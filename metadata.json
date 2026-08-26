@@ -1,0 +1,6 @@
+{
+  "name": "TERRALINKHEALTH",
+  "description": "Integrated Digital Hospital Management & Patient Experience Platform for Kenyan healthcare facilities featuring Patient, Healthcare Provider, and Administrator portals with MPESA integration, Queue tracking, Telemedicine, Lab EMR, and AI triage guidance.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
