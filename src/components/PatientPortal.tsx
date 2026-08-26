@@ -43,8 +43,11 @@ import {
   ImmunizationRecord, 
   Invoice, 
   MpesaPayment,
-  ChatMessage 
+  ChatMessage,
+  PatientInsurancePolicy,
+  InsuranceProviderPlan
 } from '../types';
+import { INITIAL_INSURANCE_PROVIDERS, INITIAL_INSURANCE_POLICIES } from '../mockData';
 import { MpesaModal } from './MpesaModal';
 import { TelemedicineRoom } from './TelemedicineRoom';
 import { ReportViewerModal } from './ReportViewerModal';
@@ -62,6 +65,8 @@ interface PatientPortalProps {
   immunizations: ImmunizationRecord[];
   invoices: Invoice[];
   mpesaPayments: MpesaPayment[];
+  insurancePolicies?: PatientInsurancePolicy[];
+  insuranceProviders?: InsuranceProviderPlan[];
   onBookAppointment: (appointmentData: any) => Promise<void>;
   onCancelAppointment: (appointmentId: string) => void;
   onPayInvoice: (invoiceId: string, receipt: string) => void;
@@ -80,14 +85,35 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   immunizations,
   invoices,
   mpesaPayments,
+  insurancePolicies: initialPolicies,
+  insuranceProviders: initialProviders,
   onBookAppointment,
   onCancelAppointment,
   onPayInvoice
 }) => {
   // Navigation tabs
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'book' | 'appointments' | 'emr' | 'queue' | 'telemedicine' | 'billing' | 'ai_assistant' | 'customer_care' | 'profile'
+    'dashboard' | 'book' | 'appointments' | 'emr' | 'queue' | 'insurance' | 'telemedicine' | 'billing' | 'ai_assistant' | 'customer_care' | 'profile'
   >('dashboard');
+
+  // Insurance State
+  const [policies, setPolicies] = useState<PatientInsurancePolicy[]>(() => {
+    if (initialPolicies && initialPolicies.length > 0) return initialPolicies;
+    const patientSeed = INITIAL_INSURANCE_POLICIES.filter(p => p.patientId === patient.id);
+    return patientSeed.length > 0 ? patientSeed : INITIAL_INSURANCE_POLICIES.slice(0, 1);
+  });
+  const [providers, setProviders] = useState<InsuranceProviderPlan[]>(() => initialProviders || INITIAL_INSURANCE_PROVIDERS);
+  
+  // New Policy Form State
+  const [newPolicyProviderCode, setNewPolicyProviderCode] = useState<string>('SHA-KENYA');
+  const [newPolicyTierName, setNewPolicyTierName] = useState<string>('Primary Care Benefit Package');
+  const [newPolicyNumber, setNewPolicyNumber] = useState<string>('');
+  const [newMemberNumber, setNewMemberNumber] = useState<string>('');
+  const [newPrincipalName, setNewPrincipalName] = useState<string>(patient.name);
+  const [newRelationship, setNewRelationship] = useState<string>('Self');
+  const [isSubmittingPolicy, setIsSubmittingPolicy] = useState<boolean>(false);
+  const [policySubmitSuccess, setPolicySubmitSuccess] = useState<string>('');
+  const [policySubmitError, setPolicySubmitError] = useState<string>('');
 
   // Booking wizard state
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
@@ -142,7 +168,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   // Department search & filter for queue
   const [deptSearch, setDeptSearch] = useState('');
 
-  // Fetch initial chat
+  // Fetch initial chat & insurance policies
   useEffect(() => {
     fetch('/api/chat/messages')
       .then(res => res.json())
@@ -150,7 +176,82 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         if (Array.isArray(data)) setCareMessages(data);
       })
       .catch(err => console.warn('Chat load err:', err));
-  }, []);
+
+    // Fetch live insurance policies
+    fetch(`/api/insurance/policies?patientId=${patient.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPolicies(data);
+        }
+      })
+      .catch(err => console.warn('Insurance load err:', err));
+
+    // Fetch providers
+    fetch('/api/insurance/providers')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProviders(data);
+        }
+      })
+      .catch(err => console.warn('Providers load err:', err));
+  }, [patient.id]);
+
+  // Handle New Insurance Card Link Submission
+  const handleLinkInsurancePolicy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPolicySubmitError('');
+    setPolicySubmitSuccess('');
+
+    if (!newPolicyNumber.trim() || !newMemberNumber.trim()) {
+      setPolicySubmitError('Please provide both the Policy Number and Member ID.');
+      return;
+    }
+
+    const matchedProvider = providers.find(p => p.providerCode === newPolicyProviderCode) || providers[0];
+    const matchedTier = matchedProvider?.planTiers.find(t => t.tierName === newPolicyTierName) || matchedProvider?.planTiers[0];
+
+    setIsSubmittingPolicy(true);
+
+    try {
+      const res = await fetch('/api/insurance/policies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: patient.id,
+          patientName: patient.name,
+          patientNationalId: patient.nationalId,
+          providerName: matchedProvider.providerName,
+          providerCode: matchedProvider.providerCode,
+          policyNumber: newPolicyNumber.trim(),
+          memberNumber: newMemberNumber.trim(),
+          principalMemberName: newPrincipalName.trim() || patient.name,
+          relationshipToPrincipal: newRelationship,
+          planTier: matchedTier?.tierName || newPolicyTierName,
+          monthlyPremiumKES: matchedTier?.monthlyPremiumKES || 1500,
+          annualPremiumKES: matchedTier?.annualPremiumKES || 18000,
+          annualInpatientLimitKES: matchedTier?.inpatientLimitKES || 2000000,
+          annualOutpatientLimitKES: matchedTier?.outpatientLimitKES || 150000,
+          copayKES: matchedTier?.copayKES || 0
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to link insurance policy.');
+      }
+
+      setPolicies(prev => [data.policy, ...prev]);
+      setPolicySubmitSuccess(`Successfully linked ${matchedProvider.providerName} policy #${newPolicyNumber}! Hospital billing desk will approve your policy.`);
+      setNewPolicyNumber('');
+      setNewMemberNumber('');
+    } catch (err: any) {
+      setPolicySubmitError(err.message || 'Error submitting insurance policy.');
+    } finally {
+      setIsSubmittingPolicy(false);
+    }
+  };
 
   // Filtered doctors for selected department
   const filteredDoctors = selectedDeptId
@@ -274,7 +375,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         ...prev,
         {
           sender: 'assistant',
-          text: 'Notice: If you are in acute pain or distress, please proceed to Accident & Emergency immediately or call our ambulance helpline on 0700 999 911.',
+          text: 'Notice: If you are in acute pain or distress, please proceed to Accident & Emergency immediately or call our ambulance helpline on 0713544101.',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -413,6 +514,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
           { id: 'appointments', label: `My Visits (${appointments.length})`, icon: Calendar },
           { id: 'emr', label: 'Medical Records (EMR)', icon: FileText },
           { id: 'queue', label: 'Department Queues', icon: Clock },
+          { id: 'insurance', label: `Insurance & Premiums (${policies.length})`, icon: ShieldCheck },
           { id: 'billing', label: `Invoices & M-PESA (${invoices.filter(i => i.status !== 'Paid').length})`, icon: CreditCard },
           { id: 'ai_assistant', label: 'TERRA AI Guidance', icon: Bot },
           { id: 'customer_care', label: 'Helpdesk Chat', icon: MessageSquare },
@@ -608,7 +710,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {departments.slice(0, 4).map((d) => (
+              {(departments || []).slice(0, 4).map((d) => (
                 <div key={d.id} className="bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-white/80 shadow-xs">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold text-xs text-slate-800">{d.name}</span>
@@ -1297,6 +1399,322 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         </div>
       )}
 
+      {/* ================= TAB: INSURANCE INTEGRATION & PREMIUMS ================= */}
+      {activeTab === 'insurance' && (
+        <div className="space-y-6">
+          
+          {/* Top Insurance Overview Banner */}
+          <div className="bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white p-6 shadow-xl shadow-slate-200/40 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 pb-4">
+              <div>
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-50 text-teal-800 text-xs font-bold border border-teal-200 mb-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Hospital Direct Insurance Integration</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  My Health Insurance Policies & Real-Time Coverage Approvals
+                </h3>
+                <p className="text-xs text-slate-600">
+                  Link your SHA or private insurance card. Once approved by TERRALINKHEALTH billing desk, all eligible inpatient admissions, surgeries, and outpatient consultations are billed cashless.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="px-3 py-1.5 rounded-xl bg-teal-600/10 text-teal-800 font-bold text-xs border border-teal-200 font-mono">
+                  {policies.length} {policies.length === 1 ? 'Policy Linked' : 'Policies Linked'}
+                </span>
+              </div>
+            </div>
+
+            {/* Active Linked Policy Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {policies.map((pol) => {
+                const inpatientAvailable = Math.max(0, pol.annualInpatientLimitKES - (pol.inpatientUsedKES || 0));
+                const outpatientAvailable = Math.max(0, pol.annualOutpatientLimitKES - (pol.outpatientUsedKES || 0));
+                const inpatientPct = Math.min(100, Math.round(((pol.inpatientUsedKES || 0) / pol.annualInpatientLimitKES) * 100));
+                const outpatientPct = Math.min(100, Math.round(((pol.outpatientUsedKES || 0) / pol.annualOutpatientLimitKES) * 100));
+
+                const isApproved = pol.status === 'Approved & Verified' || pol.status === 'Pre-Authorized';
+                const isPending = pol.status === 'Pending Verification';
+
+                return (
+                  <div
+                    key={pol.id}
+                    className="p-6 rounded-3xl bg-white/75 border border-white shadow-md hover:shadow-lg transition-all space-y-4 relative overflow-hidden"
+                  >
+                    {/* Top Row: Provider & Status Badge */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block">
+                          {pol.providerCode}
+                        </span>
+                        <h4 className="text-base font-bold text-slate-900">{pol.providerName}</h4>
+                        <p className="text-xs text-slate-600 font-medium">{pol.planTier}</p>
+                      </div>
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
+                          isApproved
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : isPending
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}
+                      >
+                        {pol.status}
+                      </span>
+                    </div>
+
+                    {/* Member & Policy Identifiers */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Policy Number</span>
+                        <strong className="font-mono text-slate-900">{pol.policyNumber}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Member Number</span>
+                        <strong className="font-mono text-slate-900">{pol.memberNumber}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Principal / Relation</span>
+                        <strong className="text-slate-900 truncate block">{pol.principalMemberName} ({pol.relationshipToPrincipal})</strong>
+                      </div>
+                    </div>
+
+                    {/* Premiums Summary */}
+                    <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-teal-50/60 border border-teal-100 text-xs">
+                      <div>
+                        <span className="text-[10px] text-teal-800 font-medium block">Monthly Premium</span>
+                        <strong className="text-slate-900 font-mono text-sm">KES {pol.monthlyPremiumKES.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-teal-800 font-medium block">Annual Premium</span>
+                        <strong className="text-slate-900 font-mono text-sm">KES {pol.annualPremiumKES.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-teal-800 font-medium block">Visit Co-Pay</span>
+                        <strong className="text-teal-900 font-mono text-sm">
+                          {pol.copayKES > 0 ? `KES ${pol.copayKES}` : 'Zero Co-pay'}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {/* Coverage Limit Utilization Bars */}
+                    <div className="space-y-3 pt-1">
+                      {/* Inpatient Limit */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-medium text-slate-700">Inpatient Benefit Limit</span>
+                          <span className="font-mono text-slate-900">
+                            Available: <strong className="text-emerald-700">KES {inpatientAvailable.toLocaleString()}</strong> / KES {pol.annualInpatientLimitKES.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                          <div
+                            className="bg-emerald-500 h-full rounded-full transition-all"
+                            style={{ width: `${inpatientPct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Outpatient Limit */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-medium text-slate-700">Outpatient Benefit Limit</span>
+                          <span className="font-mono text-slate-900">
+                            Available: <strong className="text-teal-700">KES {outpatientAvailable.toLocaleString()}</strong> / KES {pol.annualOutpatientLimitKES.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                          <div
+                            className="bg-teal-500 h-full rounded-full transition-all"
+                            style={{ width: `${outpatientPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pre-Authorization Code if present */}
+                    {pol.preAuthCode && (
+                      <div className="p-3 bg-blue-50/80 rounded-2xl border border-blue-200 text-xs text-blue-950 space-y-1">
+                        <div className="flex items-center justify-between font-bold">
+                          <span className="flex items-center space-x-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Hospital Pre-Auth Granted: {pol.preAuthCode}</span>
+                          </span>
+                          <span className="font-mono">KES {(pol.preAuthAmountKES || 0).toLocaleString()}</span>
+                        </div>
+                        <p className="text-[11px] text-blue-800">
+                          Authorized for: {pol.preAuthProcedure || 'Inpatient Admission & Specialized Surgery'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Approval Footnote */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Valid Thru: <strong className="text-slate-700 font-mono">{pol.expiryDate}</strong></span>
+                      {pol.verifiedBy ? (
+                        <span className="text-emerald-700 font-medium flex items-center space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Approved by: {pol.verifiedBy}</span>
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 font-medium">Awaiting Billing Desk Verification</span>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Form to Link / Register New Insurance Card */}
+          <div className="bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white p-6 shadow-xl shadow-slate-200/40 space-y-5">
+            <div className="border-b border-slate-200/60 pb-3">
+              <h3 className="text-base font-bold text-slate-900">
+                Link an Additional Insurance Policy / NHIF-SHA Scheme
+              </h3>
+              <p className="text-xs text-slate-500">
+                Enter your card details below. The hospital billing officer will approve the policy for cashless visits.
+              </p>
+            </div>
+
+            {policySubmitSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-start space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{policySubmitSuccess}</span>
+              </div>
+            )}
+
+            {policySubmitError && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-semibold flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span>{policySubmitError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLinkInsurancePolicy} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              
+              {/* Provider Selection */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Insurance Underwriter</label>
+                <select
+                  value={newPolicyProviderCode}
+                  onChange={(e) => {
+                    setNewPolicyProviderCode(e.target.value);
+                    const prov = providers.find(p => p.providerCode === e.target.value);
+                    if (prov && prov.planTiers[0]) {
+                      setNewPolicyTierName(prov.planTiers[0].tierName);
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                >
+                  {providers.map(p => (
+                    <option key={p.providerCode} value={p.providerCode}>
+                      {p.providerName} ({p.category})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tier Selection */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Scheme Tier</label>
+                <select
+                  value={newPolicyTierName}
+                  onChange={(e) => setNewPolicyTierName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                >
+                  {providers
+                    .find(p => p.providerCode === newPolicyProviderCode)
+                    ?.planTiers.map(t => (
+                      <option key={t.tierCode} value={t.tierName}>
+                        {t.tierName}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Policy Number */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Policy / Card Number</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. POL-SHA-992019"
+                  value={newPolicyNumber}
+                  onChange={(e) => setNewPolicyNumber(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold font-mono text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Member ID */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Member ID / National ID</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. MEM-48201"
+                  value={newMemberNumber}
+                  onChange={(e) => setNewMemberNumber(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold font-mono text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Principal Member */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Principal Member Name</label>
+                <input
+                  type="text"
+                  value={newPrincipalName}
+                  onChange={(e) => setNewPrincipalName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Relationship */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Relationship to Principal</label>
+                <select
+                  value={newRelationship}
+                  onChange={(e) => setNewRelationship(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                >
+                  <option value="Self">Self (Principal)</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child / Dependent">Child / Dependent</option>
+                  <option value="Parent">Parent</option>
+                </select>
+              </div>
+
+              {/* Submit Button */}
+              <div className="md:col-span-2 lg:col-span-3 flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingPolicy}
+                  className="px-6 py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-teal-500/25 flex items-center space-x-2 transition-all cursor-pointer"
+                >
+                  {isSubmittingPolicy ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting to Billing Desk...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Submit Policy for Approval</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+      )}
+
       {/* ================= TAB 6: BILLING & M-PESA PAYMENTS ================= */}
       {activeTab === 'billing' && (
         <div className="bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white p-6 shadow-xl shadow-slate-200/40 space-y-5">
@@ -1502,7 +1920,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
             </div>
             <div className="text-right text-xs">
               <span className="text-teal-400 font-semibold block">● Operator Online</span>
-              <span className="text-[10px] text-slate-400">Direct Line: +254 700 999 911</span>
+              <span className="text-[10px] text-slate-400">Direct Line: 0713544101</span>
             </div>
           </div>
 

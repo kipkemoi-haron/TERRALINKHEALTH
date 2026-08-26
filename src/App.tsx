@@ -39,30 +39,33 @@ import {
   MpesaPayment, 
   HospitalAnalytics, 
   AuditLog,
-  HospitalSocialLinks
+  HospitalSocialLinks,
+  InsuranceProviderPlan
 } from './types';
+import { HospitalHomepage } from './components/HospitalHomepage';
 import { PatientPortal } from './components/PatientPortal';
 import { ProviderPortal } from './components/ProviderPortal';
 import { AdminPortal } from './components/AdminPortal';
-import { AuthModals, MandatoryPasswordChangeModal } from './components/AuthModals';
-import { mockDepartments, mockDoctors, mockPatients, mockStaffUsers, mockAnalytics, mockAuditLogs } from './mockData';
+import { AuthModals, MandatoryPasswordChangeModal, AdminLoginGate, PatientLoginGate, ClinicalStaffLoginGate } from './components/AuthModals';
+import { mockDepartments, mockDoctors, mockPatients, mockStaffUsers, mockAnalytics, mockAuditLogs, INITIAL_INSURANCE_PROVIDERS } from './mockData';
 
 export function App() {
-  // Active top-level portal
-  const [activePortal, setActivePortal] = useState<'patient' | 'provider' | 'admin'>('patient');
+  // Active top-level portal ('home' is the default institutional hospital website)
+  const [activePortal, setActivePortal] = useState<'home' | 'patient' | 'provider' | 'admin'>('home');
+  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProviderPlan[]>(INITIAL_INSURANCE_PROVIDERS);
 
-  // Current session user & token
-  const [currentUser, setCurrentUser] = useState<UserType>(mockPatients[0] as any); // default patient view for public privacy
-  const [currentPatient, setCurrentPatient] = useState<PatientProfile>(mockPatients[0]); // default Wanjiku Muthoni
-  const [authToken, setAuthToken] = useState<string>('mock-jwt-token-2026');
+  // Current session user & token (null by default for unauthenticated public visitor)
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+  const [currentPatient, setCurrentPatient] = useState<PatientProfile | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   // Hospital Socials State
   const [socialLinks, setSocialLinks] = useState<HospitalSocialLinks>({
     facebook: 'https://facebook.com/terralinkhealth',
     twitter: 'https://x.com/terralinkhealth',
     instagram: 'https://instagram.com/terralinkhealth',
-    whatsapp: 'https://wa.me/254700999911',
-    emergencyHotline: '+254 700 999 911',
+    whatsapp: 'https://wa.me/254713544101',
+    emergencyHotline: '0713544101',
     contactEmail: 'info@terralinkhealth.co.ke',
     physicalAddress: 'Hospital Hill Road, Parklands / Upper Hill Medical Complex, Nairobi County'
   });
@@ -142,6 +145,25 @@ export function App() {
     refreshAllData();
   }, [currentPatient?.id]);
 
+  // URL Path & Hash detection for hidden /admin route
+  useEffect(() => {
+    const handleUrlRoute = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || path.startsWith('/admin/') || hash === '#admin' || hash === '#/admin') {
+        setActivePortal('admin');
+      }
+    };
+
+    handleUrlRoute();
+    window.addEventListener('popstate', handleUrlRoute);
+    window.addEventListener('hashchange', handleUrlRoute);
+    return () => {
+      window.removeEventListener('popstate', handleUrlRoute);
+      window.removeEventListener('hashchange', handleUrlRoute);
+    };
+  }, []);
+
   const isAdminUser = 
     currentUser?.role === 'admin' || 
     currentUser?.email === 'kipkemoiharon57@gmail.com' || 
@@ -149,28 +171,6 @@ export function App() {
     currentUser?.username === 'kipkemoiharon57@gmail.com' ||
     currentUser?.username === 'kipkemoiharon4@gmail.com' ||
     currentUser?.username === 'admin.kipkemoi';
-
-  // Demo Quick Switcher handler
-  const handleSwitchDemoPersona = (persona: 'patient' | 'doctor' | 'lab_tech' | 'radiologist' | 'pharmacist' | 'nurse') => {
-    if (persona === 'patient') {
-      setActivePortal('patient');
-      setCurrentUser({
-        id: 'user-pat-01',
-        name: 'Wanjiku Muthoni',
-        email: 'wanjiku.m@gmail.com',
-        phone: '0712345678',
-        role: 'patient',
-        nationalId: '33819200',
-        isActive: true,
-        mustChangePassword: false,
-        createdAt: '2026-08-01'
-      });
-    } else {
-      const staffMatch = staffUsers.find(s => s.role === persona) || staffUsers[0];
-      setCurrentUser(staffMatch);
-      setActivePortal('provider');
-    }
-  };
 
   // API Call Handlers
   const handleBookAppointment = async (aptData: any) => {
@@ -354,32 +354,7 @@ export function App() {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1.5 text-rose-400 font-semibold bg-rose-950/40 px-2.5 py-0.5 rounded-full border border-rose-800/40">
             <Phone className="w-3.5 h-3.5 animate-bounce" />
-            <span>24/7 A&E Hotline: <strong className="text-white font-mono">0700 999 911</strong></span>
-          </div>
-
-          {/* Quick Demo Switcher */}
-          <div className="hidden lg:flex items-center space-x-1 bg-white/10 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/15 text-[11px]">
-            <span className="text-slate-400 font-semibold">Demo Role:</span>
-            <button 
-              onClick={() => handleSwitchDemoPersona('patient')} 
-              className={`px-2 py-0.5 rounded-full font-medium transition-all cursor-pointer ${activePortal === 'patient' ? 'text-white bg-teal-600 font-bold shadow-sm shadow-teal-500/50' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-            >
-              Patient
-            </button>
-            <span className="text-slate-600">/</span>
-            <button 
-              onClick={() => handleSwitchDemoPersona('doctor')} 
-              className={`px-2 py-0.5 rounded-full font-medium transition-all cursor-pointer ${activePortal === 'provider' && currentUser.role === 'doctor' ? 'text-white bg-teal-600 font-bold shadow-sm shadow-teal-500/50' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-            >
-              Doctor
-            </button>
-            <span className="text-slate-600">/</span>
-            <button 
-              onClick={() => handleSwitchDemoPersona('lab_tech')} 
-              className={`px-2 py-0.5 rounded-full font-medium transition-all cursor-pointer ${activePortal === 'provider' && currentUser.role === 'lab_tech' ? 'text-white bg-teal-600 font-bold shadow-sm shadow-teal-500/50' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
-            >
-              Lab Tech
-            </button>
+            <span>24/7 A&E Hotline: <strong className="text-white font-mono">0713544101</strong></span>
           </div>
         </div>
       </div>
@@ -389,7 +364,12 @@ export function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           
           {/* Logo & Platform Name */}
-          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setActivePortal('patient')}>
+          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => {
+            setActivePortal('home');
+            if (window.location.pathname.startsWith('/admin')) {
+              window.history.pushState(null, '', '/');
+            }
+          }}>
             <div className="w-11 h-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
               <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                 <div className="w-1 h-3.5 bg-white rounded-full"></div>
@@ -400,62 +380,115 @@ export function App() {
                 <span className="text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
                 <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium">Integrated Hospital Information System</p>
+              <p className="text-[11px] text-slate-500 font-medium">TERRALINKHEALTH Hospital Nairobi Complex</p>
             </div>
           </div>
 
-          {/* Portals Switcher - Glass Pills (Admin strictly hidden from public view) */}
-          <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs">
+          {/* Portals Switcher - Glass Navigation */}
+          <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
             <button
               onClick={() => {
-                setActivePortal('patient');
-                setCurrentUser({
-                  id: 'user-pat-01',
-                  name: 'Wanjiku Muthoni',
-                  email: 'wanjiku.m@gmail.com',
-                  phone: '0712345678',
-                  role: 'patient',
-                  nationalId: '33819200',
-                  isActive: true,
-                  mustChangePassword: false,
-                  createdAt: '2026-08-01'
-                });
+                setActivePortal('home');
+                if (window.location.pathname.startsWith('/admin')) {
+                  window.history.pushState(null, '', '/');
+                }
               }}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePortal === 'patient' 
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                activePortal === 'home' 
                   ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              Patient Portal
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Hospital Home</span>
             </button>
 
-            <button
-              onClick={() => {
-                setActivePortal('provider');
-                const doctorUser = staffUsers.find(s => s.role === 'doctor') || staffUsers[0];
-                setCurrentUser(doctorUser);
-              }}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activePortal === 'provider' 
-                  ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              Healthcare Provider Portal
-            </button>
+            {/* Unauthenticated View: Direct Enter Actions */}
+            {!currentUser && (
+              <>
+                <button
+                  onClick={() => {
+                    setActivePortal('patient');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activePortal === 'patient'
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25'
+                      : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <Heart className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Enter Patient Portal</span>
+                </button>
 
-            {/* Administrator portal ONLY rendered if logged in as Kipkemoi Haron or Admin role */}
-            {isAdminUser && (
+                <button
+                  onClick={() => {
+                    setActivePortal('provider');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activePortal === 'provider'
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25'
+                      : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+                  }`}
+                >
+                  <Lock className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Enter Clinical Staff Portal</span>
+                </button>
+              </>
+            )}
+
+            {/* Authenticated View: Patient Portal */}
+            {currentUser && currentUser.role === 'patient' && (
               <button
-                onClick={() => setActivePortal('admin')}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                  activePortal === 'admin' 
-                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/25 border border-white/20' 
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
+                onClick={() => {
+                  setActivePortal('patient');
+                  if (window.location.pathname.startsWith('/admin')) {
+                    window.history.pushState(null, '', '/');
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                  activePortal === 'patient' 
+                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <Heart className="w-3.5 h-3.5 text-rose-400" />
+                <span>My Patient Portal</span>
+              </button>
+            )}
+
+            {/* Authenticated View: Staff Portal */}
+            {currentUser && currentUser.role !== 'patient' && (
+              <button
+                onClick={() => {
+                  setActivePortal('provider');
+                  if (window.location.pathname.startsWith('/admin')) {
+                    window.history.pushState(null, '', '/');
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                  activePortal === 'provider' 
+                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                <Stethoscope className="w-3.5 h-3.5" />
+                <span>Clinical Staff Workspace</span>
+              </button>
+            )}
+
+            {/* Authenticated View: Admin Portal link for Admin */}
+            {currentUser && isAdminUser && (
+              <button
+                onClick={() => {
+                  setActivePortal('admin');
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                  activePortal === 'admin' 
+                    ? 'bg-slate-900 text-emerald-400 shadow-md' 
+                    : 'text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Admin Operations</span>
               </button>
             )}
@@ -464,41 +497,59 @@ export function App() {
           {/* Right User Actions */}
           <div className="flex items-center space-x-2.5">
             
-            {/* Staff / Admin Direct Secure Login Trigger */}
-            {!isAdminUser && (
-              <button
-                onClick={() => {
-                  setAuthModalMode('staff_login');
-                  setAuthModalOpen(true);
-                }}
-                className="px-3 py-2 bg-slate-900/10 hover:bg-slate-900/20 text-slate-800 font-semibold rounded-2xl text-xs flex items-center space-x-1.5 border border-white/80 shadow-xs transition-all cursor-pointer backdrop-blur-md"
-                title="Hospital Staff & Administrator Secure Login"
-              >
-                <Lock className="w-3.5 h-3.5 text-slate-700" />
-                <span className="hidden sm:inline">Staff / Admin Login</span>
-              </button>
+            {!currentUser ? (
+              <>
+                <button
+                  onClick={() => {
+                    setAuthModalMode('patient_register');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl text-xs flex items-center space-x-1.5 shadow-md shadow-teal-500/20 transition-all cursor-pointer"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Register</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setAuthModalMode('patient_login');
+                    setAuthModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-white/70 hover:bg-white text-slate-800 font-bold rounded-2xl text-xs flex items-center space-x-1.5 border border-white/80 shadow-xs transition-all cursor-pointer backdrop-blur-md"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Sign In</span>
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center space-x-2.5">
+                <div className="flex items-center space-x-2.5 pl-2">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/60">
+                    {currentUser.name?.charAt(0) || 'U'}
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[130px]">{currentUser.name}</span>
+                    <span className="text-[10px] text-teal-700 font-semibold uppercase tracking-wide">{currentUser.role?.replace('_', ' ')}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentUser(null);
+                    setCurrentPatient(null);
+                    setAuthToken(null);
+                    setActivePortal('home');
+                    if (window.location.pathname.startsWith('/admin')) {
+                      window.history.pushState(null, '', '/');
+                    }
+                  }}
+                  title="Sign out of current account"
+                  className="p-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-xs transition-all cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             )}
-
-            <button
-              onClick={() => {
-                setAuthModalMode(activePortal === 'patient' ? 'patient_login' : 'staff_login');
-                setAuthModalOpen(true);
-              }}
-              className="px-4 py-2 bg-white/60 hover:bg-white/90 text-slate-800 font-semibold rounded-2xl text-xs flex items-center space-x-1.5 border border-white/80 shadow-xs transition-all cursor-pointer backdrop-blur-md"
-            >
-              <LogIn className="w-3.5 h-3.5 text-teal-600" />
-              <span className="hidden sm:inline">Switch Account</span>
-            </button>
-
-            <div className="flex items-center space-x-2.5 pl-2 border-l border-white/60">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-slate-800 to-slate-700 text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/60">
-                {currentUser?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="hidden sm:block text-left">
-                <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[130px]">{currentUser?.name}</span>
-                <span className="text-[10px] text-teal-700 font-semibold uppercase tracking-wide">{currentUser?.role?.replace('_', ' ')}</span>
-              </div>
-            </div>
 
           </div>
 
@@ -508,56 +559,123 @@ export function App() {
       {/* Main Active Portal Container */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {activePortal === 'patient' && (
-          <PatientPortal
-            patient={currentPatient}
-            onUpdatePatient={(updated) => setCurrentPatient(updated)}
+        {activePortal === 'home' && (
+          <HospitalHomepage
             departments={departments}
             doctors={doctors}
-            appointments={appointments.filter(a => a.patientId === currentPatient.id)}
-            encounters={encounters.filter(e => e.patientId === currentPatient.id)}
-            prescriptions={prescriptions.filter(p => p.patientId === currentPatient.id)}
-            labOrders={labOrders.filter(l => l.patientId === currentPatient.id)}
-            radiologyOrders={radiologyOrders.filter(r => r.patientId === currentPatient.id)}
-            immunizations={immunizations}
-            invoices={invoices.filter(i => i.patientId === currentPatient.id)}
-            mpesaPayments={mpesaPayments}
-            onBookAppointment={handleBookAppointment}
-            onCancelAppointment={handleCancelAppointment}
-            onPayInvoice={handlePayInvoice}
-          />
-        )}
-
-        {activePortal === 'provider' && (
-          <ProviderPortal
-            currentUser={currentUser}
-            patients={patients}
-            departments={departments}
-            doctors={doctors}
-            appointments={appointments}
-            encounters={encounters}
-            prescriptions={prescriptions}
-            labOrders={labOrders}
-            radiologyOrders={radiologyOrders}
-            invoices={invoices}
-            onSaveEncounter={handleSaveEncounter}
-            onSaveLabResults={handleSaveLabResults}
-            onSaveRadiologyReport={handleSaveRadiologyReport}
-            onDispensePrescription={handleDispensePrescription}
-            onCreateLabOrder={handleCreateLabOrder}
-            onCreateRadiologyOrder={handleCreateRadiologyOrder}
-            onCreatePrescription={handleCreatePrescription}
-            onUpdateAppointmentStatus={async (aptId, status) => {
-              await fetch(`/api/appointments/${aptId}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status })
-              });
-              setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, status } : a));
+            insuranceProviders={insuranceProviders}
+            onOpenRegister={() => {
+              setAuthModalMode('patient_register');
+              setAuthModalOpen(true);
+            }}
+            onOpenPatientLogin={() => {
+              setAuthModalMode('patient_login');
+              setAuthModalOpen(true);
+            }}
+            onOpenStaffLogin={() => {
+              setAuthModalMode('staff_login');
+              setAuthModalOpen(true);
+            }}
+            onOpenAuthModal={(mode) => {
+              setAuthModalMode(mode);
+              setAuthModalOpen(true);
+            }}
+            onNavigateToPortal={(portal) => {
+              setActivePortal(portal);
             }}
           />
         )}
 
+        {/* PATIENT PORTAL - Visible after user signs in / registers, or displays clean entrance login gate */}
+        {activePortal === 'patient' && (
+          currentUser && currentUser.role === 'patient' && currentPatient ? (
+            <PatientPortal
+              patient={currentPatient}
+              onUpdatePatient={(updated) => setCurrentPatient(updated)}
+              departments={departments}
+              doctors={doctors}
+              appointments={appointments.filter(a => a.patientId === currentPatient.id)}
+              encounters={encounters.filter(e => e.patientId === currentPatient.id)}
+              prescriptions={prescriptions.filter(p => p.patientId === currentPatient.id)}
+              labOrders={labOrders.filter(l => l.patientId === currentPatient.id)}
+              radiologyOrders={radiologyOrders.filter(r => r.patientId === currentPatient.id)}
+              immunizations={immunizations}
+              invoices={invoices.filter(i => i.patientId === currentPatient.id)}
+              mpesaPayments={mpesaPayments}
+              onBookAppointment={handleBookAppointment}
+              onCancelAppointment={handleCancelAppointment}
+              onPayInvoice={handlePayInvoice}
+            />
+          ) : (
+            <PatientLoginGate
+              onPatientAuthSuccess={(token, user, profile) => {
+                setAuthToken(token);
+                setCurrentUser(user);
+                if (profile) setCurrentPatient(profile);
+                setActivePortal('patient');
+                refreshAllData();
+              }}
+              onOpenRegisterModal={() => {
+                setAuthModalMode('patient_register');
+                setAuthModalOpen(true);
+              }}
+              onCancel={() => {
+                setActivePortal('home');
+              }}
+            />
+          )
+        )}
+
+        {/* CLINICAL STAFF PORTAL - Visible after staff signs in, or displays authorized workspace gate */}
+        {activePortal === 'provider' && (
+          currentUser && ['doctor', 'lab_tech', 'radiologist', 'pharmacist', 'nurse', 'admin'].includes(currentUser.role) ? (
+            <ProviderPortal
+              currentUser={currentUser}
+              patients={patients}
+              departments={departments}
+              doctors={doctors}
+              appointments={appointments}
+              encounters={encounters}
+              prescriptions={prescriptions}
+              labOrders={labOrders}
+              radiologyOrders={radiologyOrders}
+              invoices={invoices}
+              onSaveEncounter={handleSaveEncounter}
+              onSaveLabResults={handleSaveLabResults}
+              onSaveRadiologyReport={handleSaveRadiologyReport}
+              onDispensePrescription={handleDispensePrescription}
+              onCreateLabOrder={handleCreateLabOrder}
+              onCreateRadiologyOrder={handleCreateRadiologyOrder}
+              onCreatePrescription={handleCreatePrescription}
+              onUpdateAppointmentStatus={async (aptId, status) => {
+                await fetch(`/api/appointments/${aptId}/status`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status })
+                });
+                setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, status } : a));
+              }}
+            />
+          ) : (
+            <ClinicalStaffLoginGate
+              onStaffAuthSuccess={(token, user) => {
+                setAuthToken(token);
+                setCurrentUser(user);
+                if (user.mustChangePassword) {
+                  setShowPasswordChangeModal(true);
+                } else {
+                  setActivePortal('provider');
+                }
+                refreshAllData();
+              }}
+              onCancel={() => {
+                setActivePortal('home');
+              }}
+            />
+          )
+        )}
+
+        {/* ADMIN PORTAL - Restricted to /admin gateway & Admin users */}
         {activePortal === 'admin' && (
           isAdminUser ? (
             <AdminPortal
@@ -577,25 +695,18 @@ export function App() {
               onRefreshData={refreshAllData}
             />
           ) : (
-            <div className="bg-white/70 backdrop-blur-2xl rounded-3xl border border-white p-8 max-w-lg mx-auto text-center space-y-4 shadow-xl my-12">
-              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 mx-auto flex items-center justify-center shadow-inner">
-                <Lock className="w-7 h-7" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Administrator Access Restricted</h3>
-              <p className="text-xs text-slate-600">
-                The executive administration portal is strictly restricted to authorized administrators (<strong>kipkemoiharon57@gmail.com</strong> and <strong>kipkemoiharon4@gmail.com</strong>).
-              </p>
-              <button
-                onClick={() => {
-                  setAuthModalMode('staff_login');
-                  setAuthModalOpen(true);
-                }}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold shadow-md cursor-pointer inline-flex items-center space-x-2 transition-all"
-              >
-                <Lock className="w-4 h-4" />
-                <span>Log In as Administrator</span>
-              </button>
-            </div>
+            <AdminLoginGate
+              onAdminAuthSuccess={(token, user) => {
+                setAuthToken(token);
+                setCurrentUser(user);
+                setActivePortal('admin');
+                refreshAllData();
+              }}
+              onCancel={() => {
+                setActivePortal('home');
+                window.history.pushState(null, '', '/');
+              }}
+            />
           )
         )}
 
@@ -719,17 +830,7 @@ export function App() {
               ISO 27001 Certified • HL7 FHIR Compliant • Safaricom Daraja M-PESA Integration • KDPA 2019
             </div>
             <div className="flex items-center space-x-3">
-              <span>All tariffs in Kenyan Shillings (KES)</span>
-              <span>•</span>
-              <button
-                onClick={() => {
-                  setAuthModalMode('staff_login');
-                  setAuthModalOpen(true);
-                }}
-                className="hover:text-slate-800 underline cursor-pointer"
-              >
-                Administrator Access
-              </button>
+              <span>All tariffs in Kenyan Shillings (KES) • Emergency Dispatch: 0713544101</span>
             </div>
           </div>
 

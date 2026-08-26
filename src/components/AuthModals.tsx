@@ -12,7 +12,9 @@ import {
   Loader2, 
   Key, 
   Building2,
-  Stethoscope
+  Stethoscope,
+  HeartPulse,
+  ArrowRight
 } from 'lucide-react';
 import { User, PatientProfile } from '../types';
 
@@ -21,7 +23,7 @@ interface AuthModalsProps {
   onClose: () => void;
   onPatientAuthSuccess: (token: string, user: User, profile: PatientProfile) => void;
   onStaffAuthSuccess: (token: string, user: User) => void;
-  initialMode?: 'patient_login' | 'patient_register' | 'staff_login';
+  initialMode?: 'patient_login' | 'patient_register' | 'staff_login' | 'forgot_password';
 }
 
 export const AuthModals: React.FC<AuthModalsProps> = ({
@@ -31,7 +33,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   onStaffAuthSuccess,
   initialMode = 'patient_login'
 }) => {
-  const [mode, setMode] = useState<'patient_login' | 'patient_register' | 'staff_login'>(initialMode);
+  const [mode, setMode] = useState<'patient_login' | 'patient_register' | 'staff_login' | 'forgot_password'>(initialMode);
   
   // Patient Register Form - Clean manual entry fields
   const [pName, setPName] = useState('');
@@ -47,11 +49,22 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   const [pEmergencyContact, setPEmergencyContact] = useState('');
   const [pEmergencyPhone, setPEmergencyPhone] = useState('');
   const [pAllergies, setPAllergies] = useState('');
-  const [pChronicConditions, setPChronicConditions] = useState('');
+
+  // Register OTP Step
+  const [registerStep, setRegisterStep] = useState<'form' | 'verify_otp'>('form');
+  const [regVerificationCode, setRegVerificationCode] = useState('');
+  const [regCodeSuccessMsg, setRegCodeSuccessMsg] = useState('');
 
   // Patient Login Form
   const [pLoginIdentifier, setPLoginIdentifier] = useState('');
   const [pLoginPassword, setPLoginPassword] = useState('');
+
+  // Forgot Password Form
+  const [fpEmailOrId, setFpEmailOrId] = useState('');
+  const [fpResetCode, setFpResetCode] = useState('');
+  const [fpNewPassword, setFpNewPassword] = useState('');
+  const [fpStep, setFpStep] = useState<'request' | 'verify'>('request');
+  const [fpSuccessMsg, setFpSuccessMsg] = useState('');
 
   // Staff & Admin Login Form
   const [sUsername, setSUsername] = useState('');
@@ -85,13 +98,58 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  const handlePatientRegister = async (e: React.FormEvent) => {
+  // Request Registration OTP Code
+  const handleRequestRegCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!pEmail || !pEmail.includes('@')) {
+      setErrorMsg('Please provide a valid email address to receive your registration code.');
+      return;
+    }
+    if (!pName || !pNationalId || !pPhone || !pPassword) {
+      setErrorMsg('Please complete all required fields (*)');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
-
     try {
-      const res = await fetch('/api/auth/patient/register', {
+      const res = await fetch('/api/auth/patient/request-reg-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: pName,
+          email: pEmail,
+          nationalId: pNationalId,
+          phone: pPhone
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send registration code.');
+
+      setRegCodeSuccessMsg(data.message || 'Verification code sent to your email.');
+      if (data.debugCode) {
+        setRegCodeSuccessMsg(`Verification code sent to ${pEmail}! (Code: ${data.debugCode})`);
+      }
+      setRegisterStep('verify_otp');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Could not send verification code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Complete Registration with OTP Code
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regVerificationCode.trim()) {
+      setErrorMsg('Please enter the 6-digit registration code sent to your email.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/patient/verify-and-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,7 +161,8 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           dob: pDob,
           gender: pGender,
           bloodGroup: pBloodGroup,
-          insuranceProvider: pInsurance
+          insuranceProvider: pInsurance,
+          code: regVerificationCode.trim()
         })
       });
       const data = await res.json();
@@ -113,6 +172,74 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
       onClose();
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Request Password Reset Code
+  const handleRequestPasswordResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fpEmailOrId.trim()) {
+      setErrorMsg('Please enter your registered email address or National ID.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/forgot-password/request-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailOrIdentifier: fpEmailOrId.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to dispatch reset code.');
+
+      setFpSuccessMsg(data.debugCode ? `${data.message} (Test Code: ${data.debugCode})` : data.message);
+      setFpStep('verify');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to request reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm Reset with Code & Set New Password
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fpResetCode.trim() || !fpNewPassword) {
+      setErrorMsg('Please enter both the reset code and your new password.');
+      return;
+    }
+    if (fpNewPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/forgot-password/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emailOrIdentifier: fpEmailOrId.trim(),
+          code: fpResetCode.trim(),
+          newPassword: fpNewPassword
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Password reset failed');
+
+      if (data.user?.role === 'patient' && data.patientProfile) {
+        onPatientAuthSuccess(data.token, data.user, data.patientProfile);
+      } else {
+        onStaffAuthSuccess(data.token, data.user);
+      }
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Password reset error');
     } finally {
       setLoading(false);
     }
@@ -164,16 +291,16 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         {/* Tab switcher */}
         <div className="grid grid-cols-3 border-b border-slate-200 text-xs font-semibold bg-slate-50">
           <button
-            onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
-            className={`py-3 text-center transition-colors ${
-              mode === 'patient_login' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+            onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
+            className={`py-3 text-center transition-colors cursor-pointer ${
+              mode === 'patient_login' || mode === 'forgot_password' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             Patient Sign In
           </button>
           <button
-            onClick={() => { setMode('patient_register'); setErrorMsg(''); }}
-            className={`py-3 text-center transition-colors ${
+            onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
+            className={`py-3 text-center transition-colors cursor-pointer ${
               mode === 'patient_register' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -181,11 +308,11 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           </button>
           <button
             onClick={() => { setMode('staff_login'); setErrorMsg(''); }}
-            className={`py-3 text-center transition-colors ${
+            className={`py-3 text-center transition-colors cursor-pointer ${
               mode === 'staff_login' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Staff & Admin
+            Clinical Staff
           </button>
         </div>
 
@@ -220,9 +347,16 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Password *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-slate-700">Password *</label>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('forgot_password'); setErrorMsg(''); setFpStep('request'); }}
+                    className="text-[11px] text-emerald-700 font-bold hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
@@ -244,216 +378,385 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Patient Portal</span>}
               </button>
 
-              <p className="text-center text-[11px] text-slate-500 pt-1">
-                Don't have an account?{' '}
+              <div className="pt-2 text-center text-[11px] text-slate-500 border-t border-slate-100 flex items-center justify-between">
+                <span>First time visiting?</span>
                 <button
                   type="button"
-                  onClick={() => setMode('patient_register')}
-                  className="text-emerald-700 font-bold hover:underline"
+                  onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
+                  className="text-emerald-700 font-bold hover:underline cursor-pointer"
                 >
-                  Register as New Patient
+                  Register New Patient →
                 </button>
-              </p>
+              </div>
             </form>
+          )}
+
+          {/* 1.5 Forgot Password Mode */}
+          {mode === 'forgot_password' && (
+            <div className="space-y-4 text-xs">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900">
+                <p className="font-bold flex items-center space-x-1.5">
+                  <Key className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Account Password Recovery</span>
+                </p>
+                <p className="mt-1 text-amber-800">
+                  {fpStep === 'request'
+                    ? 'Enter your registered email address or National ID to receive a secure 6-digit password reset code.'
+                    : 'Enter the 6-digit reset code received on your email and choose your new password.'}
+                </p>
+              </div>
+
+              {fpSuccessMsg && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-800 font-medium">
+                  {fpSuccessMsg}
+                </div>
+              )}
+
+              {fpStep === 'request' ? (
+                <form onSubmit={handleRequestPasswordResetCode} className="space-y-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Email Address or National ID *
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        required
+                        value={fpEmailOrId}
+                        onChange={(e) => setFpEmailOrId(e.target.value)}
+                        placeholder="e.g. wanjiku@example.com or 33819200"
+                        className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send 6-Digit Password Reset Code</span>}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      6-Digit Reset Code (From Email) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={fpResetCode}
+                      onChange={(e) => setFpResetCode(e.target.value)}
+                      placeholder="e.g. 849201"
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-center font-mono font-bold tracking-widest text-lg text-emerald-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      New Secure Password *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={fpNewPassword}
+                      onChange={(e) => setFpNewPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Reset Password & Sign In</span>}
+                  </button>
+                </form>
+              )}
+
+              <div className="text-center pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+                  className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+                >
+                  ← Back to Patient Login
+                </button>
+              </div>
+            </div>
           )}
 
           {/* 2. Patient Register */}
           {mode === 'patient_register' && (
-            <form onSubmit={handlePatientRegister} className="space-y-3 text-xs">
-              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 text-[11px] text-emerald-800">
-                <p className="font-semibold">Self-Registration & Patient Master Index Entry</p>
-                <p className="mt-0.5 text-slate-600">Please enter your accurate personal and health details below.</p>
-              </div>
+            <div>
+              {registerStep === 'form' ? (
+                <form onSubmit={handleRequestRegCode} className="space-y-3 text-xs">
+                  <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 text-[11px] text-emerald-800">
+                    <p className="font-semibold">Self-Registration & Patient Master Index Entry</p>
+                    <p className="mt-0.5 text-slate-600">A 6-digit registration code will be sent to your email to verify your account.</p>
+                  </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Full Legal Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={pName}
-                  onChange={(e) => setPName(e.target.value)}
-                  placeholder="e.g. Wanjiku Muthoni"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                />
-              </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Full Legal Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={pName}
+                      onChange={(e) => setPName(e.target.value)}
+                      placeholder="e.g. Wanjiku Muthoni"
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Kenyan National ID / Passport *</label>
-                  <input
-                    type="text"
-                    required
-                    value={pNationalId}
-                    onChange={(e) => setPNationalId(e.target.value)}
-                    placeholder="e.g. 33819200"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Phone Number (M-PESA) *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={pPhone}
-                    onChange={(e) => setPPhone(e.target.value)}
-                    placeholder="e.g. 0712345678"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Kenyan National ID / Passport *</label>
+                      <input
+                        type="text"
+                        required
+                        value={pNationalId}
+                        onChange={(e) => setPNationalId(e.target.value)}
+                        placeholder="e.g. 33819200"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Phone Number (M-PESA) *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={pPhone}
+                        onChange={(e) => setPPhone(e.target.value)}
+                        placeholder="e.g. 0712345678"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={pEmail}
-                    onChange={(e) => setPEmail(e.target.value)}
-                    placeholder="e.g. wanjiku@example.com"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Date of Birth *</label>
-                  <input
-                    type="date"
-                    required
-                    value={pDob}
-                    onChange={(e) => setPDob(e.target.value)}
-                    className="w-full p-2 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Email Address (For Code) *</label>
+                      <input
+                        type="email"
+                        required
+                        value={pEmail}
+                        onChange={(e) => setPEmail(e.target.value)}
+                        placeholder="e.g. wanjiku@example.com"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Date of Birth *</label>
+                      <input
+                        type="date"
+                        required
+                        value={pDob}
+                        onChange={(e) => setPDob(e.target.value)}
+                        className="w-full p-2 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Sex / Gender *</label>
-                  <select
-                    value={pGender}
-                    onChange={(e) => setPGender(e.target.value as any)}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Sex / Gender *</label>
+                      <select
+                        value={pGender}
+                        onChange={(e) => setPGender(e.target.value as any)}
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      >
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Blood Group *</label>
+                      <select
+                        value={pBloodGroup}
+                        onChange={(e) => setPBloodGroup(e.target.value)}
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-rose-700"
+                      >
+                        {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(b => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">County</label>
+                      <input
+                        type="text"
+                        value={pCounty}
+                        onChange={(e) => setPCounty(e.target.value)}
+                        placeholder="e.g. Nairobi"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Emergency Contact</label>
+                      <input
+                        type="text"
+                        value={pEmergencyContact}
+                        onChange={(e) => setPEmergencyContact(e.target.value)}
+                        placeholder="e.g. David Muthoni"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Emergency Phone</label>
+                      <input
+                        type="tel"
+                        value={pEmergencyPhone}
+                        onChange={(e) => setPEmergencyPhone(e.target.value)}
+                        placeholder="e.g. 0722000000"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Known Allergies</label>
+                      <input
+                        type="text"
+                        value={pAllergies}
+                        onChange={(e) => setPAllergies(e.target.value)}
+                        placeholder="e.g. Penicillin (or None)"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Insurance Scheme</label>
+                      <select
+                        value={pInsurance}
+                        onChange={(e) => setPInsurance(e.target.value)}
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium"
+                      >
+                        <option value="Social Health Insurance Fund (SHIF)">SHIF (National Health)</option>
+                        <option value="Jubilee Insurance">Jubilee Insurance</option>
+                        <option value="APA Insurance">APA Insurance</option>
+                        <option value="AAR Insurance">AAR Insurance</option>
+                        <option value="CIC Insurance">CIC Insurance</option>
+                        <option value="Private Cash / M-PESA">Private Cash / M-PESA</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Create Secure Account Password *</label>
+                    <input
+                      type="password"
+                      required
+                      value={pPassword}
+                      onChange={(e) => setPPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
                   >
-                    <option value="Female">Female</option>
-                    <option value="Male">Male</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Blood Group *</label>
-                  <select
-                    value={pBloodGroup}
-                    onChange={(e) => setPBloodGroup(e.target.value)}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-rose-700"
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Email Registration Code →</span>}
+                  </button>
+                </form>
+              ) : (
+                /* Step 2: Verification Code Entry */
+                <form onSubmit={handleVerifyAndRegister} className="space-y-4 text-xs">
+                  <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 text-teal-900 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-5 h-5 text-teal-600 shrink-0" />
+                      <h4 className="font-bold text-sm">Verify Your Registration Code</h4>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-teal-800">
+                      We dispatched a 6-digit registration code to <strong className="text-teal-950">{pEmail}</strong>. Please enter the code below to complete your registration and activate your medical profile.
+                    </p>
+                    {regCodeSuccessMsg && (
+                      <div className="p-2 rounded-xl bg-teal-100/80 font-mono text-[11px] font-semibold text-teal-950 border border-teal-300">
+                        {regCodeSuccessMsg}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 text-center mb-1.5">
+                      Enter 6-Digit Email Verification Code *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={regVerificationCode}
+                      onChange={(e) => setRegVerificationCode(e.target.value)}
+                      placeholder="894102"
+                      className="w-full p-3 bg-white border-2 border-emerald-500 rounded-2xl text-center font-mono font-black text-2xl tracking-widest text-emerald-800 shadow-inner focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
                   >
-                    {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(b => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">County</label>
-                  <input
-                    type="text"
-                    value={pCounty}
-                    onChange={(e) => setPCounty(e.target.value)}
-                    placeholder="e.g. Nairobi"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-              </div>
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify Code & Complete Registration</span>}
+                  </button>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Emergency Contact Person</label>
-                  <input
-                    type="text"
-                    value={pEmergencyContact}
-                    onChange={(e) => setPEmergencyContact(e.target.value)}
-                    placeholder="e.g. David Muthoni (Spouse)"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Emergency Phone</label>
-                  <input
-                    type="tel"
-                    value={pEmergencyPhone}
-                    onChange={(e) => setPEmergencyPhone(e.target.value)}
-                    placeholder="e.g. 0722000000"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-              </div>
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setRegisterStep('form')}
+                      className="text-slate-600 hover:underline cursor-pointer"
+                    >
+                      ← Edit Details
+                    </button>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Known Allergies (if any)</label>
-                  <input
-                    type="text"
-                    value={pAllergies}
-                    onChange={(e) => setPAllergies(e.target.value)}
-                    placeholder="e.g. Penicillin, Peanuts (or None)"
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Insurance / Scheme</label>
-                  <select
-                    value={pInsurance}
-                    onChange={(e) => setPInsurance(e.target.value)}
-                    className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium"
-                  >
-                    <option value="Social Health Insurance Fund (SHIF)">SHIF (National Health)</option>
-                    <option value="Jubilee Insurance">Jubilee Insurance</option>
-                    <option value="APA Insurance">APA Insurance</option>
-                    <option value="AAR Insurance">AAR Insurance</option>
-                    <option value="CIC Insurance">CIC Insurance</option>
-                    <option value="Private Cash / M-PESA">Private Cash / M-PESA</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Create Secure Account Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={pPassword}
-                  onChange={(e) => setPPassword(e.target.value)}
-                  placeholder="Min 6 characters"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Get Started</span>}
-              </button>
-            </form>
+                    <button
+                      type="button"
+                      onClick={handleRequestRegCode}
+                      disabled={loading}
+                      className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                    >
+                      Resend Email Code
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
-          {/* 3. Staff & Admin Login */}
+          {/* 3. Clinical Staff Login */}
           {mode === 'staff_login' && (
             <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600">
-                <p className="font-semibold text-slate-800">Healthcare Staff & Administrator Authorization</p>
-                <p className="mt-0.5">
-                  Sign in with your staff username or administrator email (e.g. <strong>kipkemoiharon57@gmail.com</strong> or <strong>kipkemoiharon4@gmail.com</strong>).
+                <p className="font-semibold text-slate-800 flex items-center space-x-1.5">
+                  <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Authorized Clinical Staff Access</span>
+                </p>
+                <p className="mt-1 text-slate-500">
+                  Secure access for registered medical practitioners, nursing staff, laboratory technologists, and pharmacists.
                 </p>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Staff Username or Admin Email *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Staff Username or Work ID *</label>
                 <input
                   type="text"
                   required
                   value={sUsername}
                   onChange={(e) => setSUsername(e.target.value)}
-                  placeholder="e.g. kipkemoiharon57@gmail.com or dr.kamau"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800"
+                  placeholder="Enter staff username or employee ID"
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                 />
               </div>
 
@@ -465,28 +768,408 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   value={sPassword}
                   onChange={(e) => setSPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800"
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In as Staff / Administrator</span>}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Clinical Workspace</span>}
               </button>
-
-              <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 space-y-1">
-                <p className="font-semibold text-slate-700">Quick Test Credentials:</p>
-                <p>• Admin: <span className="font-mono text-indigo-700">kipkemoiharon57@gmail.com</span> or <span className="font-mono text-indigo-700">kipkemoiharon4@gmail.com</span> (Pass: <span className="font-mono">password123</span> / any)</p>
-                <p>• Doctor: <span className="font-mono">dr.kamau</span> (Pass: <span className="font-mono">doctor123</span>)</p>
-                <p>• Lab / Pharmacy: <span className="font-mono">lab.otieno</span> / <span className="font-mono">pharm.chebet</span></p>
-              </div>
             </form>
           )}
 
         </div>
+      </div>
+    </div>
+  );
+};
+
+interface AdminLoginGateProps {
+  onAdminAuthSuccess: (token: string, user: User) => void;
+  onCancel?: () => void;
+}
+
+export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
+  onAdminAuthSuccess,
+  onCancel
+}) => {
+  const [adminIdentifier, setAdminIdentifier] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleAdminSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/auth/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernameOrEmail: adminIdentifier, password: adminPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+      const isAuthorizedAdmin = 
+        data.user?.role === 'admin' || 
+        data.user?.email === 'kipkemoiharon57@gmail.com' || 
+        data.user?.email === 'kipkemoiharon4@gmail.com' ||
+        data.user?.username === 'kipkemoiharon57@gmail.com' ||
+        data.user?.username === 'kipkemoiharon4@gmail.com' ||
+        data.user?.username === 'admin.kipkemoi';
+
+      if (!isAuthorizedAdmin) {
+        throw new Error('Access denied: This portal is restricted to Hospital Administrative personnel only.');
+      }
+
+      onAdminAuthSuccess(data.token, data.user);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Administrative login error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[75vh] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 overflow-hidden">
+        <div className="p-8 space-y-6">
+          
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-900/50">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <h2 className="text-xl font-black tracking-tight text-white">TERRALINKHEALTH</h2>
+            <div className="inline-block px-3 py-1 bg-slate-800 text-slate-300 rounded-full text-[11px] font-mono font-semibold border border-slate-700">
+              RESTRICTED ENTERPRISE GATEWAY (/admin)
+            </div>
+            <p className="text-xs text-slate-400">
+              Hospital Executive, Auditing & HMIS Control Plane
+            </p>
+          </div>
+
+          {errorMsg && (
+            <div className="bg-rose-950/70 border border-rose-800/80 rounded-2xl p-3.5 text-xs text-rose-200 flex items-center space-x-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-semibold text-slate-300 mb-1.5">
+                Administrator Identifier *
+              </label>
+              <div className="relative">
+                <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  required
+                  value={adminIdentifier}
+                  onChange={(e) => setAdminIdentifier(e.target.value)}
+                  placeholder="Enter administrator email or system ID"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-300 mb-1.5">
+                Security Key / Password *
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                <input
+                  type="password"
+                  required
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-950 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Authenticate & Access Admin Systems</span>}
+            </button>
+          </form>
+
+          {onCancel && (
+            <div className="pt-2 text-center border-t border-slate-800">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                ← Return to Public Hospital Portal
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface PatientLoginGateProps {
+  onPatientAuthSuccess: (token: string, user: User, profile: PatientProfile) => void;
+  onOpenRegisterModal: () => void;
+  onCancel?: () => void;
+}
+
+export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
+  onPatientAuthSuccess,
+  onOpenRegisterModal,
+  onCancel
+}) => {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/auth/patient/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+      onPatientAuthSuccess(data.token, data.user, data.patientProfile);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Patient authentication error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center p-4">
+      <div className="w-full max-w-lg bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white p-8 space-y-6">
+        
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-600 mx-auto flex items-center justify-center shadow-inner">
+            <HeartPulse className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900">Patient Health Portal</h2>
+          <p className="text-xs text-slate-600 max-w-sm mx-auto">
+            Sign in with your National ID, Phone, or Email to view your health records, e-prescriptions, lab tests, and appointments.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-700 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1.5">
+              National ID / Phone / Email *
+            </label>
+            <div className="relative">
+              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Enter National ID, phone or email"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1.5">
+              Confidential Password *
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Patient Portal</span>}
+          </button>
+        </form>
+
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="text-slate-600">
+            First time visiting?{' '}
+            <button
+              type="button"
+              onClick={onOpenRegisterModal}
+              className="text-teal-700 font-bold hover:underline cursor-pointer"
+            >
+              Register New Profile
+            </button>
+          </div>
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              ← Back to Home
+            </button>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+interface ClinicalStaffLoginGateProps {
+  onStaffAuthSuccess: (token: string, user: User) => void;
+  onCancel?: () => void;
+}
+
+export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
+  onStaffAuthSuccess,
+  onCancel
+}) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/auth/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernameOrEmail: username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Clinical authentication failed');
+
+      onStaffAuthSuccess(data.token, data.user);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Staff authentication error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[70vh] flex items-center justify-center p-4">
+      <div className="w-full max-w-lg bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 p-8 space-y-6">
+        
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 rounded-2xl bg-teal-500/20 border border-teal-500/30 text-teal-400 mx-auto flex items-center justify-center shadow-lg">
+            <Stethoscope className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-white">Clinical Staff Portal</h2>
+          <div className="inline-block px-3 py-1 bg-slate-800 text-teal-300 rounded-full text-[11px] font-mono font-semibold border border-slate-700">
+            AUTHORIZED MEDICAL WORKSPACE
+          </div>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Authorized sign-in for Doctors, Nurses, Laboratory Technologists, Radiologists, and Pharmacists.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="bg-rose-950/70 border border-rose-800/80 rounded-2xl p-3.5 text-xs text-rose-200 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-300 mb-1.5">
+              Staff Username or Employee ID *
+            </label>
+            <div className="relative">
+              <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter staff username"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-300 mb-1.5">
+              Password / Access Key *
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-bold shadow-lg shadow-teal-950 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Clinical Workspace</span>}
+          </button>
+        </form>
+
+        {onCancel && (
+          <div className="pt-2 text-center border-t border-slate-800">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              ← Return to Hospital Home
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

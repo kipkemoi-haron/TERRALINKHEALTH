@@ -34,8 +34,12 @@ import {
   Check,
   Receipt,
   X,
-  Smartphone
+  Smartphone,
+  Bed,
+  Stethoscope
 } from 'lucide-react';
+import { AdminBedsTab } from './AdminBedsTab';
+import { AdminServicesTab } from './AdminServicesTab';
 import { 
   User, 
   PatientProfile, 
@@ -81,7 +85,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onAddDepartment,
   onRefreshData
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'pricing' | 'socials' | 'departments' | 'staff' | 'patients' | 'audit_logs'>('billings');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'staff' | 'patients' | 'audit_logs'>('billings');
 
   // Invoices state
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
@@ -170,8 +174,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     facebook: 'https://facebook.com/terralinkhealth',
     twitter: 'https://x.com/terralinkhealth',
     instagram: 'https://instagram.com/terralinkhealth',
-    whatsapp: 'https://wa.me/254700999911',
-    emergencyHotline: '+254 700 999 911',
+    whatsapp: 'https://wa.me/254713544101',
+    emergencyHotline: '0713544101',
     contactEmail: 'info@terralinkhealth.co.ke',
     physicalAddress: 'Hospital Hill Road, Parklands / Upper Hill Medical Complex, Nairobi County'
   });
@@ -539,6 +543,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="flex overflow-x-auto pb-1 gap-2 border-b border-sky-200/50 text-xs font-semibold">
         {[
           { id: 'billings', label: `Patient Billings & Invoices (${invoices.length})`, icon: Receipt },
+          { id: 'beds', label: 'Hospital Beds & Wards Capacity', icon: Bed },
+          { id: 'services', label: 'Clinical Services & Tariffs Catalogue', icon: Stethoscope },
           { id: 'pricing', label: 'Hospital Pricing & Tariff (KES)', icon: DollarSign },
           { id: 'socials', label: 'Hospital Socials & Contact Channels', icon: Share2 },
           { id: 'analytics', label: 'Executive Analytics & KPIs', icon: BarChart3 },
@@ -741,6 +747,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
 
         </div>
+      )}
+
+      {/* ================= TAB: HOSPITAL BEDS & WARDS CAPACITY ================= */}
+      {activeTab === 'beds' && (
+        <AdminBedsTab onDataChanged={onRefreshData} />
+      )}
+
+      {/* ================= TAB: CLINICAL SERVICES & TARIFFS ================= */}
+      {activeTab === 'services' && (
+        <AdminServicesTab onDataChanged={onRefreshData} />
       )}
 
       {/* ================= TAB 2: HOSPITAL PRICING & TARIFF SCHEDULE ================= */}
@@ -1051,7 +1067,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="url"
                   value={socialLinks.whatsapp}
                   onChange={(e) => setSocialLinks(prev => ({ ...prev, whatsapp: e.target.value }))}
-                  placeholder="https://wa.me/254700999911"
+                  placeholder="https://wa.me/254713544101"
                   className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-slate-800"
                 />
               </div>
@@ -1066,7 +1082,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="text"
                   value={socialLinks.emergencyHotline}
                   onChange={(e) => setSocialLinks(prev => ({ ...prev, emergencyHotline: e.target.value }))}
-                  placeholder="+254 700 999 911 / 999"
+                  placeholder="0713544101"
                   className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono text-slate-800"
                 />
               </div>
@@ -1373,7 +1389,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <tbody className="divide-y divide-slate-200/50">
                 {auditLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-white/60 transition-colors">
-                    <td className="py-2.5 px-3.5 text-slate-500">{log.timestamp.replace('T', ' ').slice(0, 19)}</td>
+                    <td className="py-2.5 px-3.5 text-slate-500">{log.timestamp ? log.timestamp.replace('T', ' ').slice(0, 19) : ''}</td>
                     <td className="py-2.5 px-3.5 font-semibold text-slate-900 font-sans">{log.userName}</td>
                     <td className="py-2.5 px-3.5 text-slate-600 font-sans">{log.userRole}</td>
                     <td className="py-2.5 px-3.5 font-bold text-emerald-700 font-sans">{log.action}</td>
@@ -1649,7 +1665,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <h3 className="font-bold text-base tracking-tight">TERRALINKHEALTH HOSPITAL</h3>
                 </div>
                 <p className="text-[11px] text-slate-300 mt-1">Official Patient Billing Statement & Tax Receipt</p>
-                <p className="text-[10px] text-slate-400">Hospital Hill Rd, Nairobi • Tel: +254 700 999 911</p>
+                <p className="text-[10px] text-slate-400">Hospital Hill Rd, Nairobi • Tel: 0713544101</p>
               </div>
               <button onClick={() => setPrintingInvoice(null)} className="text-slate-400 hover:text-white cursor-pointer">✕</button>
             </div>
@@ -1709,7 +1725,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <div className="flex justify-between items-center pt-2 text-[10px] text-slate-500">
                 <div>
                   <p>Status: <strong className="uppercase font-bold text-slate-800">{printingInvoice.status}</strong></p>
-                  <p>Verification Hash: <span className="font-mono">TL-KES-{printingInvoice.id.slice(0, 8)}</span></p>
+                  <p>Verification Hash: <span className="font-mono">TL-KES-{printingInvoice.id ? printingInvoice.id.slice(0, 8) : 'INV-001'}</span></p>
                 </div>
                 <div className="border border-emerald-600 text-emerald-800 px-3 py-1.5 rounded-lg text-center font-bold">
                   OFFICIAL HOSPITAL BILLING
@@ -1790,7 +1806,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         id: `lab-${Date.now()}`,
                         name: newLabName,
                         category: newLabCat,
-                        code: `LAB-${newLabName.slice(0, 4).toUpperCase()}`,
+                        code: `LAB-${(newLabName || 'TEST').slice(0, 4).toUpperCase()}`,
                         priceKES: newLabPrice
                       }
                     ]

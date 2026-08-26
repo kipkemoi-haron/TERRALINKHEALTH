@@ -299,7 +299,7 @@ export interface AuditLog {
   userName: string;
   role: UserRole;
   action: string;
-  module: 'Auth' | 'EMR' | 'Billing' | 'Lab' | 'Pharmacy' | 'Admin' | 'Telemedicine' | 'Queue';
+  module: 'Auth' | 'EMR' | 'Billing' | 'Lab' | 'Pharmacy' | 'Admin' | 'Telemedicine' | 'Queue' | 'Emergency' | 'System';
   ipAddress: string;
   details: string;
   status: 'Success' | 'Warning' | 'Failed';
@@ -313,6 +313,58 @@ export interface HospitalSocialLinks {
   phoneHotline: string;
   email: string;
   address: string;
+}
+
+export interface InsuranceProviderPlan {
+  id: string;
+  providerName: string; // e.g. "Social Health Authority (SHA / NHIF)", "Jubilee Health Insurance", "Britam Insurance", "AAR Insurance", "CIC Medical", "Old Mutual Kenya"
+  providerCode: string;
+  logoUrl?: string;
+  category: 'National Public Scheme' | 'Private Underwriter' | 'Corporate HMO';
+  planTiers: {
+    tierName: string; // e.g. "SHA Essential Benefit Package", "Silver Care", "Gold Comprehensive", "Executive Platinum"
+    tierCode: string;
+    monthlyPremiumKES: number;
+    annualPremiumKES: number;
+    inpatientLimitKES: number;
+    outpatientLimitKES: number;
+    maternityLimitKES: number;
+    dentalLimitKES: number;
+    opticalLimitKES: number;
+    copayKES: number;
+    preAuthRequiredAboveKES: number;
+    coverageHighlights: string[];
+  }[];
+}
+
+export interface PatientInsurancePolicy {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientNationalId: string;
+  providerName: string;
+  providerCode: string;
+  policyNumber: string;
+  memberNumber: string;
+  principalMemberName: string;
+  relationshipToPrincipal: 'Self' | 'Spouse' | 'Child' | 'Parent' | 'Dependent';
+  planTier: string;
+  status: 'Pending Verification' | 'Approved & Verified' | 'Pre-Authorized' | 'Suspended' | 'Expired';
+  monthlyPremiumKES: number;
+  annualPremiumKES: number;
+  annualInpatientLimitKES: number;
+  inpatientUsedKES: number;
+  annualOutpatientLimitKES: number;
+  outpatientUsedKES: number;
+  copayKES: number;
+  preAuthCode?: string;
+  preAuthAmountKES?: number;
+  preAuthProcedure?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  expiryDate: string;
+  rejectionReason?: string;
+  submittedAt: string;
 }
 
 export interface SystemPricing {
@@ -372,4 +424,80 @@ export interface HospitalAnalytics {
     time: string;
     visits: number;
   }[];
+}
+
+export type BedType = 'ICU' | 'HDU' | 'General' | 'Maternity' | 'Pediatric' | 'Isolation' | 'Emergency';
+export type BedStatus = 'Available' | 'Occupied' | 'Reserved' | 'Maintenance' | 'Cleaning';
+
+export interface HospitalBed {
+  id: string;
+  bedNumber: string;
+  roomNumber?: string;
+  ward: string;
+  bedType: BedType;
+  status: BedStatus;
+  patientId?: string;
+  patientName?: string;
+  assignedPatientId?: string;
+  assignedPatientName?: string;
+  admissionDate?: string;
+  dailyRateKES: number;
+  hasOxygen: boolean;
+  hasVentilator: boolean;
+  hasTelemetry: boolean;
+  notes?: string;
+  lastUpdated?: string;
+}
+
+export type AmbulanceStatus = 'Available & Ready' | 'Dispatched / En Route' | 'On-Scene' | 'Patient Onboard' | 'Maintenance';
+
+export interface AmbulanceUnit {
+  id: string;
+  callSign: string;
+  vehicleType: string;
+  registrationNumber: string;
+  status: AmbulanceStatus;
+  baseStation: string;
+  crewLead: string;
+  crewPhone: string;
+  etaMinutes?: number;
+  currentMission?: string;
+  equipment: string[];
+  lastUpdated?: string;
+}
+
+export interface HospitalServiceItem {
+  id: string;
+  code: string;
+  name: string;
+  category: 'Consultation' | 'Bed & Inpatient' | 'Laboratory' | 'Radiology & Imaging' | 'Surgical & Theatre' | 'Maternity & Delivery' | 'Emergency & Ambulance' | 'Physiotherapy & Rehab';
+  description: string;
+  standardFeeKES: number;
+  shaCovered: boolean;
+  privateInsuranceEligible: boolean;
+  departmentId?: string;
+  departmentName: string;
+  isActive: boolean;
+}
+
+export interface EmergencyStatusOverview {
+  traumaLevel: string;
+  triageStatus: 'Normal Capacity' | 'Elevated Alert' | 'Critical Mass Casualty';
+  emergencyHotline: string;
+  aeAvgWaitMinutes: number;
+  totalBeds: number;
+  availableBeds: number;
+  occupiedBeds: number;
+  icuAvailable: number;
+  icuTotal: number;
+  hduAvailable: number;
+  hduTotal: number;
+  maternityAvailable: number;
+  maternityTotal: number;
+  generalAvailable: number;
+  generalTotal: number;
+  ambulancesTotal: number;
+  ambulancesAvailable: number;
+  ambulancesDispatched: number;
+  lastUpdated: string;
 }

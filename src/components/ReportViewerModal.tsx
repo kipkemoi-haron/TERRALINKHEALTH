@@ -72,7 +72,7 @@ export const ReportViewerModal: React.FC<ReportViewerModalProps> = ({
                 Nairobi Central Medical Tower • P.O. Box 40200-00100, Nairobi, Kenya
               </p>
               <p className="text-xs text-slate-500">
-                Helpline: +254 700 999 911 • Email: records@terralinkhealth.co.ke
+                Helpline: 0713544101 • Email: records@terralinkhealth.co.ke
               </p>
             </div>
             <div className="text-right">

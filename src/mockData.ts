@@ -14,7 +14,13 @@ import {
   SystemPricing,
   HospitalAnalytics,
   HospitalSocialLinks,
-  User
+  InsuranceProviderPlan,
+  PatientInsurancePolicy,
+  User,
+  HospitalBed,
+  AmbulanceUnit,
+  HospitalServiceItem,
+  EmergencyStatusOverview
 } from './types';
 
 export const INITIAL_DEPARTMENTS: Department[] = [
@@ -1271,10 +1277,802 @@ export const INITIAL_SOCIAL_LINKS: HospitalSocialLinks = {
   facebook: 'https://facebook.com/terralinkhealth',
   twitter: 'https://x.com/terralinkhealth',
   instagram: 'https://instagram.com/terralinkhealth',
-  whatsapp: 'https://wa.me/254700999911',
-  phoneHotline: '+254 700 999 911',
+  whatsapp: 'https://wa.me/254713544101',
+  phoneHotline: '0713544101',
   email: 'info@terralinkhealth.co.ke',
   address: 'Hospital Hill Road, Parklands / Upper Hill Medical Complex, Nairobi County, Kenya'
+};
+
+export const INITIAL_INSURANCE_PROVIDERS: InsuranceProviderPlan[] = [
+  {
+    id: 'ins-prov-sha',
+    providerName: 'Social Health Authority (SHA / NHIF Kenya)',
+    providerCode: 'SHA-KENYA',
+    category: 'National Public Scheme',
+    planTiers: [
+      {
+        tierName: 'SHA Primary Care & Essential Benefit Package',
+        tierCode: 'SHA-PRIMARY',
+        monthlyPremiumKES: 500,
+        annualPremiumKES: 6000,
+        inpatientLimitKES: 1800000,
+        outpatientLimitKES: 100000,
+        maternityLimitKES: 50000,
+        dentalLimitKES: 25000,
+        opticalLimitKES: 20000,
+        copayKES: 0,
+        preAuthRequiredAboveKES: 30000,
+        coverageHighlights: [
+          'Full consultation coverage at all public & empaneled level 4/5 hospitals',
+          'Standard generic medication at hospital pharmacy',
+          'Basic and routine laboratory tests (Hemogram, Urinalysis, Malaria, BS)',
+          'Emergency ambulance triage and ICU stabilization allowance'
+        ]
+      },
+      {
+        tierName: 'SHA Civil Servants & Comprehensive Enhanced Scheme',
+        tierCode: 'SHA-ENHANCED',
+        monthlyPremiumKES: 1750,
+        annualPremiumKES: 21000,
+        inpatientLimitKES: 3500000,
+        outpatientLimitKES: 200000,
+        maternityLimitKES: 120000,
+        dentalLimitKES: 45000,
+        opticalLimitKES: 35000,
+        copayKES: 0,
+        preAuthRequiredAboveKES: 50000,
+        coverageHighlights: [
+          'Priority outpatient specialist clinics',
+          'Branded therapeutics and specialized MRI / CT Scan cover',
+          'Private bed ward allocation up to KES 8,000/night',
+          'Oncology and chronic disease management support'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-jubilee',
+    providerName: 'Jubilee Health Insurance Kenya',
+    providerCode: 'JUBILEE-HLTH',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Jubilee J-Care Gold Comprehensive',
+        tierCode: 'JUB-GOLD',
+        monthlyPremiumKES: 4500,
+        annualPremiumKES: 54000,
+        inpatientLimitKES: 5000000,
+        outpatientLimitKES: 250000,
+        maternityLimitKES: 200000,
+        dentalLimitKES: 50000,
+        opticalLimitKES: 40000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'Full direct billing at TERRALINKHEALTH HOSPITAL',
+          'Private en-suite room inpatient bed allocation',
+          'Free annual wellness checkup and executive cancer screening',
+          'International emergency evacuation cover'
+        ]
+      },
+      {
+        tierName: 'Jubilee Executive Platinum Care',
+        tierCode: 'JUB-PLATINUM',
+        monthlyPremiumKES: 8200,
+        annualPremiumKES: 98400,
+        inpatientLimitKES: 10000000,
+        outpatientLimitKES: 500000,
+        maternityLimitKES: 350000,
+        dentalLimitKES: 100000,
+        opticalLimitKES: 75000,
+        copayKES: 0,
+        preAuthRequiredAboveKES: 100000,
+        coverageHighlights: [
+          'Unlimited tele-consultations and home drug delivery',
+          'VIP presidential wing inpatient accommodation',
+          'Zero co-pay on all diagnostics, MRI, CT scans, and surgeries',
+          'Comprehensive organ transplant and international treatment rider'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-britam',
+    providerName: 'Britam Health Insurance',
+    providerCode: 'BRITAM-MED',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Britam Milele Health Standard',
+        tierCode: 'BRT-STD',
+        monthlyPremiumKES: 3800,
+        annualPremiumKES: 45600,
+        inpatientLimitKES: 3000000,
+        outpatientLimitKES: 200000,
+        maternityLimitKES: 150000,
+        dentalLimitKES: 35000,
+        opticalLimitKES: 30000,
+        copayKES: 250,
+        preAuthRequiredAboveKES: 35000,
+        coverageHighlights: [
+          'Cover for pre-existing and chronic conditions after 1 year',
+          'No biometric card needed — integrated digitally with TERRALINKHEALTH',
+          'Ambulance and paramedic transport cover within Nairobi County'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-aar',
+    providerName: 'AAR Insurance Kenya',
+    providerCode: 'AAR-KENYA',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'AAR ProHealth Executive',
+        tierCode: 'AAR-EXEC',
+        monthlyPremiumKES: 5200,
+        annualPremiumKES: 62400,
+        inpatientLimitKES: 6000000,
+        outpatientLimitKES: 300000,
+        maternityLimitKES: 250000,
+        dentalLimitKES: 60000,
+        opticalLimitKES: 50000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 45000,
+        coverageHighlights: [
+          'Direct SMART cardless digital verification',
+          'Post-hospitalization recuperation allowance',
+          'Emergency local air and road evacuation cover'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-cic',
+    providerName: 'CIC Family Health & Corporate Medical',
+    providerCode: 'CIC-MED',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'CIC Afya Bora Comprehensive',
+        tierCode: 'CIC-AFYA',
+        monthlyPremiumKES: 3400,
+        annualPremiumKES: 40800,
+        inpatientLimitKES: 2500000,
+        outpatientLimitKES: 180000,
+        maternityLimitKES: 120000,
+        dentalLimitKES: 30000,
+        opticalLimitKES: 25000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 30000,
+        coverageHighlights: [
+          'Affordable family premiums with pooled inpatient benefits',
+          'Full consultation & lab diagnostics coverage at TERRALINKHEALTH',
+          'Chronic disease clinical clinics included'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-oldmutual',
+    providerName: 'Old Mutual Health Kenya (UAP)',
+    providerCode: 'OLD-MUTUAL',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Old Mutual Premier Health',
+        tierCode: 'OM-PREMIER',
+        monthlyPremiumKES: 4900,
+        annualPremiumKES: 58800,
+        inpatientLimitKES: 5500000,
+        outpatientLimitKES: 280000,
+        maternityLimitKES: 220000,
+        dentalLimitKES: 55000,
+        opticalLimitKES: 45000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'Rapid direct electronic authorization in under 10 minutes',
+          'Comprehensive mental health and wellness sessions',
+          'Full cover for day-care surgical procedures'
+        ]
+      }
+    ]
+  }
+];
+
+export const INITIAL_INSURANCE_POLICIES: PatientInsurancePolicy[] = [
+  {
+    id: 'pol-001',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    patientNationalId: '32849102',
+    providerName: 'Social Health Authority (SHA / NHIF Kenya)',
+    providerCode: 'SHA-KENYA',
+    policyNumber: 'SHA-NRB-8831920',
+    memberNumber: 'MEM-SHA-440192',
+    principalMemberName: 'Faith Chebet Koech',
+    relationshipToPrincipal: 'Self',
+    planTier: 'SHA Primary Care & Essential Benefit Package',
+    status: 'Approved & Verified',
+    monthlyPremiumKES: 500,
+    annualPremiumKES: 6000,
+    annualInpatientLimitKES: 1800000,
+    inpatientUsedKES: 0,
+    annualOutpatientLimitKES: 100000,
+    outpatientUsedKES: 12500,
+    copayKES: 0,
+    preAuthCode: 'SHA-AUTH-2026-8819',
+    verifiedAt: '2026-08-01T10:00:00Z',
+    verifiedBy: 'Billing Officer - J. Karanja',
+    expiryDate: '2027-07-31',
+    submittedAt: '2026-08-01T09:15:00Z'
+  },
+  {
+    id: 'pol-002',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    patientNationalId: '32849102',
+    providerName: 'Jubilee Health Insurance Kenya',
+    providerCode: 'JUBILEE-HLTH',
+    policyNumber: 'JUB-MED-59218',
+    memberNumber: 'JUB-0914-FCK',
+    principalMemberName: 'Collins Kiprono (Spouse Corporate)',
+    relationshipToPrincipal: 'Spouse',
+    planTier: 'Jubilee J-Care Gold Comprehensive',
+    status: 'Approved & Verified',
+    monthlyPremiumKES: 4500,
+    annualPremiumKES: 54000,
+    annualInpatientLimitKES: 5000000,
+    inpatientUsedKES: 0,
+    annualOutpatientLimitKES: 250000,
+    outpatientUsedKES: 18400,
+    copayKES: 200,
+    preAuthCode: 'JUB-PA-993821',
+    verifiedAt: '2026-08-02T14:30:00Z',
+    verifiedBy: 'Billing Officer - J. Karanja',
+    expiryDate: '2027-08-01',
+    submittedAt: '2026-08-02T11:00:00Z'
+  },
+  {
+    id: 'pol-003',
+    patientId: 'pat-2',
+    patientName: 'Brian Mwangi Kimani',
+    patientNationalId: '29817463',
+    providerName: 'Britam Health Insurance',
+    providerCode: 'BRITAM-MED',
+    policyNumber: 'BRT-H-774102',
+    memberNumber: 'BRT-MEM-88192',
+    principalMemberName: 'Brian Mwangi Kimani',
+    relationshipToPrincipal: 'Self',
+    planTier: 'Britam Milele Health Standard',
+    status: 'Approved & Verified',
+    monthlyPremiumKES: 3800,
+    annualPremiumKES: 45600,
+    annualInpatientLimitKES: 3000000,
+    inpatientUsedKES: 0,
+    annualOutpatientLimitKES: 200000,
+    outpatientUsedKES: 8500,
+    copayKES: 250,
+    preAuthCode: 'BRT-PA-44182',
+    verifiedAt: '2026-08-05T09:00:00Z',
+    verifiedBy: 'Admin Team - Terralink',
+    expiryDate: '2027-08-04',
+    submittedAt: '2026-08-05T08:30:00Z'
+  },
+  {
+    id: 'pol-004',
+    patientId: 'pat-3',
+    patientName: 'Grace Achieng Ochieng',
+    patientNationalId: '34190827',
+    providerName: 'AAR Insurance Kenya',
+    providerCode: 'AAR-KENYA',
+    policyNumber: 'AAR-NRB-44109',
+    memberNumber: 'AAR-881920-GA',
+    principalMemberName: 'Grace Achieng Ochieng',
+    relationshipToPrincipal: 'Self',
+    planTier: 'AAR ProHealth Executive',
+    status: 'Pending Verification',
+    monthlyPremiumKES: 5200,
+    annualPremiumKES: 62400,
+    annualInpatientLimitKES: 6000000,
+    inpatientUsedKES: 0,
+    annualOutpatientLimitKES: 300000,
+    outpatientUsedKES: 0,
+    copayKES: 200,
+    expiryDate: '2027-08-15',
+    submittedAt: '2026-08-25T16:20:00Z'
+  }
+];
+
+export const INITIAL_HOSPITAL_BEDS: HospitalBed[] = [
+  {
+    id: 'bed-icu-01',
+    bedNumber: 'ICU-01',
+    ward: 'Intensive Care Unit (ICU)',
+    bedType: 'ICU',
+    status: 'Occupied',
+    patientId: 'pat-1',
+    patientName: 'Wanjiku Muthoni',
+    admissionDate: '2026-08-25',
+    dailyRateKES: 25000,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'Post-op respiratory stabilization. Continuous invasive arterial monitoring.',
+    lastUpdated: '2026-08-26 10:15 AM'
+  },
+  {
+    id: 'bed-icu-02',
+    bedNumber: 'ICU-02',
+    ward: 'Intensive Care Unit (ICU)',
+    bedType: 'ICU',
+    status: 'Available',
+    dailyRateKES: 25000,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'Sanitized and prepped with Dräger transport ventilator.',
+    lastUpdated: '2026-08-26 09:30 AM'
+  },
+  {
+    id: 'bed-icu-03',
+    bedNumber: 'ICU-03',
+    ward: 'Intensive Care Unit (ICU)',
+    bedType: 'ICU',
+    status: 'Available',
+    dailyRateKES: 25000,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'Ready for emergency trauma admissions.',
+    lastUpdated: '2026-08-26 08:00 AM'
+  },
+  {
+    id: 'bed-icu-04',
+    bedNumber: 'ICU-04',
+    ward: 'Intensive Care Unit (ICU)',
+    bedType: 'ICU',
+    status: 'Occupied',
+    patientId: 'pat-2',
+    patientName: 'David Kiprono',
+    admissionDate: '2026-08-26',
+    dailyRateKES: 25000,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'Post-angioplasty cardiac telemetry observation.',
+    lastUpdated: '2026-08-26 10:40 AM'
+  },
+  {
+    id: 'bed-hdu-01',
+    bedNumber: 'HDU-01',
+    ward: 'High Dependency Unit (HDU)',
+    bedType: 'HDU',
+    status: 'Occupied',
+    patientName: 'Juma Hassan',
+    admissionDate: '2026-08-24',
+    dailyRateKES: 12000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: true,
+    notes: 'Step-down monitoring post-abdominal laparotomy.',
+    lastUpdated: '2026-08-26 07:45 AM'
+  },
+  {
+    id: 'bed-hdu-02',
+    bedNumber: 'HDU-02',
+    ward: 'High Dependency Unit (HDU)',
+    bedType: 'HDU',
+    status: 'Available',
+    dailyRateKES: 12000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: true,
+    notes: 'High-flow nasal cannula connected and tested.',
+    lastUpdated: '2026-08-26 10:00 AM'
+  },
+  {
+    id: 'bed-hdu-03',
+    bedNumber: 'HDU-03',
+    ward: 'High Dependency Unit (HDU)',
+    bedType: 'HDU',
+    status: 'Available',
+    dailyRateKES: 12000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: true,
+    notes: 'Immediate readiness for emergency step-down.',
+    lastUpdated: '2026-08-26 09:15 AM'
+  },
+  {
+    id: 'bed-mat-01',
+    bedNumber: 'MAT-01',
+    ward: 'Maternity Wing & Delivery Suites',
+    bedType: 'Maternity',
+    status: 'Occupied',
+    patientName: 'Amina Abdi',
+    admissionDate: '2026-08-25',
+    dailyRateKES: 5000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Postnatal recovery room. Neonatal incubator bedside.',
+    lastUpdated: '2026-08-26 09:50 AM'
+  },
+  {
+    id: 'bed-mat-02',
+    bedNumber: 'MAT-02',
+    ward: 'Maternity Wing & Delivery Suites',
+    bedType: 'Maternity',
+    status: 'Available',
+    dailyRateKES: 5000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Private delivery suite with birthing pool and fetal monitor.',
+    lastUpdated: '2026-08-26 10:20 AM'
+  },
+  {
+    id: 'bed-mat-03',
+    bedNumber: 'MAT-03',
+    ward: 'Maternity Wing & Delivery Suites',
+    bedType: 'Maternity',
+    status: 'Available',
+    dailyRateKES: 5000,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Postpartum recovery bed ready.',
+    lastUpdated: '2026-08-26 08:30 AM'
+  },
+  {
+    id: 'bed-ped-01',
+    bedNumber: 'PED-01',
+    ward: 'Pediatric Ward & NICU',
+    bedType: 'Pediatric',
+    status: 'Occupied',
+    patientName: 'Baby Ethan Mwangi',
+    admissionDate: '2026-08-26',
+    dailyRateKES: 4500,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: true,
+    notes: 'Pediatric nebulizer support and pulse oximeter.',
+    lastUpdated: '2026-08-26 10:05 AM'
+  },
+  {
+    id: 'bed-ped-02',
+    bedNumber: 'PED-02',
+    ward: 'Pediatric Ward & NICU',
+    bedType: 'Pediatric',
+    status: 'Available',
+    dailyRateKES: 4500,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Cleaned and sanitized child-friendly recovery cot.',
+    lastUpdated: '2026-08-26 09:00 AM'
+  },
+  {
+    id: 'bed-gen-01',
+    bedNumber: 'GEN-M01',
+    ward: 'Male General Medical Ward',
+    bedType: 'General',
+    status: 'Occupied',
+    patientName: 'Peter Njoroge',
+    admissionDate: '2026-08-24',
+    dailyRateKES: 3500,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Routine orthopedic post-op recovery.',
+    lastUpdated: '2026-08-26 07:30 AM'
+  },
+  {
+    id: 'bed-gen-02',
+    bedNumber: 'GEN-M02',
+    ward: 'Male General Medical Ward',
+    bedType: 'General',
+    status: 'Available',
+    dailyRateKES: 3500,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Standard electric medical bed with call button.',
+    lastUpdated: '2026-08-26 08:45 AM'
+  },
+  {
+    id: 'bed-gen-03',
+    bedNumber: 'GEN-F01',
+    ward: 'Female General Medical Ward',
+    bedType: 'General',
+    status: 'Available',
+    dailyRateKES: 3500,
+    hasOxygen: true,
+    hasVentilator: false,
+    hasTelemetry: false,
+    notes: 'Freshly sterilized bedding with wall oxygen port.',
+    lastUpdated: '2026-08-26 09:20 AM'
+  },
+  {
+    id: 'bed-iso-01',
+    bedNumber: 'ISO-01',
+    ward: 'Negative-Pressure Isolation Unit',
+    bedType: 'Isolation',
+    status: 'Available',
+    dailyRateKES: 15000,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'HEPA filtration & negative pressure airflow active.',
+    lastUpdated: '2026-08-26 10:10 AM'
+  },
+  {
+    id: 'bed-emg-01',
+    bedNumber: 'A&E-RESUS-1',
+    ward: 'Accident & Emergency Trauma Bay',
+    bedType: 'Emergency',
+    status: 'Available',
+    dailyRateKES: 2500,
+    hasOxygen: true,
+    hasVentilator: true,
+    hasTelemetry: true,
+    notes: 'Full resuscitation crash cart and defibrillator on standby.',
+    lastUpdated: '2026-08-26 10:45 AM'
+  }
+];
+
+export const INITIAL_AMBULANCES: AmbulanceUnit[] = [
+  {
+    id: 'amb-als-01',
+    callSign: 'ALPHA-MED-01',
+    vehicleType: 'Type C Advanced Life Support (ALS) Ambulance',
+    registrationNumber: 'KDK 410A',
+    status: 'Available & Ready',
+    baseStation: 'Main Hospital Bay 1 (Parklands HQ)',
+    crewLead: 'Lead Paramedic Kelvin Kiprono',
+    crewPhone: '0713544101',
+    etaMinutes: 6,
+    equipment: ['Zoll X Series Defibrillator', 'Hamilton T1 Transport Ventilator', 'Lucas 3 CPR Device', 'Advanced IV & Drug Vault'],
+    lastUpdated: '2026-08-26 10:42 AM'
+  },
+  {
+    id: 'amb-als-02',
+    callSign: 'BRAVO-MED-02',
+    vehicleType: 'Type C Advanced Life Support (ALS) Ambulance',
+    registrationNumber: 'KDM 882B',
+    status: 'Dispatched / En Route',
+    baseStation: 'Westlands / Expressway Dispatch Hub',
+    crewLead: 'Paramedic Faith Chepngeno',
+    crewPhone: '0713544102',
+    etaMinutes: 8,
+    currentMission: 'Dispatched to Runda for suspected myocardial infarction emergency.',
+    equipment: ['Telemetry ECG Streamer', 'Portable Suction Unit', 'Spinal Traction & Splints', 'Emergency Airway Kit'],
+    lastUpdated: '2026-08-26 10:35 AM'
+  },
+  {
+    id: 'amb-nicu-01',
+    callSign: 'NEO-CARE-01',
+    vehicleType: 'Neonatal & Pediatric Intensive Care Ambulance',
+    registrationNumber: 'KDL 194C',
+    status: 'Available & Ready',
+    baseStation: 'Mother & Child Centre Bay 2',
+    crewLead: 'Neonatal Specialist Nurse Beatrice Otieno',
+    crewPhone: '0713544103',
+    etaMinutes: 10,
+    equipment: ['Dräger Transport Incubator', 'Neonatal High-Frequency Ventilator', 'Nitric Oxide Delivery System', 'Syringe Infusion Pumps'],
+    lastUpdated: '2026-08-26 10:20 AM'
+  },
+  {
+    id: 'amb-bls-01',
+    callSign: 'DELTA-MED-04',
+    vehicleType: 'Type B Basic Life Support (BLS) Ambulance',
+    registrationNumber: 'KDN 301D',
+    status: 'Patient Onboard',
+    baseStation: 'Upper Hill Medical Complex',
+    crewLead: 'EMT Samuel Wachira',
+    crewPhone: '0713544104',
+    etaMinutes: 4,
+    currentMission: 'Transporting stable post-trauma transfer from Satellite Clinic to A&E.',
+    equipment: ['AED Defibrillator', 'Oxygen Cylinder Pack', 'Stair Chair & Stretcher', 'Basic Trauma Dressing'],
+    lastUpdated: '2026-08-26 10:48 AM'
+  },
+  {
+    id: 'amb-heli-01',
+    callSign: 'AERO-MED-HELI',
+    vehicleType: 'Air Ambulance Intensive Care Helicopter',
+    registrationNumber: '5Y-TLH',
+    status: 'Available & Ready',
+    baseStation: 'Hospital Rooftop Helipad (Tower A)',
+    crewLead: 'Flight Surgeon Dr. Anthony Bett',
+    crewPhone: '0713544100',
+    etaMinutes: 15,
+    equipment: ['Aviation Grade Ventilator', 'Blood Transfusion Cooler', 'Satellite Telemetry Link', 'Multi-Parameter Flight Monitor'],
+    lastUpdated: '2026-08-26 10:00 AM'
+  }
+];
+
+export const INITIAL_HOSPITAL_SERVICES: HospitalServiceItem[] = [
+  {
+    id: 'srv-01',
+    code: 'SRV-OPD-GEN',
+    name: 'General Outpatient Medical Consultation',
+    category: 'Consultation',
+    description: 'Comprehensive physical examination, primary diagnosis, and outpatient triage.',
+    standardFeeKES: 1500,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Outpatient Department (OPD)',
+    isActive: true
+  },
+  {
+    id: 'srv-02',
+    code: 'SRV-SPEC-CONS',
+    name: 'Specialist Physician Consultation',
+    category: 'Consultation',
+    description: 'Senior Consultant review in Cardiology, Neurology, Orthopedics, or Oncology.',
+    standardFeeKES: 3000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Specialist Clinics',
+    isActive: true
+  },
+  {
+    id: 'srv-03',
+    code: 'SRV-EMG-TRIAGE',
+    name: 'Accident & Emergency Trauma Triage',
+    category: 'Emergency & Ambulance',
+    description: 'Immediate critical trauma assessment, stabilization, and initial emergency care.',
+    standardFeeKES: 2500,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Accident & Emergency (A&E)',
+    isActive: true
+  },
+  {
+    id: 'srv-04',
+    code: 'SRV-ICU-DAY',
+    name: 'Intensive Care Unit (ICU) Daily Inpatient Rate',
+    category: 'Bed & Inpatient',
+    description: '24/7 dedicated 1:1 intensive nursing, mechanical ventilation, and multi-organ monitoring.',
+    standardFeeKES: 25000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Intensive Care Unit',
+    isActive: true
+  },
+  {
+    id: 'srv-05',
+    code: 'SRV-HDU-DAY',
+    name: 'High Dependency Unit (HDU) Daily Rate',
+    category: 'Bed & Inpatient',
+    description: 'Continuous continuous cardiac telemetry, oxygen therapy, and close clinical supervision.',
+    standardFeeKES: 12000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'High Dependency Unit',
+    isActive: true
+  },
+  {
+    id: 'srv-06',
+    code: 'SRV-GEN-WARD',
+    name: 'General Medical / Surgical Ward Daily Rate',
+    category: 'Bed & Inpatient',
+    description: 'Standard inpatient care, routine doctor rounds, daily nursing, and meals.',
+    standardFeeKES: 3500,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Inpatient Wards',
+    isActive: true
+  },
+  {
+    id: 'srv-07',
+    code: 'SRV-MAT-DELIVERY',
+    name: 'Normal Vaginal Delivery (Maternity Package)',
+    category: 'Maternity & Delivery',
+    description: 'Midwife & Obstetrician delivery, standard 48-hour postpartum stay, and baby immunizations.',
+    standardFeeKES: 45000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Obstetrics & Gynaecology',
+    isActive: true
+  },
+  {
+    id: 'srv-08',
+    code: 'SRV-MAT-CSECTION',
+    name: 'Caesarean Section Surgical Delivery',
+    category: 'Surgical & Theatre',
+    description: 'Elective or emergency C-section, theatre fees, anaesthesia, and 3-day inpatient stay.',
+    standardFeeKES: 95000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Obstetrics & Gynaecology',
+    isActive: true
+  },
+  {
+    id: 'srv-09',
+    code: 'SRV-LAB-CBC',
+    name: 'Full Hemogram / Complete Blood Count (CBC)',
+    category: 'Laboratory',
+    description: 'Automated 5-part differential blood analysis with platelet count and red cell indices.',
+    standardFeeKES: 1200,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Laboratory & Pathology',
+    isActive: true
+  },
+  {
+    id: 'srv-10',
+    code: 'SRV-LAB-LIPID',
+    name: 'Comprehensive Fasting Lipid Profile',
+    category: 'Laboratory',
+    description: 'Total cholesterol, HDL, LDL, triglycerides, and cardiovascular risk calculation.',
+    standardFeeKES: 1800,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Laboratory & Pathology',
+    isActive: true
+  },
+  {
+    id: 'srv-11',
+    code: 'SRV-RAD-XRAY',
+    name: 'Digital Chest X-Ray (PA & Lateral)',
+    category: 'Radiology & Imaging',
+    description: 'High-definition digital thoracic imaging with radiologist interpretation report.',
+    standardFeeKES: 2500,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Radiology & Diagnostic Imaging',
+    isActive: true
+  },
+  {
+    id: 'srv-12',
+    code: 'SRV-RAD-CT',
+    name: 'Brain CT Scan (High-Resolution Multi-Slice)',
+    category: 'Radiology & Imaging',
+    description: '128-slice rapid volumetric computed tomography for trauma, stroke, and hemorrhage.',
+    standardFeeKES: 14000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Radiology & Diagnostic Imaging',
+    isActive: true
+  },
+  {
+    id: 'srv-13',
+    code: 'SRV-AMB-DISPATCH',
+    name: 'ALS Emergency Ambulance Dispatch (Nairobi Metropolitan)',
+    category: 'Emergency & Ambulance',
+    description: 'Paramedic response with advanced life support, defibrillation, and hospital transport.',
+    standardFeeKES: 5000,
+    shaCovered: true,
+    privateInsuranceEligible: true,
+    departmentName: 'Emergency Transport & Dispatch',
+    isActive: true
+  }
+];
+
+export const INITIAL_EMERGENCY_STATUS: EmergencyStatusOverview = {
+  traumaLevel: 'Level 5 Tertiary Trauma & Specialty Center',
+  triageStatus: 'Normal Capacity',
+  emergencyHotline: '0713544101',
+  aeAvgWaitMinutes: 8,
+  totalBeds: 17,
+  availableBeds: 11,
+  occupiedBeds: 6,
+  icuAvailable: 2,
+  icuTotal: 4,
+  hduAvailable: 2,
+  hduTotal: 3,
+  maternityAvailable: 2,
+  maternityTotal: 3,
+  generalAvailable: 2,
+  generalTotal: 3,
+  ambulancesTotal: 5,
+  ambulancesAvailable: 3,
+  ambulancesDispatched: 2,
+  lastUpdated: 'Live Telemetry Active'
 };
 
 export const mockDepartments = INITIAL_DEPARTMENTS;
@@ -1284,4 +2082,10 @@ export const mockStaffUsers = INITIAL_USERS;
 export const mockAnalytics = INITIAL_ANALYTICS;
 export const mockAuditLogs = INITIAL_AUDIT_LOGS;
 export const mockSocialLinks = INITIAL_SOCIAL_LINKS;
+export const mockInsuranceProviders = INITIAL_INSURANCE_PROVIDERS;
+export const mockInsurancePolicies = INITIAL_INSURANCE_POLICIES;
+export const mockHospitalBeds = INITIAL_HOSPITAL_BEDS;
+export const mockAmbulances = INITIAL_AMBULANCES;
+export const mockHospitalServices = INITIAL_HOSPITAL_SERVICES;
+export const mockEmergencyStatus = INITIAL_EMERGENCY_STATUS;
 

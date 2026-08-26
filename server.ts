@@ -23,7 +23,12 @@ import {
   INITIAL_PRICING,
   INITIAL_ANALYTICS,
   INITIAL_AUDIT_LOGS,
-  INITIAL_SOCIAL_LINKS
+  INITIAL_SOCIAL_LINKS,
+  INITIAL_INSURANCE_PROVIDERS,
+  INITIAL_INSURANCE_POLICIES,
+  INITIAL_HOSPITAL_BEDS,
+  INITIAL_AMBULANCES,
+  INITIAL_HOSPITAL_SERVICES
 } from './src/mockData';
 
 const app = express();
@@ -45,6 +50,13 @@ const db = {
   immunizations: [...INITIAL_IMMUNIZATIONS],
   invoices: [...INITIAL_INVOICES],
   mpesaPayments: [...INITIAL_MPESA_PAYMENTS],
+  insuranceProviders: [...INITIAL_INSURANCE_PROVIDERS],
+  insurancePolicies: [...INITIAL_INSURANCE_POLICIES],
+  beds: [...INITIAL_HOSPITAL_BEDS],
+  ambulances: [...INITIAL_AMBULANCES],
+  services: [...INITIAL_HOSPITAL_SERVICES],
+  registrationCodes: new Map<string, { code: string; expiresAt: number; regData: any }>(),
+  passwordResetCodes: new Map<string, { code: string; expiresAt: number; userId: string; email: string }>(),
   pricing: { ...INITIAL_PRICING },
   analytics: { ...INITIAL_ANALYTICS },
   auditLogs: [...INITIAL_AUDIT_LOGS],
@@ -90,17 +102,83 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
-// Authentication
-app.post('/api/auth/patient/register', (req: Request, res: Response) => {
-  const { name, email, phone, nationalId, password, dob, gender, bloodGroup, address, emergencyContact } = req.body;
-  
-  if (!name || !email || !phone || !nationalId || !password) {
-    return res.status(400).json({ error: 'Please provide full name, email, phone, National ID and password.' });
+// Registration Code Request (OTP sent to Patient Email & Phone)
+app.post('/api/auth/patient/request-reg-code', (req: Request, res: Response) => {
+  const { name, email, phone, nationalId } = req.body;
+  if (!name || !email || !phone || !nationalId) {
+    return res.status(400).json({ error: 'Please provide full name, email, phone number, and Kenyan National ID.' });
   }
 
-  const existing = db.users.find(u => u.email === email || u.nationalId === nationalId || u.phone === phone);
+  const existing = db.users.find(u => 
+    (email && u.email.toLowerCase() === email.toLowerCase()) || 
+    (nationalId && u.nationalId === nationalId) || 
+    (phone && u.phone === phone)
+  );
+
   if (existing) {
-    return res.status(400).json({ error: 'A patient with this email, phone, or National ID is already registered.' });
+    return res.status(400).json({ error: 'A patient with this email, National ID, or phone is already registered. Please sign in.' });
+  }
+
+  // Generate 6-digit registration OTP code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
+  const regKey = email.toLowerCase().trim();
+
+  db.registrationCodes.set(regKey, {
+    code,
+    expiresAt,
+    regData: req.body
+  });
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'guest',
+    userName: name,
+    role: 'patient',
+    action: 'Patient Registration Code Generated',
+    module: 'Auth',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Registration OTP code sent to email: ${email} and SMS: ${phone}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Security registration code sent to ${email} and ${phone}.`,
+    verificationCode: code, // returned for live simulation in dev/preview
+    email,
+    phone,
+    expiresInMinutes: 15
+  });
+});
+
+// Verify Registration Code and Complete Patient Creation
+app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) => {
+  const { email, code, name, phone, nationalId, password, dob, gender, bloodGroup, address, emergencyContact } = req.body;
+
+  if (!email || !code || !password) {
+    return res.status(400).json({ error: 'Email, 6-digit verification code, and password are required.' });
+  }
+
+  const regKey = email.toLowerCase().trim();
+  const stored = db.registrationCodes.get(regKey);
+
+  // Check code validity
+  if (!stored || stored.code !== code.trim()) {
+    return res.status(400).json({ error: 'Invalid verification code. Please check your email or request a new code.' });
+  }
+
+  if (Date.now() > stored.expiresAt) {
+    db.registrationCodes.delete(regKey);
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new code.' });
+  }
+
+  // Clear code once used
+  db.registrationCodes.delete(regKey);
+
+  const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.nationalId === nationalId);
+  if (existing) {
+    return res.status(400).json({ error: 'Account already exists. Please log in.' });
   }
 
   const newUserId = `usr-pat-${Date.now()}`;
@@ -108,10 +186,10 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
 
   const newUser = {
     id: newUserId,
-    name,
+    name: name || stored.regData?.name || 'Patient',
     email,
-    phone,
-    nationalId,
+    phone: phone || stored.regData?.phone || '+254700000000',
+    nationalId: nationalId || stored.regData?.nationalId || '00000000',
     role: 'patient' as const,
     status: 'active' as const,
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300',
@@ -121,24 +199,24 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
   const newProfile = {
     id: newPatientId,
     userId: newUserId,
-    name,
+    name: newUser.name,
     email,
-    phone,
-    nationalId,
-    dob: dob || '1995-01-01',
-    gender: gender || 'Female',
-    bloodGroup: bloodGroup || 'O+',
-    address: address || 'Nairobi, Kenya',
+    phone: newUser.phone,
+    nationalId: newUser.nationalId,
+    dob: dob || stored.regData?.dob || '1995-01-01',
+    gender: gender || stored.regData?.gender || 'Female',
+    bloodGroup: bloodGroup || stored.regData?.bloodGroup || 'O+',
+    address: address || stored.regData?.address || 'Nairobi, Kenya',
     county: 'Nairobi County',
-    emergencyContact: emergencyContact || {
-      name: 'Emergency Contact Person',
-      relationship: 'Next of Kin',
+    emergencyContact: emergencyContact || stored.regData?.emergencyContact || {
+      name: 'Next of Kin',
+      relationship: 'Family Member',
       phone: '+254700000000'
     },
     allergies: ['No known drug allergies (NKDA)'],
     chronicConditions: [],
-    insuranceProvider: 'NHIF / SHIF Scheme',
-    insurancePolicyNumber: `SHIF-${Math.floor(100000 + Math.random() * 900000)}`,
+    insuranceProvider: 'NHIF / SHA Scheme',
+    insurancePolicyNumber: `SHA-${Math.floor(100000 + Math.random() * 900000)}`,
     createdAt: new Date().toISOString()
   };
 
@@ -149,20 +227,123 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
     id: `aud-${Date.now()}`,
     timestamp: new Date().toISOString(),
     userId: newUserId,
-    userName: name,
+    userName: newUser.name,
     role: 'patient',
-    action: 'Patient Self-Registration Completed',
+    action: 'Patient Email-Verified Registration Completed',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: `New patient registered with National ID: ${nationalId}, Phone: ${phone}`,
+    details: `Patient account verified via OTP email code for ID: ${newUser.nationalId}`,
     status: 'Success'
   });
 
   res.json({
-    message: 'Registration successful. Welcome to TERRALINKHEALTH!',
+    message: 'Verification successful! Your patient account is now active.',
     user: newUser,
     profile: newProfile,
     token: `token-${newUserId}-${Date.now()}`
+  });
+});
+
+// Forgot Password - Request Reset Code
+app.post('/api/auth/forgot-password/request-code', (req: Request, res: Response) => {
+  const { identifier } = req.body;
+  if (!identifier) {
+    return res.status(400).json({ error: 'Please enter your registered email, phone number, or Kenyan National ID.' });
+  }
+
+  const idLower = identifier.trim().toLowerCase();
+  const user = db.users.find(u => 
+    u.email.toLowerCase() === idLower || 
+    u.phone === identifier.trim() || 
+    u.nationalId === identifier.trim()
+  );
+
+  if (!user) {
+    return res.status(404).json({ error: 'No account found matching this identifier. Please verify your details or register.' });
+  }
+
+  // Generate 6-digit Reset OTP code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
+  const resetKey = user.email.toLowerCase().trim();
+
+  db.passwordResetCodes.set(resetKey, {
+    code,
+    expiresAt,
+    userId: user.id,
+    email: user.email
+  });
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: user.id,
+    userName: user.name,
+    role: user.role,
+    action: 'Password Reset OTP Code Requested',
+    module: 'Auth',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Password reset code sent to registered contact ${user.email} / ${user.phone}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Password reset code has been sent to ${user.email} and SMS to ${user.phone}.`,
+    verificationCode: code, // returned for live simulation in dev/preview
+    email: user.email,
+    phone: user.phone,
+    userName: user.name,
+    expiresInMinutes: 15
+  });
+});
+
+// Forgot Password - Reset Password with Verified Code
+app.post('/api/auth/forgot-password/reset', (req: Request, res: Response) => {
+  const { email, code, newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ error: 'Email, 6-digit verification code, and new password are required.' });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+  }
+
+  const resetKey = email.toLowerCase().trim();
+  const stored = db.passwordResetCodes.get(resetKey);
+
+  if (!stored || stored.code !== code.trim()) {
+    return res.status(400).json({ error: 'Invalid verification code. Please check the code sent to your email.' });
+  }
+
+  if (Date.now() > stored.expiresAt) {
+    db.passwordResetCodes.delete(resetKey);
+    return res.status(400).json({ error: 'Verification code has expired. Please request a new reset code.' });
+  }
+
+  const user = db.users.find(u => u.id === stored.userId || u.email.toLowerCase() === resetKey);
+  if (!user) {
+    return res.status(404).json({ error: 'User account not found.' });
+  }
+
+  // Clear code after successful reset
+  db.passwordResetCodes.delete(resetKey);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: user.id,
+    userName: user.name,
+    role: user.role,
+    action: 'Password Reset Completed Successfully',
+    module: 'Auth',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Password updated via email OTP verification for user ${user.name} (${user.email})`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: 'Your password has been successfully reset! You can now sign in with your new credentials.',
+    success: true
   });
 });
 
@@ -1057,6 +1238,628 @@ app.post('/api/billing/pricing/item', (req: Request, res: Response) => {
   res.json({ message: 'New tariff item added to catalog.', pricing: db.pricing });
 });
 
+// Insurance Providers & Policies Integration
+app.get('/api/insurance/providers', (req: Request, res: Response) => {
+  res.json(db.insuranceProviders);
+});
+
+app.get('/api/insurance/policies', (req: Request, res: Response) => {
+  const { patientId } = req.query;
+  if (patientId) {
+    return res.json(db.insurancePolicies.filter(p => p.patientId === patientId));
+  }
+  res.json(db.insurancePolicies);
+});
+
+app.post('/api/insurance/policies', (req: Request, res: Response) => {
+  const {
+    patientId,
+    patientName,
+    patientNationalId,
+    providerName,
+    providerCode,
+    policyNumber,
+    memberNumber,
+    principalMemberName,
+    relationshipToPrincipal,
+    planTier,
+    monthlyPremiumKES,
+    annualPremiumKES,
+    annualInpatientLimitKES,
+    annualOutpatientLimitKES,
+    copayKES,
+    expiryDate
+  } = req.body;
+
+  if (!patientName || !providerName || !policyNumber || !memberNumber) {
+    return res.status(400).json({ error: 'Patient name, insurance provider, policy number, and member number are required.' });
+  }
+
+  // Find provider plan info for defaults if not provided
+  const matchedProvider = db.insuranceProviders.find(p => p.providerName === providerName || p.providerCode === providerCode);
+  const matchedTier = matchedProvider?.planTiers.find(t => t.tierName === planTier) || matchedProvider?.planTiers[0];
+
+  const newPolicy = {
+    id: `pol-${Date.now()}`,
+    patientId: patientId || `pat-${Date.now()}`,
+    patientName,
+    patientNationalId: patientNationalId || '00000000',
+    providerName,
+    providerCode: providerCode || matchedProvider?.providerCode || 'INS-GEN',
+    policyNumber,
+    memberNumber,
+    principalMemberName: principalMemberName || patientName,
+    relationshipToPrincipal: relationshipToPrincipal || 'Self',
+    planTier: planTier || matchedTier?.tierName || 'Standard Health Cover',
+    status: 'Pending Verification' as const,
+    monthlyPremiumKES: Number(monthlyPremiumKES) || matchedTier?.monthlyPremiumKES || 1500,
+    annualPremiumKES: Number(annualPremiumKES) || matchedTier?.annualPremiumKES || 18000,
+    annualInpatientLimitKES: Number(annualInpatientLimitKES) || matchedTier?.inpatientLimitKES || 2000000,
+    inpatientUsedKES: 0,
+    annualOutpatientLimitKES: Number(annualOutpatientLimitKES) || matchedTier?.outpatientLimitKES || 150000,
+    outpatientUsedKES: 0,
+    copayKES: Number(copayKES) || matchedTier?.copayKES || 0,
+    expiryDate: expiryDate || new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+    submittedAt: new Date().toISOString()
+  };
+
+  db.insurancePolicies.unshift(newPolicy);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: patientId || 'pat',
+    userName: patientName,
+    role: 'patient',
+    action: `Submitted Insurance Policy for ${providerName}`,
+    module: 'Billing',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Policy #${policyNumber} (Member: ${memberNumber}) sent for hospital billing desk approval.`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: 'Insurance policy linked successfully! Hospital billing desk has received it for real-time verification and approval.',
+    policy: newPolicy
+  });
+});
+
+app.patch('/api/insurance/policies/:id/status', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status, verifiedBy, preAuthCode, preAuthAmountKES, preAuthProcedure, annualInpatientLimitKES, annualOutpatientLimitKES, copayKES, rejectionReason } = req.body;
+
+  const policy = db.insurancePolicies.find(p => p.id === id);
+  if (!policy) return res.status(404).json({ error: 'Insurance policy not found.' });
+
+  if (status) policy.status = status;
+  if (verifiedBy) policy.verifiedBy = verifiedBy;
+  if (status === 'Approved & Verified' || status === 'Pre-Authorized') {
+    policy.verifiedAt = new Date().toISOString();
+    if (!policy.verifiedBy) policy.verifiedBy = 'Hospital Billing Desk - TERRALINKHEALTH';
+  }
+  if (preAuthCode) policy.preAuthCode = preAuthCode;
+  if (preAuthAmountKES !== undefined) policy.preAuthAmountKES = Number(preAuthAmountKES);
+  if (preAuthProcedure) policy.preAuthProcedure = preAuthProcedure;
+  if (annualInpatientLimitKES !== undefined) policy.annualInpatientLimitKES = Number(annualInpatientLimitKES);
+  if (annualOutpatientLimitKES !== undefined) policy.annualOutpatientLimitKES = Number(annualOutpatientLimitKES);
+  if (copayKES !== undefined) policy.copayKES = Number(copayKES);
+  if (rejectionReason) policy.rejectionReason = rejectionReason;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'billing-admin',
+    userName: policy.verifiedBy || 'Billing Officer',
+    role: 'admin',
+    action: `Insurance Policy Status Updated to ${status}`,
+    module: 'Billing',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Policy ${policy.policyNumber} (${policy.providerName}) updated for Patient ${policy.patientName}.`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Insurance policy updated to ${status}.`,
+    policy
+  });
+});
+
+app.post('/api/insurance/estimate-premium', (req: Request, res: Response) => {
+  const { age, schemeType, dependentsCount, monthlyIncomeKES, tierPreference } = req.body;
+  
+  const ageNum = Number(age) || 30;
+  const deps = Number(dependentsCount) || 0;
+  const income = Number(monthlyIncomeKES) || 50000;
+
+  // SHA Calculation (2.75% of income with standard KES 500 floor)
+  const shaMonthly = Math.max(500, Math.round(income * 0.0275));
+  const shaAnnual = shaMonthly * 12;
+
+  // Private calculation base
+  let privateBaseMonthly = 3500;
+  if (tierPreference === 'executive') privateBaseMonthly = 7800;
+  else if (tierPreference === 'comprehensive') privateBaseMonthly = 4800;
+  
+  if (ageNum > 50) privateBaseMonthly *= 1.35;
+  else if (ageNum > 40) privateBaseMonthly *= 1.18;
+
+  const totalPrivateMonthly = Math.round(privateBaseMonthly * (1 + deps * 0.45));
+  const totalPrivateAnnual = totalPrivateMonthly * 12;
+
+  res.json({
+    shaEstimate: {
+      provider: 'Social Health Authority (SHA)',
+      monthlyPremiumKES: shaMonthly,
+      annualPremiumKES: shaAnnual,
+      inpatientCoverKES: 1800000,
+      outpatientCoverKES: 100000,
+      copayKES: 0,
+      approvalSpeed: 'Instant Biometric & Digital Link'
+    },
+    privateEstimate: {
+      provider: 'Private Underwriter (Jubilee / Britam / AAR / CIC)',
+      tier: tierPreference || 'Comprehensive Care',
+      monthlyPremiumKES: totalPrivateMonthly,
+      annualPremiumKES: totalPrivateAnnual,
+      inpatientCoverKES: tierPreference === 'executive' ? 10000000 : 5000000,
+      outpatientCoverKES: tierPreference === 'executive' ? 500000 : 250000,
+      copayKES: tierPreference === 'executive' ? 0 : 200,
+      approvalSpeed: 'Under 15 Minutes at TERRALINKHEALTH Desk'
+    },
+    recommendation: income < 40000 
+      ? 'SHA Primary Benefit Package is fully subsidized and recommended for zero out-of-pocket outpatient care.' 
+      : 'Hybrid Cover: Link your mandatory SHA policy and complement with a Private Underwriter for private suite hospitalization and priority specialist access.'
+  });
+});
+
+// ----------------- EMERGENCY STATUS, BEDS, AMBULANCES & SERVICES -----------------
+
+// Live Emergency Status Overview
+app.get('/api/emergency/status', (req: Request, res: Response) => {
+  const beds = db.beds;
+  const ambulances = db.ambulances;
+
+  const totalBeds = beds.length;
+  const availableBeds = beds.filter(b => b.status === 'Available').length;
+  const occupiedBeds = beds.filter(b => b.status === 'Occupied').length;
+
+  const icuBeds = beds.filter(b => b.bedType === 'ICU');
+  const icuAvailable = icuBeds.filter(b => b.status === 'Available').length;
+
+  const hduBeds = beds.filter(b => b.bedType === 'HDU');
+  const hduAvailable = hduBeds.filter(b => b.status === 'Available').length;
+
+  const matBeds = beds.filter(b => b.bedType === 'Maternity');
+  const matAvailable = matBeds.filter(b => b.status === 'Available').length;
+
+  const genBeds = beds.filter(b => b.bedType === 'General');
+  const genAvailable = genBeds.filter(b => b.status === 'Available').length;
+
+  const ambulancesTotal = ambulances.length;
+  const ambulancesAvailable = ambulances.filter(a => a.status === 'Available & Ready').length;
+  const ambulancesDispatched = ambulances.filter(a => a.status === 'Dispatched / En Route' || a.status === 'On-Scene' || a.status === 'Patient Onboard').length;
+
+  const overview = {
+    traumaLevel: 'Level 5 Tertiary Trauma & Specialty Center',
+    triageStatus: (availableBeds > 3 ? 'Normal Capacity' : 'Elevated Alert') as any,
+    emergencyHotline: '0713544101',
+    aeAvgWaitMinutes: availableBeds > 5 ? 6 : 14,
+    totalBeds,
+    availableBeds,
+    occupiedBeds,
+    icuAvailable,
+    icuTotal: icuBeds.length,
+    hduAvailable,
+    hduTotal: hduBeds.length,
+    maternityAvailable: matAvailable,
+    maternityTotal: matBeds.length,
+    generalAvailable: genAvailable,
+    generalTotal: genBeds.length,
+    ambulancesTotal,
+    ambulancesAvailable,
+    ambulancesDispatched,
+    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' (Live Telemetry)'
+  };
+
+  res.json(overview);
+});
+
+// Hospital Beds Management
+app.get('/api/beds', (req: Request, res: Response) => {
+  const { type, status, ward } = req.query;
+  let results = db.beds;
+  if (type) results = results.filter(b => b.bedType === type);
+  if (status) results = results.filter(b => b.status === status);
+  if (ward) results = results.filter(b => b.ward.toLowerCase().includes((ward as string).toLowerCase()));
+  res.json(results);
+});
+
+app.post('/api/beds', (req: Request, res: Response) => {
+  const { bedNumber, ward, bedType, status, dailyRateKES, hasOxygen, hasVentilator, hasTelemetry, notes, patientName } = req.body;
+
+  if (!bedNumber || !ward || !bedType) {
+    return res.status(400).json({ error: 'Bed number, ward name, and bed type are required.' });
+  }
+
+  const existing = db.beds.find(b => b.bedNumber.toLowerCase() === bedNumber.trim().toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: `A bed with number "${bedNumber}" already exists in the system.` });
+  }
+
+  const newBed = {
+    id: `bed-${Date.now()}`,
+    bedNumber: bedNumber.trim().toUpperCase(),
+    ward,
+    bedType: bedType || 'General',
+    status: (status || 'Available') as any,
+    patientName: patientName || undefined,
+    admissionDate: status === 'Occupied' ? new Date().toISOString().split('T')[0] : undefined,
+    dailyRateKES: Number(dailyRateKES) || (bedType === 'ICU' ? 25000 : bedType === 'HDU' ? 12000 : bedType === 'Maternity' ? 5000 : 3500),
+    hasOxygen: hasOxygen !== undefined ? Boolean(hasOxygen) : true,
+    hasVentilator: hasVentilator !== undefined ? Boolean(hasVentilator) : (bedType === 'ICU'),
+    hasTelemetry: hasTelemetry !== undefined ? Boolean(hasTelemetry) : (bedType === 'ICU' || bedType === 'HDU'),
+    notes: notes || 'Hospital bed provisioned by clinical administration.',
+    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  };
+
+  db.beds.unshift(newBed);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Added New Bed ${newBed.bedNumber}`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Added ${newBed.bedType} bed in ${newBed.ward} with daily tariff KES ${newBed.dailyRateKES.toLocaleString()}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Hospital bed added successfully.', bed: newBed });
+});
+
+app.put('/api/beds/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const bed = db.beds.find(b => b.id === id);
+  if (!bed) return res.status(404).json({ error: 'Hospital bed not found.' });
+
+  const { bedNumber, ward, bedType, status, dailyRateKES, hasOxygen, hasVentilator, hasTelemetry, notes, patientName, patientId } = req.body;
+
+  if (bedNumber) bed.bedNumber = bedNumber.trim().toUpperCase();
+  if (ward) bed.ward = ward;
+  if (bedType) bed.bedType = bedType;
+  if (status) {
+    bed.status = status;
+    if (status === 'Occupied') {
+      bed.patientName = patientName || bed.patientName || 'Admitted Inpatient';
+      bed.patientId = patientId || bed.patientId;
+      bed.admissionDate = bed.admissionDate || new Date().toISOString().split('T')[0];
+    } else if (status === 'Available') {
+      bed.patientName = undefined;
+      bed.patientId = undefined;
+      bed.admissionDate = undefined;
+    }
+  }
+  if (dailyRateKES !== undefined) bed.dailyRateKES = Number(dailyRateKES);
+  if (hasOxygen !== undefined) bed.hasOxygen = Boolean(hasOxygen);
+  if (hasVentilator !== undefined) bed.hasVentilator = Boolean(hasVentilator);
+  if (hasTelemetry !== undefined) bed.hasTelemetry = Boolean(hasTelemetry);
+  if (notes !== undefined) bed.notes = notes;
+  bed.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Ward Coordinator / Admin',
+    role: 'admin',
+    action: `Updated Bed Status ${bed.bedNumber} -> ${bed.status}`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Bed ${bed.bedNumber} (${bed.ward}) updated. Rate: KES ${bed.dailyRateKES}, Occupant: ${bed.patientName || 'None'}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Hospital bed updated successfully.', bed });
+});
+
+app.delete('/api/beds/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = db.beds.findIndex(b => b.id === id);
+  if (index === -1) return res.status(404).json({ error: 'Hospital bed not found.' });
+
+  const deleted = db.beds.splice(index, 1)[0];
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Decommissioned Bed ${deleted.bedNumber}`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Bed ${deleted.bedNumber} removed from ${deleted.ward}.`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Bed removed successfully.', deletedBed: deleted });
+});
+
+// Ambulances Fleet Management
+app.get('/api/ambulances', (req: Request, res: Response) => {
+  res.json(db.ambulances);
+});
+
+app.put('/api/ambulances/:id/status', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const amb = db.ambulances.find(a => a.id === id);
+  if (!amb) return res.status(404).json({ error: 'Ambulance unit not found.' });
+
+  const { status, currentMission, etaMinutes, crewLead } = req.body;
+  if (status) amb.status = status;
+  if (currentMission !== undefined) amb.currentMission = currentMission;
+  if (etaMinutes !== undefined) amb.etaMinutes = Number(etaMinutes);
+  if (crewLead) amb.crewLead = crewLead;
+  amb.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'dispatch-admin',
+    userName: 'Emergency Dispatch Coordinator',
+    role: 'admin',
+    action: `Updated Ambulance ${amb.callSign} Status to ${amb.status}`,
+    module: 'Emergency',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Mission: ${amb.currentMission || 'Station standby'}, ETA: ${amb.etaMinutes || 0} mins`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Ambulance status updated.', ambulance: amb });
+});
+
+app.post('/api/ambulances/dispatch', (req: Request, res: Response) => {
+  const { ambulanceId, location, emergencyNature, patientName, callerPhone } = req.body;
+  
+  const amb = ambulanceId ? db.ambulances.find(a => a.id === ambulanceId) : db.ambulances.find(a => a.status === 'Available & Ready');
+  if (!amb) {
+    return res.status(400).json({ error: 'No available ambulance units ready for immediate dispatch. Emergency air medical or partner unit required.' });
+  }
+
+  amb.status = 'Dispatched / En Route';
+  amb.currentMission = `Emergency response to ${location || 'Nairobi Area'}: ${emergencyNature || 'Acute Trauma / Medical Emergency'} (Caller: ${callerPhone || 'Hospital Line'})`;
+  amb.etaMinutes = Math.floor(5 + Math.random() * 8);
+  amb.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'dispatch',
+    userName: 'Emergency Control Room',
+    role: 'admin',
+    action: `Dispatched ${amb.callSign} to ${location || 'Location'}`,
+    module: 'Emergency',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Patient: ${patientName || 'Emergency Casualty'}, ETA: ${amb.etaMinutes} min`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Ambulance unit ${amb.callSign} dispatched! Estimated response time: ${amb.etaMinutes} minutes.`,
+    ambulance: amb
+  });
+});
+
+// Hospital Services & Clinical Tariffs Catalogue
+app.get('/api/services', (req: Request, res: Response) => {
+  const { category, shaOnly } = req.query;
+  let results = db.services;
+  if (category) results = results.filter(s => s.category === category);
+  if (shaOnly === 'true') results = results.filter(s => s.shaCovered);
+  res.json(results);
+});
+
+app.post('/api/services', (req: Request, res: Response) => {
+  const { code, name, category, description, standardFeeKES, shaCovered, privateInsuranceEligible, departmentName, isActive } = req.body;
+
+  if (!name || !category || standardFeeKES === undefined) {
+    return res.status(400).json({ error: 'Service name, category, and standard fee in KES are required.' });
+  }
+
+  const newService = {
+    id: `srv-${Date.now()}`,
+    code: code || `SRV-${Math.floor(100 + Math.random() * 900)}`,
+    name,
+    category,
+    description: description || 'Hospital clinical service or procedure.',
+    standardFeeKES: Number(standardFeeKES) || 0,
+    shaCovered: shaCovered !== undefined ? Boolean(shaCovered) : true,
+    privateInsuranceEligible: privateInsuranceEligible !== undefined ? Boolean(privateInsuranceEligible) : true,
+    departmentName: departmentName || 'Clinical Services',
+    isActive: isActive !== undefined ? Boolean(isActive) : true
+  };
+
+  db.services.unshift(newService);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Created New Service Tariff "${newService.name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Fee: KES ${newService.standardFeeKES.toLocaleString()}, Category: ${newService.category}, SHA: ${newService.shaCovered}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Service tariff added successfully.', service: newService });
+});
+
+app.put('/api/services/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const service = db.services.find(s => s.id === id);
+  if (!service) return res.status(404).json({ error: 'Hospital service item not found.' });
+
+  const { code, name, category, description, standardFeeKES, shaCovered, privateInsuranceEligible, departmentName, isActive } = req.body;
+
+  if (code) service.code = code;
+  if (name) service.name = name;
+  if (category) service.category = category;
+  if (description !== undefined) service.description = description;
+  if (standardFeeKES !== undefined) service.standardFeeKES = Number(standardFeeKES);
+  if (shaCovered !== undefined) service.shaCovered = Boolean(shaCovered);
+  if (privateInsuranceEligible !== undefined) service.privateInsuranceEligible = Boolean(privateInsuranceEligible);
+  if (departmentName) service.departmentName = departmentName;
+  if (isActive !== undefined) service.isActive = Boolean(isActive);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Modified Service Tariff "${service.name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Updated standard fee to KES ${service.standardFeeKES.toLocaleString()}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Service updated successfully.', service });
+});
+
+app.delete('/api/services/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = db.services.findIndex(s => s.id === id);
+  if (index === -1) return res.status(404).json({ error: 'Hospital service item not found.' });
+
+  const deleted = db.services.splice(index, 1)[0];
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Deleted Service Tariff "${deleted.name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Service #${deleted.code} deleted from catalogue.`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Service removed from catalogue.', deletedService: deleted });
+});
+
+// Admin Staff Management (Add/Edit Staff)
+app.post('/api/admin/staff', (req: Request, res: Response) => {
+  const { name, email, phone, role, departmentName, specialty, licenseNumber, consultationFeeKES } = req.body;
+
+  if (!name || !email || !role) {
+    return res.status(400).json({ error: 'Staff full name, email, and clinical/admin role are required.' });
+  }
+
+  const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: 'A staff member with this email address already exists.' });
+  }
+
+  const newUserId = `usr-staff-${Date.now()}`;
+  const isDoc = role === 'doctor';
+
+  const newStaffUser = {
+    id: newUserId,
+    name,
+    email,
+    phone: phone || '+254712000000',
+    role,
+    status: 'active' as const,
+    departmentName: departmentName || 'Clinical Administration',
+    avatar: isDoc 
+      ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'
+      : 'https://images.unsplash.com/photo-1594824813589-9e0c528b3d08?auto=format&fit=crop&q=80&w=300',
+    createdAt: new Date().toISOString()
+  };
+
+  db.users.push(newStaffUser);
+
+  if (isDoc) {
+    const newDoctor = {
+      id: `doc-${Date.now()}`,
+      userId: newUserId,
+      name,
+      email,
+      phone: phone || '+254712000000',
+      specialty: specialty || 'General Medicine & Surgery',
+      departmentId: 'dept-opd',
+      departmentName: departmentName || 'Outpatient Department (OPD)',
+      licenseNumber: licenseNumber || `KMPDC-A${Math.floor(1000 + Math.random() * 9000)}`,
+      qualifications: ['MBChB (UoN)', 'MSc Health Systems Management', 'KMPDC Registered Specialist'],
+      experienceYears: 6,
+      avatar: newStaffUser.avatar,
+      bio: `Dedicated medical specialist at TERRALINKHEALTH Nairobi Central Hospital delivering evidence-based patient-centered care.`,
+      consultationFeeKES: Number(consultationFeeKES) || 2000,
+      rating: 4.9,
+      reviewCount: 18,
+      isAvailableTelemedicine: true,
+      availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      workingHours: '08:00 AM - 05:00 PM',
+      currentQueueCount: 0
+    };
+    db.doctors.push(newDoctor);
+  }
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Added New Staff Member "${name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Role: ${role}, Department: ${newStaffUser.departmentName}, License: ${licenseNumber || 'N/A'}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Staff member ${name} created successfully. Initial credentials provisioned.`,
+    user: newStaffUser
+  });
+});
+
+app.put('/api/admin/staff/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = db.users.find(u => u.id === id);
+  if (!user) return res.status(404).json({ error: 'Staff account not found.' });
+
+  const { name, email, phone, role, status, departmentName } = req.body;
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (phone) user.phone = phone;
+  if (role) user.role = role;
+  if (status) user.status = status;
+  if (departmentName) user.departmentName = departmentName;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Updated Staff Member "${user.name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.1.1',
+    details: `Status: ${user.status}, Role: ${user.role}, Department: ${user.departmentName}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Staff profile updated.', user });
+});
+
 // Analytics & Audit
 app.get('/api/analytics', (req: Request, res: Response) => {
   res.json(db.analytics);
@@ -1094,7 +1897,7 @@ app.post('/api/chat/messages', (req: Request, res: Response) => {
         senderId: 'desk-operator',
         senderName: 'Sister Lucy (Hospital Helpdesk)',
         senderRole: 'customer_care',
-        text: `Thank you for your message, ${senderName}. Your query has been received by the Nairobi Central Hospital Customer Service desk. For emergencies, please call our direct hotline at +254 700 999 911 or visit our A&E Ground Floor immediately.`,
+        text: `Thank you for your message, ${senderName}. Your query has been received by the Nairobi Central Hospital Customer Service desk. For emergencies, please call our direct hotline at 0713544101 or visit our A&E Ground Floor immediately.`,
         timestamp: new Date().toISOString()
       });
     }, 1500);
@@ -1235,7 +2038,7 @@ app.post('/api/gemini/health-assistant', async (req: Request, res: Response) => 
       fallbackText += `\n#### 🎯 **Health & Wellness Recommendations**\n`;
       fallbackText += `- **Blood Group & Precautions**: Blood Group **${matchedPatient.bloodGroup}**. Allergies: *${matchedPatient.allergies.join(', ')}*.\n`;
       fallbackText += `- **Hydration & Diet**: Maintain 2.5L daily hydration, reduce sodium intake, and maintain balanced nutrition rich in leafy greens and lean proteins.\n`;
-      fallbackText += `- **Need immediate clinical assistance?**: You can book an in-person or telemedicine session right here in the portal, or contact the 24/7 hotline at **+254 700 999 911**.\n\n*Medical Notice: AI health guidance is for supportive educational tracking and does not replace evaluation by a registered KMPDC medical practitioner.*`;
+      fallbackText += `- **Need immediate clinical assistance?**: You can book an in-person or telemedicine session right here in the portal, or contact the 24/7 hotline at **0713544101**.\n\n*Medical Notice: AI health guidance is for supportive educational tracking and does not replace evaluation by a registered KMPDC medical practitioner.*`;
 
       return res.json({ reply: fallbackText });
     }
@@ -1274,7 +2077,7 @@ Please provide a comprehensive, intelligent, supportive, and data-grounded respo
   } catch (error: any) {
     console.error('Gemini Health Assistant Error:', error);
     res.status(500).json({
-      reply: `### 🌟 TERRALINKHEALTH AI Health Engine\n\nJambo **${matchedPatient.name}**!\n\nWe have traced your records:\n- **Blood Group**: ${matchedPatient.bloodGroup}\n- **Active Prescriptions**: ${patientPrescriptions.length} on file\n- **Recent Lab Reports**: ${patientLabOrders.length} test records verified\n- **Outstanding Balance**: KES ${patientInvoices.reduce((acc, curr) => acc + curr.balanceKES, 0).toLocaleString()}\n\nFor urgent inquiries, please reach our 24/7 hotline at **+254 700 999 911** or consult your doctor via the Telemedicine tab.`,
+      reply: `### 🌟 TERRALINKHEALTH AI Health Engine\n\nJambo **${matchedPatient.name}**!\n\nWe have traced your records:\n- **Blood Group**: ${matchedPatient.bloodGroup}\n- **Active Prescriptions**: ${patientPrescriptions.length} on file\n- **Recent Lab Reports**: ${patientLabOrders.length} test records verified\n- **Outstanding Balance**: KES ${patientInvoices.reduce((acc, curr) => acc + curr.balanceKES, 0).toLocaleString()}\n\nFor urgent inquiries, please reach our 24/7 hotline at **0713544101** or consult your doctor via the Telemedicine tab.`,
       error: error?.message || 'Server error'
     });
   }
