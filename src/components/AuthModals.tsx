@@ -925,128 +925,352 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
 
 interface PatientLoginGateProps {
   onPatientAuthSuccess: (token: string, user: User, profile: PatientProfile) => void;
-  onOpenRegisterModal: () => void;
+  onOpenRegisterModal?: () => void;
   onCancel?: () => void;
 }
 
 export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
   onPatientAuthSuccess,
-  onOpenRegisterModal,
   onCancel
 }) => {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState<'register' | 'login'>('register');
+  
+  // Registration Fields: Full Name, National ID, Phone/Email, Password
+  const [regName, setRegName] = useState('');
+  const [regNationalId, setRegNationalId] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+
+  // Login Fields: Identifier + Password
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg('');
+    setSuccessMsg('');
 
+    if (!regName.trim() || !regNationalId.trim() || (!regPhone.trim() && !regEmail.trim()) || !regPassword) {
+      setErrorMsg('Please provide your Full Names, National ID, Phone Number or Email, and Password.');
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      setErrorMsg('Password should be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/patient/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: regName.trim(),
+          nationalId: regNationalId.trim(),
+          phone: regPhone.trim() || '+254700000000',
+          email: regEmail.trim() || `${regNationalId.trim()}@patient.terralinkhealth.ke`,
+          password: regPassword
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+      setSuccessMsg(`Welcome, ${data.user.name}! Accessing your digital health portal...`);
+      setTimeout(() => {
+        onPatientAuthSuccess(data.token, data.user, data.patientProfile);
+      }, 400);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration error. Please check your details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!loginIdentifier.trim() || !loginPassword) {
+      setErrorMsg('Please enter your National ID, Phone Number, or Email and your Password.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch('/api/auth/patient/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password })
+        body: JSON.stringify({ identifier: loginIdentifier.trim(), password: loginPassword })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+      if (!res.ok) throw new Error(data.error || 'Authentication failed. Please verify credentials.');
 
       onPatientAuthSuccess(data.token, data.user, data.patientProfile);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Patient authentication error');
+      setErrorMsg(err.message || 'Patient login failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white p-8 space-y-6">
+    <div className="min-h-[75vh] flex items-center justify-center p-3 sm:p-6">
+      <div className="w-full max-w-lg bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/80 overflow-hidden space-y-0">
         
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 text-teal-600 mx-auto flex items-center justify-center shadow-inner">
-            <HeartPulse className="w-8 h-8" />
+        {/* Header Banner */}
+        <div className="bg-gradient-to-r from-teal-800 to-teal-600 p-6 text-white text-center space-y-2">
+          <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 text-white mx-auto flex items-center justify-center shadow-md">
+            <HeartPulse className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-slate-900">Patient Health Portal</h2>
-          <p className="text-xs text-slate-600 max-w-sm mx-auto">
-            Sign in with your National ID, Phone, or Email to view your health records, e-prescriptions, lab tests, and appointments.
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">TERRALINKHEALTH Patient Portal</h2>
+          <p className="text-xs text-teal-100 max-w-sm mx-auto">
+            Direct access to your medical records, e-prescriptions, lab tests, doctor bookings, and NHIF/SHA benefits.
           </p>
         </div>
 
-        {errorMsg && (
-          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-700 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div>
-            <label className="block font-bold text-slate-700 mb-1.5">
-              National ID / Phone / Email *
-            </label>
-            <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              <input
-                type="text"
-                required
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter National ID, phone or email"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1.5">
-              Confidential Password *
-            </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
-              />
-            </div>
-          </div>
-
+        {/* Tab Selection */}
+        <div className="grid grid-cols-2 bg-slate-100/80 p-1.5 border-b border-slate-200">
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+            type="button"
+            onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
+            className={`py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              activeTab === 'register'
+                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Patient Portal</span>}
+            <UserIcon className="w-4 h-4" />
+            <span>Register New Patient</span>
           </button>
-        </form>
+          
+          <button
+            type="button"
+            onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
+            className={`py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              activeTab === 'login'
+                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            <span>Sign In to Account</span>
+          </button>
+        </div>
 
-        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="text-slate-600">
-            First time visiting?{' '}
-            <button
-              type="button"
-              onClick={onOpenRegisterModal}
-              className="text-teal-700 font-bold hover:underline cursor-pointer"
-            >
-              Register New Profile
-            </button>
-          </div>
+        {/* Form Body */}
+        <div className="p-6 sm:p-8 space-y-5">
+          
+          {errorMsg && (
+            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-700 flex items-start space-x-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs text-emerald-800 flex items-start space-x-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* REGISTER TAB */}
+          {activeTab === 'register' && (
+            <form onSubmit={handleRegister} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1.5">
+                  Full Names (As on National ID / Birth Certificate) *
+                </label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="e.g. Wanjiku Muthoni Kimani"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1.5">
+                  Kenyan National ID Number / Passport Number *
+                </label>
+                <div className="relative">
+                  <CreditCard className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={regNationalId}
+                    onChange={(e) => setRegNationalId(e.target.value)}
+                    placeholder="e.g. 29481022"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1.5">
+                    Phone Number (M-PESA / SMS) *
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="tel"
+                      required
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
+                      placeholder="0712 345 678"
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1.5">
+                    Email Address (Optional)
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="email"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1.5">
+                  Create Confidential Password *
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="Create a password (min 6 characters)"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <span>Register & Open Patient Portal</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-[11px] text-slate-500 pt-1">
+                Already registered?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
+                  className="text-teal-700 font-bold hover:underline cursor-pointer"
+                >
+                  Sign In here
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* SIGN IN TAB */}
+          {activeTab === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1.5">
+                  National ID, Phone Number, or Email Address *
+                </label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
+                    placeholder="e.g. 0712345678 or 29481022 or name@email.com"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1.5">
+                  Confidential Password *
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <span>Sign In to Patient Portal</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <div className="pt-2 text-center text-[11px] text-slate-500 border-t border-slate-100 flex items-center justify-between">
+                <span>First time visiting us?</span>
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('register'); setErrorMsg(''); }}
+                  className="text-teal-700 font-bold hover:underline cursor-pointer"
+                >
+                  Register New Patient →
+                </button>
+              </div>
+            </form>
+          )}
 
           {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-            >
-              ← Back to Home
-            </button>
+            <div className="pt-2 text-center border-t border-slate-100">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+              >
+                ← Return to Hospital Home
+              </button>
+            </div>
           )}
+
         </div>
 
       </div>
@@ -1080,7 +1304,7 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
         body: JSON.stringify({ usernameOrEmail: username, password })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Clinical authentication failed');
+      if (!res.ok) throw new Error(data.error || 'Clinical staff authentication failed');
 
       onStaffAuthSuccess(data.token, data.user);
     } catch (err: any) {
@@ -1091,16 +1315,16 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 p-8 space-y-6">
+    <div className="min-h-[75vh] flex items-center justify-center p-3 sm:p-6">
+      <div className="w-full max-w-lg bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
         
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-teal-500/20 border border-teal-500/30 text-teal-400 mx-auto flex items-center justify-center shadow-lg">
-            <Stethoscope className="w-8 h-8" />
+          <div className="w-14 h-14 rounded-2xl bg-teal-500/20 border border-teal-500/30 text-teal-400 mx-auto flex items-center justify-center shadow-lg">
+            <Stethoscope className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">Clinical Staff Portal</h2>
-          <div className="inline-block px-3 py-1 bg-slate-800 text-teal-300 rounded-full text-[11px] font-mono font-semibold border border-slate-700">
-            AUTHORIZED MEDICAL WORKSPACE
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">Clinical Staff Portal</h2>
+          <div className="inline-block px-3 py-1 bg-slate-800 text-teal-300 rounded-full text-[10px] font-mono font-semibold border border-slate-700">
+            AUTHORIZED MEDICAL WORKSPACE ONLY
           </div>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
             Authorized sign-in for Doctors, Nurses, Laboratory Technologists, Radiologists, and Pharmacists.
@@ -1120,31 +1344,31 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
               Staff Username or Employee ID *
             </label>
             <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <UserIcon className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter staff username"
-                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                placeholder="e.g. dr_grace or lab_mwangi"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
               />
             </div>
           </div>
 
           <div>
             <label className="block font-bold text-slate-300 mb-1.5">
-              Password / Access Key *
+              Password / Security Access Key *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl text-white font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
               />
             </div>
           </div>
@@ -1152,9 +1376,14 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-bold shadow-lg shadow-teal-950 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+            className="w-full py-4 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-bold shadow-lg shadow-teal-950 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Clinical Workspace</span>}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Sign In to Clinical Staff Portal</span>
+              </>
+            )}
           </button>
         </form>
 

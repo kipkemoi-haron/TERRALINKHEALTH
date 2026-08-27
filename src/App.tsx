@@ -339,8 +339,8 @@ export function App() {
       </div>
 
       {/* Top Emergency & Hospital Indicator Strip with Glass Effect */}
-      <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-xs px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 shadow-xs">
-        <div className="flex items-center space-x-3">
+      <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           <span className="flex items-center space-x-1.5 text-teal-400 font-semibold">
             <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-sm shadow-teal-400" />
             <span>Nairobi County Digital Hospital Network</span>
@@ -352,175 +352,126 @@ export function App() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5 text-rose-400 font-semibold bg-rose-950/40 px-2.5 py-0.5 rounded-full border border-rose-800/40">
-            <Phone className="w-3.5 h-3.5 animate-bounce" />
-            <span>24/7 A&E Hotline: <strong className="text-white font-mono">0713544101</strong></span>
+          <div className="flex items-center space-x-1.5 text-emerald-400 font-medium text-[10px] sm:text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>24/7 Outpatient & Emergency Open</span>
           </div>
         </div>
       </div>
 
       {/* Main Hospital Navigation Header - Frosted Glass Bar */}
       <header className="relative z-40 bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm shadow-slate-200/50 sticky top-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
           
           {/* Logo & Platform Name */}
-          <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => {
+          <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0" onClick={() => {
             setActivePortal('home');
             if (window.location.pathname.startsWith('/admin')) {
               window.history.pushState(null, '', '/');
             }
           }}>
-            <div className="w-11 h-11 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
-              <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
-                <div className="w-1 h-3.5 bg-white rounded-full"></div>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white rounded-full flex items-center justify-center">
+                <div className="w-1 h-3 sm:h-3.5 bg-white rounded-full"></div>
               </div>
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
-                <span className="px-2 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
+                <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 text-[9px] sm:text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
               </div>
-              <p className="text-[11px] text-slate-500 font-medium">TERRALINKHEALTH Hospital Nairobi Complex</p>
+              <p className="hidden xs:block sm:block text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] sm:max-w-none">TERRALINKHEALTH Hospital Nairobi</p>
             </div>
           </div>
 
-          {/* Portals Switcher - Glass Navigation */}
-          <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
-            <button
-              onClick={() => {
-                setActivePortal('home');
-                if (window.location.pathname.startsWith('/admin')) {
-                  window.history.pushState(null, '', '/');
-                }
-              }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                activePortal === 'home' 
-                  ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Hospital Home</span>
-            </button>
+          {/* Portals Switcher / Navigation */}
+          {currentUser && (
+            <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
+              <button
+                onClick={() => {
+                  setActivePortal('home');
+                  if (window.location.pathname.startsWith('/admin')) {
+                    window.history.pushState(null, '', '/');
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                  activePortal === 'home' 
+                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Hospital Home</span>
+              </button>
 
-            {/* Unauthenticated View: Direct Enter Actions */}
-            {!currentUser && (
-              <>
+              {currentUser.role === 'patient' && (
                 <button
                   onClick={() => {
                     setActivePortal('patient');
+                    if (window.location.pathname.startsWith('/admin')) {
+                      window.history.pushState(null, '', '/');
+                    }
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    activePortal === 'patient'
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25'
-                      : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+                    activePortal === 'patient' 
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <Heart className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Enter Patient Portal</span>
+                  <Heart className="w-3.5 h-3.5 text-rose-400" />
+                  <span>My Patient Portal</span>
                 </button>
+              )}
 
+              {currentUser.role !== 'patient' && (
                 <button
                   onClick={() => {
                     setActivePortal('provider');
+                    if (window.location.pathname.startsWith('/admin')) {
+                      window.history.pushState(null, '', '/');
+                    }
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    activePortal === 'provider'
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25'
-                      : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+                    activePortal === 'provider' 
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <Lock className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Enter Clinical Staff Portal</span>
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  <span>Clinical Workspace</span>
                 </button>
-              </>
-            )}
+              )}
 
-            {/* Authenticated View: Patient Portal */}
-            {currentUser && currentUser.role === 'patient' && (
-              <button
-                onClick={() => {
-                  setActivePortal('patient');
-                  if (window.location.pathname.startsWith('/admin')) {
-                    window.history.pushState(null, '', '/');
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                  activePortal === 'patient' 
-                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                }`}
-              >
-                <Heart className="w-3.5 h-3.5 text-rose-400" />
-                <span>My Patient Portal</span>
-              </button>
-            )}
+              {isAdminUser && (
+                <button
+                  onClick={() => {
+                    setActivePortal('admin');
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activePortal === 'admin' 
+                      ? 'bg-slate-900 text-emerald-400 shadow-md' 
+                      : 'text-emerald-700 hover:bg-emerald-50'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </button>
+              )}
+            </nav>
+          )}
 
-            {/* Authenticated View: Staff Portal */}
-            {currentUser && currentUser.role !== 'patient' && (
-              <button
-                onClick={() => {
-                  setActivePortal('provider');
-                  if (window.location.pathname.startsWith('/admin')) {
-                    window.history.pushState(null, '', '/');
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                  activePortal === 'provider' 
-                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                }`}
-              >
-                <Stethoscope className="w-3.5 h-3.5" />
-                <span>Clinical Staff Workspace</span>
-              </button>
-            )}
-
-            {/* Authenticated View: Admin Portal link for Admin */}
-            {currentUser && isAdminUser && (
-              <button
-                onClick={() => {
-                  setActivePortal('admin');
-                }}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                  activePortal === 'admin' 
-                    ? 'bg-slate-900 text-emerald-400 shadow-md' 
-                    : 'text-emerald-700 hover:bg-emerald-50'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin Operations</span>
-              </button>
-            )}
-          </nav>
-
-          {/* Right User Actions */}
-          <div className="flex items-center space-x-2.5">
+          {/* Right User Actions / Emergency Contact */}
+          <div className="flex items-center space-x-2 shrink-0">
             
             {!currentUser ? (
-              <>
-                <button
-                  onClick={() => {
-                    setAuthModalMode('patient_register');
-                    setAuthModalOpen(true);
-                  }}
-                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl text-xs flex items-center space-x-1.5 shadow-md shadow-teal-500/20 transition-all cursor-pointer"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Register</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setAuthModalMode('patient_login');
-                    setAuthModalOpen(true);
-                  }}
-                  className="px-4 py-2 bg-white/70 hover:bg-white text-slate-800 font-bold rounded-2xl text-xs flex items-center space-x-1.5 border border-white/80 shadow-xs transition-all cursor-pointer backdrop-blur-md"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Sign In</span>
-                </button>
-              </>
+              <a
+                href="tel:0713544101"
+                className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center space-x-1 sm:space-x-1.5 shadow-xs transition-all shrink-0 whitespace-nowrap"
+              >
+                <Phone className="w-3.5 h-3.5 text-rose-600 animate-pulse shrink-0" />
+                <span className="hidden sm:inline">24/7 Hotline:</span>
+                <span className="font-mono">0713544101</span>
+              </a>
             ) : (
               <div className="flex items-center space-x-2.5">
                 <div className="flex items-center space-x-2.5 pl-2">
@@ -827,10 +778,10 @@ export function App() {
 
           <div className="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
             <div>
-              ISO 27001 Certified • HL7 FHIR Compliant • Safaricom Daraja M-PESA Integration • KDPA 2019
+              ISO 27001 Certified • HL7 FHIR Compliant • KDPA 2019
             </div>
             <div className="flex items-center space-x-3">
-              <span>All tariffs in Kenyan Shillings (KES) • Emergency Dispatch: 0713544101</span>
+              <span>All tariffs in Kenyan Shillings (KES)</span>
             </div>
           </div>
 

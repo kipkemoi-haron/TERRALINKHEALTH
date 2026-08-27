@@ -107,7 +107,7 @@ export const MpesaModal: React.FC<MpesaModalProps> = ({
             </div>
             <div>
               <h3 className="font-semibold text-lg leading-tight">Lipa na M-PESA Online</h3>
-              <p className="text-xs text-emerald-100">Safaricom Daraja API Gateway</p>
+              <p className="text-xs text-emerald-100">Secure Instant STK Push Gateway</p>
             </div>
           </div>
           <button 

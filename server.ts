@@ -30,6 +30,7 @@ import {
   INITIAL_AMBULANCES,
   INITIAL_HOSPITAL_SERVICES
 } from './src/mockData';
+import { Doctor } from './src/types';
 
 const app = express();
 const PORT = 3000;
@@ -240,6 +241,91 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
     message: 'Verification successful! Your patient account is now active.',
     user: newUser,
     profile: newProfile,
+    token: `token-${newUserId}-${Date.now()}`
+  });
+});
+
+// Direct Patient Registration (Fast mobile signup with Full Name, National ID, Phone/Email, Password)
+app.post('/api/auth/patient/register', (req: Request, res: Response) => {
+  const { name, nationalId, phone, email, password } = req.body;
+
+  if (!name || !nationalId || (!phone && !email) || !password) {
+    return res.status(400).json({ error: 'Please provide full name, Kenyan National ID, phone or email, and a password.' });
+  }
+
+  const cleanEmail = (email || `${nationalId}@patient.terralinkhealth.ke`).toLowerCase().trim();
+  const cleanPhone = phone || '+254700000000';
+  const cleanNatId = nationalId.trim();
+
+  const existing = db.users.find(u => 
+    (cleanEmail && u.email.toLowerCase() === cleanEmail) || 
+    (cleanNatId && u.nationalId === cleanNatId) || 
+    (cleanPhone && cleanPhone !== '+254700000000' && u.phone === cleanPhone)
+  );
+
+  if (existing) {
+    return res.status(400).json({ error: 'An account with this National ID, phone, or email already exists. Please sign in instead.' });
+  }
+
+  const newUserId = `usr-pat-${Date.now()}`;
+  const newPatientId = `pat-${Date.now()}`;
+
+  const newUser = {
+    id: newUserId,
+    name: name.trim(),
+    email: cleanEmail,
+    phone: cleanPhone,
+    nationalId: cleanNatId,
+    role: 'patient' as const,
+    status: 'active' as const,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300',
+    createdAt: new Date().toISOString()
+  };
+
+  const newProfile = {
+    id: newPatientId,
+    userId: newUserId,
+    name: newUser.name,
+    email: cleanEmail,
+    phone: cleanPhone,
+    nationalId: cleanNatId,
+    dob: '1995-01-01',
+    gender: 'Female' as const,
+    bloodGroup: 'O+' as const,
+    address: 'Nairobi, Kenya',
+    county: 'Nairobi County',
+    emergencyContact: {
+      name: 'Next of Kin',
+      relationship: 'Family Member',
+      phone: cleanPhone
+    },
+    allergies: ['No known drug allergies (NKDA)'],
+    chronicConditions: [],
+    insuranceProvider: 'Social Health Insurance Fund (SHIF)',
+    insurancePolicyNumber: `SHIF-${Math.floor(100000 + Math.random() * 900000)}`,
+    createdAt: new Date().toISOString()
+  };
+
+  db.users.push(newUser);
+  db.patientProfiles.push(newProfile);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: newUserId,
+    userName: newUser.name,
+    role: 'patient',
+    action: 'Patient Direct Registration Completed',
+    module: 'Auth',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Patient account created with National ID: ${cleanNatId}, Phone: ${cleanPhone}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Account created successfully! Welcome to TERRALINKHEALTH, ${newUser.name}.`,
+    user: newUser,
+    patientProfile: newProfile,
     token: `token-${newUserId}-${Date.now()}`
   });
 });
@@ -1787,27 +1873,23 @@ app.post('/api/admin/staff', (req: Request, res: Response) => {
   db.users.push(newStaffUser);
 
   if (isDoc) {
-    const newDoctor = {
+    const newDoctor: Doctor = {
       id: `doc-${Date.now()}`,
       userId: newUserId,
       name,
-      email,
-      phone: phone || '+254712000000',
-      specialty: specialty || 'General Medicine & Surgery',
+      title: role === 'doctor' ? 'Dr.' : 'Clinician',
       departmentId: 'dept-opd',
       departmentName: departmentName || 'Outpatient Department (OPD)',
+      specialization: specialty || 'General Medicine & Surgery',
+      qualifications: 'MBChB (UoN), MSc Health Systems Management, KMPDC Registered Specialist',
       licenseNumber: licenseNumber || `KMPDC-A${Math.floor(1000 + Math.random() * 9000)}`,
-      qualifications: ['MBChB (UoN)', 'MSc Health Systems Management', 'KMPDC Registered Specialist'],
       experienceYears: 6,
       avatar: newStaffUser.avatar,
-      bio: `Dedicated medical specialist at TERRALINKHEALTH Nairobi Central Hospital delivering evidence-based patient-centered care.`,
       consultationFeeKES: Number(consultationFeeKES) || 2000,
-      rating: 4.9,
-      reviewCount: 18,
-      isAvailableTelemedicine: true,
-      availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      workingHours: '08:00 AM - 05:00 PM',
-      currentQueueCount: 0
+      telemedicineAvailable: true,
+      availableDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      availableHours: '08:00 AM - 05:00 PM',
+      rating: 4.9
     };
     db.doctors.push(newDoctor);
   }
