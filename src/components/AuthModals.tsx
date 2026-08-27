@@ -98,6 +98,56 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
+  // Direct Instant Registration into System Memory & Storage
+  const handleDirectRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pName || !pNationalId || !pPhone || !pPassword) {
+      setErrorMsg('Please complete all required fields (Full Name, National ID, Phone, Password).');
+      return;
+    }
+    if (pPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/auth/patient/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: pName.trim(),
+          phone: pPhone.trim(),
+          email: pEmail.trim() || `${pNationalId.trim()}@patient.terralinkhealth.ke`,
+          nationalId: pNationalId.trim(),
+          password: pPassword,
+          dob: pDob || '1995-01-01',
+          gender: pGender,
+          bloodGroup: pBloodGroup,
+          address: pCounty || 'Nairobi',
+          county: pCounty,
+          emergencyContact: {
+            name: pEmergencyContact || 'Next of Kin',
+            relationship: 'Family Member',
+            phone: pEmergencyPhone || pPhone
+          },
+          allergies: pAllergies ? [pAllergies] : ['No known drug allergies (NKDA)'],
+          insuranceProvider: pInsurance
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+
+      onPatientAuthSuccess(data.token, data.user, data.patientProfile);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Request Registration OTP Code
   const handleRequestRegCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -496,10 +546,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           {mode === 'patient_register' && (
             <div>
               {registerStep === 'form' ? (
-                <form onSubmit={handleRequestRegCode} className="space-y-3 text-xs">
+                <form onSubmit={handleDirectRegister} className="space-y-3 text-xs">
                   <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 text-[11px] text-emerald-800">
-                    <p className="font-semibold">Self-Registration & Patient Master Index Entry</p>
-                    <p className="mt-0.5 text-slate-600">A 6-digit registration code will be sent to your email to verify your account.</p>
+                    <p className="font-semibold">Patient Registration & System Storage</p>
+                    <p className="mt-0.5 text-slate-600">Your account will be memorized in system storage for instant secure access.</p>
                   </div>
 
                   <div>
@@ -668,8 +718,19 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     disabled={loading}
                     className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Email Registration Code →</span>}
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Register & Memorize in System Storage →</span>}
                   </button>
+
+                  <div className="text-center pt-1">
+                    <button
+                      type="button"
+                      onClick={handleRequestRegCode}
+                      disabled={loading}
+                      className="text-[11px] text-slate-500 hover:text-emerald-700 underline cursor-pointer"
+                    >
+                      Or verify via 6-digit email OTP code
+                    </button>
+                  </div>
                 </form>
               ) : (
                 /* Step 2: Verification Code Entry */

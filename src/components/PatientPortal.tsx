@@ -51,6 +51,11 @@ import { INITIAL_INSURANCE_PROVIDERS, INITIAL_INSURANCE_POLICIES } from '../mock
 import { MpesaModal } from './MpesaModal';
 import { TelemedicineRoom } from './TelemedicineRoom';
 import { ReportViewerModal } from './ReportViewerModal';
+import { PatientJourneyTracker } from './PatientJourneyTracker';
+import { AiTriageModal } from './AiTriageModal';
+import { HealthWalletTimeline } from './HealthWalletTimeline';
+import { NurseDirectChatModal } from './NurseDirectChatModal';
+import { AutoSchedulerModal } from './AutoSchedulerModal';
 
 interface PatientPortalProps {
   patient: PatientProfile;
@@ -146,8 +151,13 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
     invoice?: Invoice;
   }>({ title: '', type: 'medical_report' });
 
-  // EMR subtabs
-  const [emrSubtab, setEmrSubtab] = useState<'visits' | 'prescriptions' | 'labs' | 'radiology' | 'allergies' | 'immunizations'>('visits');
+  // EMR subtabs (including unified timeline)
+  const [emrSubtab, setEmrSubtab] = useState<'timeline' | 'visits' | 'prescriptions' | 'labs' | 'radiology' | 'allergies' | 'immunizations'>('timeline');
+
+  // Smart Patient Modals State
+  const [isAiTriageOpen, setIsAiTriageOpen] = useState(false);
+  const [isNurseChatOpen, setIsNurseChatOpen] = useState(false);
+  const [isAutoSchedulerOpen, setIsAutoSchedulerOpen] = useState(false);
 
   // Customer care chat state
   const [careMessages, setCareMessages] = useState<ChatMessage[]>([]);
@@ -445,6 +455,34 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         invoice={reportModalData.invoice}
       />
 
+      {/* AI Clinical Triage Modal */}
+      <AiTriageModal
+        isOpen={isAiTriageOpen}
+        onClose={() => setIsAiTriageOpen(false)}
+        patient={patient}
+        onRouteToDepartment={(deptId, urgency) => {
+          setSelectedDeptId(deptId);
+          setActiveTab('book');
+        }}
+      />
+
+      {/* Direct Nurse Chat Modal */}
+      <NurseDirectChatModal
+        isOpen={isNurseChatOpen}
+        onClose={() => setIsNurseChatOpen(false)}
+        patient={patient}
+      />
+
+      {/* Auto Scheduler Follow-up Modal */}
+      <AutoSchedulerModal
+        isOpen={isAutoSchedulerOpen}
+        onClose={() => setIsAutoSchedulerOpen(false)}
+        patient={patient}
+        departments={departments}
+        doctors={doctors}
+        onConfirmSchedule={onBookAppointment}
+      />
+
       {/* M-PESA Payment Modal */}
       <MpesaModal
         isOpen={mpesaModalOpen}
@@ -543,6 +581,233 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
           
+          {/* 1. VISUAL PATIENT JOURNEY TRACKER (From Check-in to Pharmacy) */}
+          <PatientJourneyTracker
+            patient={patient}
+            activeAppointment={appointments[0]}
+            encounters={encounters}
+            prescriptions={prescriptions}
+            labOrders={labOrders}
+            invoices={invoices}
+            onOpenBooking={() => setActiveTab('book')}
+            onOpenRecords={(sub) => {
+              setEmrSubtab(sub as any);
+              setActiveTab('emr');
+            }}
+            onOpenBilling={() => setActiveTab('billing')}
+            onOpenNurseChat={() => setIsNurseChatOpen(true)}
+          />
+
+          {/* 2. AI-DRIVEN TRIAGE & EMERGENCY ESCALATION BAR */}
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white shadow-xl border border-teal-500/30 flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden">
+            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex items-center space-x-3.5 relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 shrink-0 shadow-inner">
+                <HeartPulse className="w-6 h-6 animate-pulse text-teal-300" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h4 className="text-sm sm:text-base font-bold tracking-tight text-white">
+                    AI Clinical Triage & Red-Flag Emergency Scanner
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/30 text-teal-300 border border-teal-400/30">
+                    24/7 Smart Engine
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Input acute symptoms, evaluate vitals, and automatically alert trauma doctors or receive priority fast-track routing.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2.5 shrink-0 relative z-10 w-full md:w-auto justify-end">
+              <button
+                onClick={() => setIsNurseChatOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-teal-200 hover:text-white text-xs font-bold border border-white/20 transition-all cursor-pointer flex items-center space-x-1.5"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Duty Nurse</span>
+              </button>
+
+              <button
+                onClick={() => setIsAiTriageOpen(true)}
+                className="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black shadow-lg shadow-teal-500/30 transition-all cursor-pointer hover:scale-102 flex items-center space-x-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <span>Launch AI Triage</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. ESSENTIAL 6 DEPARTMENTS: LIVE WAIT TIMES & EQUIPMENT SYNC */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-[2rem] border border-white/80 p-6 shadow-sm shadow-slate-200/40 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    Essential Clinical Departments: Live Wait Times & Equipment Availability
+                  </h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Live Telemetry
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Real-time queue length, doctor on-duty status, and verified medical equipment availability
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setIsAutoSchedulerOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold border border-teal-200 transition-all cursor-pointer flex items-center space-x-1"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Auto-Scheduler</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('queue')}
+                  className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                >
+                  Full Board &rarr;
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  id: 'dept-cardio',
+                  name: 'Cardiology & Heart Center',
+                  code: 'CARD-01',
+                  doctor: 'Dr. David Ochieng (Consultant Cardiologist)',
+                  waitMins: '8 mins',
+                  waitColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+                  queueCount: 4,
+                  equipment: 'Siemens Artis Q Cath Lab & 12-Lead ECG Suite',
+                  equipmentStatus: 'Operational',
+                  room: 'Suite 204'
+                },
+                {
+                  id: 'dept-ortho',
+                  name: 'Orthopedics & Joint Surgery',
+                  code: 'ORTH-02',
+                  doctor: 'Dr. Brian Kiprono (Orthopedic Surgeon)',
+                  waitMins: '12 mins',
+                  waitColor: 'text-teal-700 bg-teal-50 border-teal-200',
+                  queueCount: 6,
+                  equipment: 'GE C-Arm Fluoroscopy & Cast Prep Suite',
+                  equipmentStatus: 'Operational',
+                  room: 'Suite 108'
+                },
+                {
+                  id: 'dept-peds',
+                  name: 'Pediatrics & Child Wellness',
+                  code: 'PEDS-03',
+                  doctor: 'Dr. Grace Muthoni (Pediatric Specialist)',
+                  waitMins: '5 mins',
+                  waitColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+                  queueCount: 2,
+                  equipment: 'Draeger Infant Phototherapy & Resuscitation Pods',
+                  equipmentStatus: 'Available',
+                  room: 'Suite 112'
+                },
+                {
+                  id: 'dept-obgyn',
+                  name: 'Obstetrics & Gynaecology (OB/GYN)',
+                  code: 'OBGY-04',
+                  doctor: 'Dr. Beatrice Muthoni (Lead Obstetrician)',
+                  waitMins: '10 mins',
+                  waitColor: 'text-teal-700 bg-teal-50 border-teal-200',
+                  queueCount: 3,
+                  equipment: 'Voluson E10 4D HD-Live Ultrasound & Delivery Suite',
+                  equipmentStatus: 'Operational',
+                  room: 'Maternity Wing'
+                },
+                {
+                  id: 'dept-radiology',
+                  name: 'Radiology & Advanced Imaging',
+                  code: 'RAD-05',
+                  doctor: 'Dr. Daniel Mutua (Chief Radiologist)',
+                  waitMins: '15 mins',
+                  waitColor: 'text-amber-700 bg-amber-50 border-amber-200',
+                  queueCount: 5,
+                  equipment: 'Siemens 3.0T Magnetom MRI & 128-Slice Somatom CT',
+                  equipmentStatus: 'Available',
+                  room: 'Imaging Wing'
+                },
+                {
+                  id: 'dept-emergency',
+                  name: 'Emergency & Trauma Center (24/7)',
+                  code: 'EMRG-00',
+                  doctor: 'Dr. Kevin Otieno (Emergency Trauma Lead)',
+                  waitMins: 'Instant (< 2 min)',
+                  waitColor: 'text-rose-700 bg-rose-50 border-rose-200 font-bold animate-pulse',
+                  queueCount: 1,
+                  equipment: 'Trauma Resus Bay, Zoll Defibrillator, Life Support',
+                  equipmentStatus: '24/7 Standby',
+                  room: 'Ground Floor A&E'
+                }
+              ].map((d) => (
+                <div 
+                  key={d.id} 
+                  className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-teal-300 transition-all flex flex-col justify-between space-y-3"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 truncate">{d.name}</span>
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 font-mono text-[10px] font-bold rounded-md">
+                        {d.code}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 font-medium truncate">
+                      {d.doctor}
+                    </p>
+
+                    <div className="flex items-center justify-between text-[11px] pt-1">
+                      <span className="text-slate-500">
+                        Live Wait: <strong className={`px-2 py-0.5 rounded-md border text-[10px] ${d.waitColor}`}>{d.waitMins}</strong>
+                      </span>
+                      <span className="text-slate-500 font-medium">
+                        Active Queue: <strong className="text-slate-800">{d.queueCount} patients</strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-[10px] text-slate-600 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 font-bold uppercase">Equipment Sync:</span>
+                      <span className="text-emerald-700 font-bold flex items-center space-x-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                        <span>{d.equipmentStatus}</span>
+                      </span>
+                    </div>
+                    <p className="text-slate-700 font-medium truncate">{d.equipment}</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setIsNurseChatOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all cursor-pointer"
+                    >
+                      Nurse Chat
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedDeptId(d.id);
+                        setActiveTab('book');
+                      }}
+                      className="px-3 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer"
+                    >
+                      Book Clinic
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Quick Metric Cards - Frosted Glass Panels */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white/50 backdrop-blur-xl p-5 rounded-3xl border border-white/70 shadow-sm shadow-slate-200/40 hover:bg-white/60 transition-all">
@@ -1035,6 +1300,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
           {/* EMR Subtabs */}
           <div className="flex overflow-x-auto gap-2 border-b border-slate-200/60 pb-2 text-xs font-semibold">
             {[
+              { id: 'timeline', label: `Unified Health Wallet Timeline` },
               { id: 'visits', label: `Clinical Encounters (${encounters.length})` },
               { id: 'prescriptions', label: `Prescriptions & Pharmacy (${prescriptions.length})` },
               { id: 'labs', label: `Laboratory Results (${labOrders.length})` },
@@ -1046,13 +1312,31 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                 key={sub.id}
                 onClick={() => setEmrSubtab(sub.id as any)}
                 className={`py-2 px-3.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                  emrSubtab === sub.id ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20' : 'bg-white/60 text-slate-600 hover:bg-white border border-white/60'
+                  emrSubtab === sub.id ? 'bg-teal-600 text-white shadow-md shadow-teal-500/20 font-bold' : 'bg-white/60 text-slate-600 hover:bg-white border border-white/60'
                 }`}
               >
                 {sub.label}
               </button>
             ))}
           </div>
+
+          {/* Subtab: Unified Health Wallet Timeline */}
+          {emrSubtab === 'timeline' && (
+            <HealthWalletTimeline
+              patient={patient}
+              encounters={encounters}
+              prescriptions={prescriptions}
+              labOrders={labOrders}
+              radiologyOrders={radiologyOrders}
+              immunizations={immunizations}
+              invoices={invoices}
+              onViewReport={(data) => {
+                setReportModalData(data);
+                setReportModalOpen(true);
+              }}
+              onOpenAutoScheduler={() => setIsAutoSchedulerOpen(true)}
+            />
+          )}
 
           {/* Subtab: Visits / Encounters */}
           {emrSubtab === 'visits' && (

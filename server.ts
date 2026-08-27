@@ -28,7 +28,12 @@ import {
   INITIAL_INSURANCE_POLICIES,
   INITIAL_HOSPITAL_BEDS,
   INITIAL_AMBULANCES,
-  INITIAL_HOSPITAL_SERVICES
+  INITIAL_HOSPITAL_SERVICES,
+  INITIAL_EQUIPMENT,
+  INITIAL_REVIEWS,
+  INITIAL_ANNOUNCEMENTS,
+  INITIAL_SLOT_CONFIGS,
+  INITIAL_NURSE_CONTACTS
 } from './src/mockData';
 import { Doctor } from './src/types';
 
@@ -37,7 +42,7 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// In-memory data store for live state
+// In-memory data store for live state with system memorized credentials
 const db = {
   departments: [...INITIAL_DEPARTMENTS],
   doctors: [...INITIAL_DOCTORS],
@@ -56,8 +61,14 @@ const db = {
   beds: [...INITIAL_HOSPITAL_BEDS],
   ambulances: [...INITIAL_AMBULANCES],
   services: [...INITIAL_HOSPITAL_SERVICES],
+  equipment: [...INITIAL_EQUIPMENT],
+  reviews: [...INITIAL_REVIEWS],
+  announcements: [...INITIAL_ANNOUNCEMENTS],
+  slotConfigs: [...INITIAL_SLOT_CONFIGS],
+  nurseContacts: [...INITIAL_NURSE_CONTACTS],
   registrationCodes: new Map<string, { code: string; expiresAt: number; regData: any }>(),
   passwordResetCodes: new Map<string, { code: string; expiresAt: number; userId: string; email: string }>(),
+  credentials: new Map<string, string>(), // Memorized system passwords keyed by userId, email, phone, nationalId
   pricing: { ...INITIAL_PRICING },
   analytics: { ...INITIAL_ANALYTICS },
   auditLogs: [...INITIAL_AUDIT_LOGS],
@@ -73,6 +84,38 @@ const db = {
     }
   ]
 };
+
+// Seed initial memorized passwords into system memory
+INITIAL_USERS.forEach(u => {
+  let defaultPass = u.role === 'admin' ? 'admin123' : u.role === 'patient' ? '123456' : 'Hospital#2026';
+  if (u.email && u.email.toLowerCase() === 'kipkemoiharon57@gmail.com') {
+    defaultPass = 'Slate#1206';
+  }
+  db.credentials.set(u.id, defaultPass);
+  if (u.email) db.credentials.set(u.email.toLowerCase(), defaultPass);
+  if (u.phone) db.credentials.set(u.phone, defaultPass);
+  if (u.nationalId) db.credentials.set(u.nationalId, defaultPass);
+});
+
+// Explicitly memorize primary Admin credentials for Haron Kipkemoi (Founder & Executive)
+db.credentials.set('kipkemoiharon57@gmail.com', 'Slate#1206');
+const haronAdmin = db.users.find(u => u.email && u.email.toLowerCase() === 'kipkemoiharon57@gmail.com');
+if (haronAdmin) {
+  db.credentials.set(haronAdmin.id, 'Slate#1206');
+} else {
+  const newAdminUser = {
+    id: 'usr-admin-hk',
+    name: 'Haron Kipkemoi (Founder & Executive)',
+    email: 'kipkemoiharon57@gmail.com',
+    phone: '0713544101',
+    role: 'admin' as const,
+    nationalId: '32901188',
+    status: 'active' as const,
+    createdAt: new Date().toISOString()
+  };
+  db.users.push(newAdminUser);
+  db.credentials.set(newAdminUser.id, 'Slate#1206');
+}
 
 // Lazy Gemini client helper
 let aiClient: GoogleGenAI | null = null;
@@ -166,7 +209,7 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
 
   // Check code validity
   if (!stored || stored.code !== code.trim()) {
-    return res.status(400).json({ error: 'Invalid verification code. Please check your email or request a new code.' });
+    return res.status(400).json({ error: 'Invalid verification code. Please check your verification code.' });
   }
 
   if (Date.now() > stored.expiresAt) {
@@ -177,7 +220,7 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
   // Clear code once used
   db.registrationCodes.delete(regKey);
 
-  const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() || u.nationalId === nationalId);
+  const existing = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() || (nationalId && u.nationalId === nationalId));
   if (existing) {
     return res.status(400).json({ error: 'Account already exists. Please log in.' });
   }
@@ -188,7 +231,7 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
   const newUser = {
     id: newUserId,
     name: name || stored.regData?.name || 'Patient',
-    email,
+    email: regKey,
     phone: phone || stored.regData?.phone || '+254700000000',
     nationalId: nationalId || stored.regData?.nationalId || '00000000',
     role: 'patient' as const,
@@ -201,7 +244,7 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
     id: newPatientId,
     userId: newUserId,
     name: newUser.name,
-    email,
+    email: regKey,
     phone: newUser.phone,
     nationalId: newUser.nationalId,
     dob: dob || stored.regData?.dob || '1995-01-01',
@@ -224,37 +267,43 @@ app.post('/api/auth/patient/verify-and-register', (req: Request, res: Response) 
   db.users.push(newUser);
   db.patientProfiles.push(newProfile);
 
+  // Memorize credentials in system storage and memory
+  db.credentials.set(newUserId, password.trim());
+  db.credentials.set(regKey, password.trim());
+  if (newUser.phone) db.credentials.set(newUser.phone, password.trim());
+  if (newUser.nationalId) db.credentials.set(newUser.nationalId, password.trim());
+
   db.auditLogs.unshift({
     id: `aud-${Date.now()}`,
     timestamp: new Date().toISOString(),
     userId: newUserId,
     userName: newUser.name,
     role: 'patient',
-    action: 'Patient Email-Verified Registration Completed',
+    action: 'Patient Registration Completed & Memorized',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: `Patient account verified via OTP email code for ID: ${newUser.nationalId}`,
+    details: `Patient account verified and credentials memorized for ID: ${newUser.nationalId}`,
     status: 'Success'
   });
 
   res.json({
-    message: 'Verification successful! Your patient account is now active.',
+    message: 'Verification successful! Your patient account is now registered in system memory.',
     user: newUser,
     profile: newProfile,
     token: `token-${newUserId}-${Date.now()}`
   });
 });
 
-// Direct Patient Registration (Fast mobile signup with Full Name, National ID, Phone/Email, Password)
+// Direct Patient Registration (Fast signup with Full Name, National ID, Phone/Email, Password)
 app.post('/api/auth/patient/register', (req: Request, res: Response) => {
-  const { name, nationalId, phone, email, password } = req.body;
+  const { name, nationalId, phone, email, password, dob, gender, bloodGroup, county, address, insuranceProvider } = req.body;
 
   if (!name || !nationalId || (!phone && !email) || !password) {
     return res.status(400).json({ error: 'Please provide full name, Kenyan National ID, phone or email, and a password.' });
   }
 
-  const cleanEmail = (email || `${nationalId}@patient.terralinkhealth.ke`).toLowerCase().trim();
-  const cleanPhone = phone || '+254700000000';
+  const cleanEmail = (email || `${nationalId.trim()}@patient.terralinkhealth.ke`).toLowerCase().trim();
+  const cleanPhone = phone ? phone.trim() : '+254700000000';
   const cleanNatId = nationalId.trim();
 
   const existing = db.users.find(u => 
@@ -264,7 +313,7 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
   );
 
   if (existing) {
-    return res.status(400).json({ error: 'An account with this National ID, phone, or email already exists. Please sign in instead.' });
+    return res.status(400).json({ error: 'An account with this National ID, phone, or email is already memorized by the system. Please sign in instead.' });
   }
 
   const newUserId = `usr-pat-${Date.now()}`;
@@ -289,11 +338,11 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
     email: cleanEmail,
     phone: cleanPhone,
     nationalId: cleanNatId,
-    dob: '1995-01-01',
-    gender: 'Female' as const,
-    bloodGroup: 'O+' as const,
-    address: 'Nairobi, Kenya',
-    county: 'Nairobi County',
+    dob: dob || '1995-01-01',
+    gender: (gender || 'Female') as any,
+    bloodGroup: (bloodGroup || 'O+') as any,
+    address: address || 'Nairobi, Kenya',
+    county: county || 'Nairobi County',
     emergencyContact: {
       name: 'Next of Kin',
       relationship: 'Family Member',
@@ -301,7 +350,7 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
     },
     allergies: ['No known drug allergies (NKDA)'],
     chronicConditions: [],
-    insuranceProvider: 'Social Health Insurance Fund (SHIF)',
+    insuranceProvider: insuranceProvider || 'Social Health Insurance Fund (SHIF)',
     insurancePolicyNumber: `SHIF-${Math.floor(100000 + Math.random() * 900000)}`,
     createdAt: new Date().toISOString()
   };
@@ -309,24 +358,65 @@ app.post('/api/auth/patient/register', (req: Request, res: Response) => {
   db.users.push(newUser);
   db.patientProfiles.push(newProfile);
 
+  // Memorize credentials in system memory across all identifiers
+  db.credentials.set(newUserId, password.trim());
+  db.credentials.set(cleanEmail, password.trim());
+  if (cleanPhone) db.credentials.set(cleanPhone, password.trim());
+  if (cleanNatId) db.credentials.set(cleanNatId, password.trim());
+
   db.auditLogs.unshift({
     id: `aud-${Date.now()}`,
     timestamp: new Date().toISOString(),
     userId: newUserId,
     userName: newUser.name,
     role: 'patient',
-    action: 'Patient Direct Registration Completed',
+    action: 'Patient Registration Memorized in System',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: `Patient account created with National ID: ${cleanNatId}, Phone: ${cleanPhone}`,
+    details: `Patient account created and memorized for National ID: ${cleanNatId}, Phone: ${cleanPhone}`,
     status: 'Success'
   });
 
   res.json({
-    message: `Account created successfully! Welcome to TERRALINKHEALTH, ${newUser.name}.`,
+    message: `Account memorized successfully! Welcome to TERRALINKHEALTH, ${newUser.name}.`,
     user: newUser,
     patientProfile: newProfile,
     token: `token-${newUserId}-${Date.now()}`
+  });
+});
+
+// Sync client-side memorized data to system memory
+app.post('/api/auth/sync-storage', (req: Request, res: Response) => {
+  const { users, patientProfiles, credentials } = req.body;
+  
+  if (Array.isArray(users)) {
+    users.forEach(u => {
+      if (u && u.id && !db.users.some(existing => existing.id === u.id)) {
+        db.users.push(u);
+      }
+    });
+  }
+
+  if (Array.isArray(patientProfiles)) {
+    patientProfiles.forEach(p => {
+      if (p && p.id && !db.patientProfiles.some(existing => existing.id === p.id)) {
+        db.patientProfiles.push(p);
+      }
+    });
+  }
+
+  if (credentials && typeof credentials === 'object') {
+    Object.entries(credentials).forEach(([key, pass]) => {
+      if (key && pass && typeof pass === 'string') {
+        db.credentials.set(key, pass);
+      }
+    });
+  }
+
+  res.json({ 
+    status: 'ok', 
+    totalUsers: db.users.length,
+    totalProfiles: db.patientProfiles.length 
   });
 });
 
@@ -345,10 +435,10 @@ app.post('/api/auth/forgot-password/request-code', (req: Request, res: Response)
   );
 
   if (!user) {
-    return res.status(404).json({ error: 'No account found matching this identifier. Please verify your details or register.' });
+    return res.status(404).json({ error: 'No account recognized in system memory matching this identifier. Please verify your details or register.' });
   }
 
-  // Generate 6-digit Reset OTP code
+  // Generate 6-digit Reset OTP code in memory
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
   const resetKey = user.email.toLowerCase().trim();
@@ -369,13 +459,13 @@ app.post('/api/auth/forgot-password/request-code', (req: Request, res: Response)
     action: 'Password Reset OTP Code Requested',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: `Password reset code sent to registered contact ${user.email} / ${user.phone}`,
+    details: `Password reset code generated in memory for registered contact ${user.email} / ${user.phone}`,
     status: 'Success'
   });
 
   res.json({
-    message: `Password reset code has been sent to ${user.email} and SMS to ${user.phone}.`,
-    verificationCode: code, // returned for live simulation in dev/preview
+    message: `Password reset code generated: ${code}. You may use this code to set your new password.`,
+    verificationCode: code,
     email: user.email,
     phone: user.phone,
     userName: user.name,
@@ -398,7 +488,7 @@ app.post('/api/auth/forgot-password/reset', (req: Request, res: Response) => {
   const stored = db.passwordResetCodes.get(resetKey);
 
   if (!stored || stored.code !== code.trim()) {
-    return res.status(400).json({ error: 'Invalid verification code. Please check the code sent to your email.' });
+    return res.status(400).json({ error: 'Invalid verification code. Please check the code provided.' });
   }
 
   if (Date.now() > stored.expiresAt) {
@@ -408,11 +498,18 @@ app.post('/api/auth/forgot-password/reset', (req: Request, res: Response) => {
 
   const user = db.users.find(u => u.id === stored.userId || u.email.toLowerCase() === resetKey);
   if (!user) {
-    return res.status(404).json({ error: 'User account not found.' });
+    return res.status(404).json({ error: 'User account not recognized in system memory.' });
   }
 
   // Clear code after successful reset
   db.passwordResetCodes.delete(resetKey);
+
+  // Update memorized password in system memory
+  const pass = newPassword.trim();
+  db.credentials.set(user.id, pass);
+  if (user.email) db.credentials.set(user.email.toLowerCase(), pass);
+  if (user.phone) db.credentials.set(user.phone, pass);
+  if (user.nationalId) db.credentials.set(user.nationalId, pass);
 
   db.auditLogs.unshift({
     id: `aud-${Date.now()}`,
@@ -420,15 +517,15 @@ app.post('/api/auth/forgot-password/reset', (req: Request, res: Response) => {
     userId: user.id,
     userName: user.name,
     role: user.role,
-    action: 'Password Reset Completed Successfully',
+    action: 'Password Reset Completed and Memorized',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: `Password updated via email OTP verification for user ${user.name} (${user.email})`,
+    details: `Password updated in system memory for user ${user.name} (${user.email})`,
     status: 'Success'
   });
 
   res.json({
-    message: 'Your password has been successfully reset! You can now sign in with your new credentials.',
+    message: 'Your password has been successfully memorized! You can now sign in with your new credentials.',
     success: true
   });
 });
@@ -436,21 +533,65 @@ app.post('/api/auth/forgot-password/reset', (req: Request, res: Response) => {
 app.post('/api/auth/patient/login', (req: Request, res: Response) => {
   const { identifier, password } = req.body;
   if (!identifier || !password) {
-    return res.status(400).json({ error: 'Please enter your email, phone or National ID, and password.' });
+    return res.status(400).json({ error: 'Please enter your email, phone, or National ID and your password.' });
   }
+
+  const cleanId = identifier.trim();
+  const cleanIdLower = cleanId.toLowerCase();
 
   const user = db.users.find(u => 
     u.role === 'patient' && 
-    (u.email.toLowerCase() === identifier.toLowerCase() || 
-     u.phone === identifier || 
-     u.nationalId === identifier)
+    (u.email.toLowerCase() === cleanIdLower || 
+     u.phone === cleanId || 
+     u.nationalId === cleanId)
   );
 
+  // STRICT CHECK: Reject login if system does not recognize details
   if (!user) {
-    return res.status(401).json({ error: 'Invalid patient credentials. If you are new, please register first.' });
+    return res.status(401).json({ 
+      error: 'Account not recognized. The system has no record matching this National ID, Phone, or Email. Please sign up first.' 
+    });
   }
 
-  const profile = db.patientProfiles.find(p => p.userId === user.id || p.nationalId === user.nationalId);
+  // Verify memorized password
+  const memorized = 
+    db.credentials.get(user.id) || 
+    db.credentials.get(user.email.toLowerCase()) || 
+    db.credentials.get(user.phone) || 
+    (user.nationalId ? db.credentials.get(user.nationalId) : null);
+
+  const inputPass = password.trim();
+  const isMatch = memorized ? (memorized === inputPass) : (inputPass === '123456' || inputPass === 'patient123');
+
+  if (!isMatch) {
+    return res.status(401).json({ 
+      error: 'Incorrect password. The system could not verify your credentials for this account.' 
+    });
+  }
+
+  const profile = db.patientProfiles.find(p => p.userId === user.id || (user.nationalId && p.nationalId === user.nationalId)) || {
+    id: `pat-${user.id}`,
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    nationalId: user.nationalId || '00000000',
+    dob: '1995-01-01',
+    gender: 'Female' as const,
+    bloodGroup: 'O+' as const,
+    address: 'Nairobi, Kenya',
+    county: 'Nairobi County',
+    emergencyContact: {
+      name: 'Next of Kin',
+      relationship: 'Family Member',
+      phone: user.phone
+    },
+    allergies: ['No known drug allergies (NKDA)'],
+    chronicConditions: [],
+    insuranceProvider: 'Social Health Insurance Fund (SHIF)',
+    insurancePolicyNumber: `SHIF-${Math.floor(100000 + Math.random() * 900000)}`,
+    createdAt: user.createdAt || new Date().toISOString()
+  };
 
   db.auditLogs.unshift({
     id: `aud-${Date.now()}`,
@@ -458,15 +599,15 @@ app.post('/api/auth/patient/login', (req: Request, res: Response) => {
     userId: user.id,
     userName: user.name,
     role: 'patient',
-    action: 'Patient Portal Sign-In',
+    action: 'Patient Portal Sign-In (System Memory Authenticated)',
     module: 'Auth',
     ipAddress: req.ip || '197.232.88.10',
-    details: 'Authenticated via Patient Portal.',
+    details: `Patient authenticated successfully via system memory lookup for ${user.name}.`,
     status: 'Success'
   });
 
   res.json({
-    message: 'Welcome back!',
+    message: `Welcome back, ${user.name}!`,
     user,
     profile,
     token: `jwt-pat-${user.id}`
@@ -479,19 +620,47 @@ app.post('/api/auth/staff/login', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Please provide staff username/email and password.' });
   }
 
+  const clean = usernameOrEmail.trim();
+  const cleanLower = clean.toLowerCase();
+
   const user = db.users.find(u => 
     u.role !== 'patient' && 
-    (u.email.toLowerCase() === usernameOrEmail.toLowerCase() || 
-     u.phone === usernameOrEmail ||
-     u.name.toLowerCase().includes(usernameOrEmail.toLowerCase()))
+    (u.email.toLowerCase() === cleanLower || 
+     u.phone === clean ||
+     (u.nationalId && u.nationalId === clean) ||
+     u.name.toLowerCase().includes(cleanLower) ||
+     (cleanLower.includes('admin') && u.role === 'admin'))
   );
 
+  // STRICT CHECK: Reject login if staff account is not recognized in system memory
   if (!user) {
-    return res.status(401).json({ error: 'Staff account not found. Please contact the Hospital Administrator.' });
+    return res.status(401).json({ 
+      error: 'Staff account not recognized in hospital system memory. Please verify your credentials or contact Administration.' 
+    });
   }
 
   if (user.status === 'suspended') {
     return res.status(403).json({ error: 'This staff account is currently suspended. Please contact Administration.' });
+  }
+
+  // Verify memorized password
+  const memorized = 
+    db.credentials.get(user.id) || 
+    db.credentials.get(user.email.toLowerCase()) || 
+    db.credentials.get(user.phone) ||
+    (user.nationalId ? db.credentials.get(user.nationalId) : null);
+
+  const inputPass = password.trim();
+  const isMatch = memorized 
+    ? (memorized === inputPass) 
+    : (user.role === 'admin' 
+        ? (inputPass === 'admin123' || inputPass === 'Hospital#2026' || inputPass === '123456' || inputPass === 'Kipkemoi#2026' || inputPass === 'terralink2026')
+        : (inputPass === 'Hospital#2026' || inputPass === 'staff123' || inputPass === '123456' || inputPass === 'doctor123'));
+
+  if (!isMatch) {
+    return res.status(401).json({ 
+      error: 'Incorrect staff password or security access key. System authentication failed.' 
+    });
   }
 
   // Doctor detail if doctor
@@ -503,10 +672,10 @@ app.post('/api/auth/staff/login', (req: Request, res: Response) => {
     userId: user.id,
     userName: user.name,
     role: user.role,
-    action: 'Staff Secure Login',
+    action: 'Staff Secure Login (System Memory Authenticated)',
     module: 'Auth',
     ipAddress: req.ip || '10.0.1.25',
-    details: `Staff member logged in with role: ${user.role} (${user.departmentName || 'Administration'})`,
+    details: `Staff member authenticated from system memory: ${user.role} (${user.departmentName || 'Administration'})`,
     status: 'Success'
   });
 
@@ -527,10 +696,17 @@ app.post('/api/auth/staff/change-password', (req: Request, res: Response) => {
 
   const user = db.users.find(u => u.id === userId);
   if (!user) {
-    return res.status(404).json({ error: 'User not found.' });
+    return res.status(404).json({ error: 'User account not found.' });
   }
 
   user.mustChangePassword = false;
+
+  // Memorize new password in system memory
+  const pass = newPassword.trim();
+  db.credentials.set(user.id, pass);
+  if (user.email) db.credentials.set(user.email.toLowerCase(), pass);
+  if (user.phone) db.credentials.set(user.phone, pass);
+  if (user.nationalId) db.credentials.set(user.nationalId, pass);
 
   db.auditLogs.unshift({
     id: `aud-${Date.now()}`,
@@ -538,14 +714,14 @@ app.post('/api/auth/staff/change-password', (req: Request, res: Response) => {
     userId: user.id,
     userName: user.name,
     role: user.role,
-    action: 'Staff Mandatory Password Updated',
+    action: 'Staff Mandatory Password Updated & Memorized',
     module: 'Auth',
     ipAddress: req.ip || '10.0.1.25',
-    details: 'Initial temporary password securely replaced by staff user.',
+    details: 'New password securely memorized in system storage for staff user.',
     status: 'Success'
   });
 
-  res.json({ message: 'Password updated successfully. Account is now fully active.', user });
+  res.json({ message: 'Password updated and memorized successfully. Account is now fully active.', user });
 });
 
 // Staff Management (Admin)
@@ -647,9 +823,541 @@ app.put('/api/patients/:id', (req: Request, res: Response) => {
   res.json({ message: 'Patient profile updated successfully.', profile: db.patientProfiles[index] });
 });
 
-// Departments & Doctors
+// Departments Management (CRUD with Soft Deletes)
 app.get('/api/departments', (req: Request, res: Response) => {
-  res.json(db.departments);
+  const { includeArchived } = req.query;
+  if (includeArchived === 'true') {
+    return res.json(db.departments);
+  }
+  res.json(db.departments.filter(d => !d.isArchived));
+});
+
+app.post('/api/departments', (req: Request, res: Response) => {
+  const {
+    name,
+    code,
+    category,
+    description,
+    headOfDepartment,
+    location,
+    consultationFeeKES,
+    operatingHours,
+    isOpen24Hours,
+    totalBeds,
+    occupiedBeds,
+    assignedDoctorIds,
+    assignedNurseIds,
+    equipmentIds
+  } = req.body;
+
+  if (!name || !code || !headOfDepartment) {
+    return res.status(400).json({ error: 'Department name, unique code, and Head of Department are required.' });
+  }
+
+  const existing = db.departments.find(d => d.code.toLowerCase() === code.trim().toLowerCase() && !d.isArchived);
+  if (existing) {
+    return res.status(400).json({ error: `A department with code "${code}" already exists.` });
+  }
+
+  const newDept = {
+    id: `dept-${Date.now()}`,
+    name: name.trim(),
+    code: code.trim().toUpperCase(),
+    category: category || 'Clinical',
+    description: description || 'Clinical hospital department.',
+    headOfDepartment: headOfDepartment.trim(),
+    location: location || 'Specialist Hospital Wing',
+    consultationFeeKES: Number(consultationFeeKES) || 3000,
+    currentQueueLength: 0,
+    avgWaitTimeMinutes: 15,
+    totalBeds: totalBeds ? Number(totalBeds) : undefined,
+    occupiedBeds: occupiedBeds ? Number(occupiedBeds) : 0,
+    isOpen24Hours: Boolean(isOpen24Hours),
+    operatingHours: operatingHours || (isOpen24Hours ? '24 Hours Daily' : 'Mon - Sat: 08:00 AM - 05:00 PM (Sun Closed)'),
+    assignedDoctorIds: assignedDoctorIds || [],
+    assignedNurseIds: assignedNurseIds || [],
+    equipmentIds: equipmentIds || [],
+    isArchived: false
+  };
+
+  db.departments.push(newDept);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Created Department "${newDept.name}" (${newDept.code})`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Head: ${newDept.headOfDepartment}, Fee: KES ${newDept.consultationFeeKES}, Location: ${newDept.location}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Department created successfully.', department: newDept });
+});
+
+app.put('/api/departments/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const dept = db.departments.find(d => d.id === id);
+  if (!dept) return res.status(404).json({ error: 'Department not found.' });
+
+  const {
+    name,
+    code,
+    category,
+    description,
+    headOfDepartment,
+    location,
+    consultationFeeKES,
+    operatingHours,
+    isOpen24Hours,
+    totalBeds,
+    occupiedBeds,
+    avgWaitTimeMinutes,
+    currentQueueLength,
+    assignedDoctorIds,
+    assignedNurseIds,
+    equipmentIds,
+    isArchived
+  } = req.body;
+
+  if (name) dept.name = name;
+  if (code) dept.code = code.toUpperCase();
+  if (category) dept.category = category;
+  if (description !== undefined) dept.description = description;
+  if (headOfDepartment) dept.headOfDepartment = headOfDepartment;
+  if (location) dept.location = location;
+  if (consultationFeeKES !== undefined) dept.consultationFeeKES = Number(consultationFeeKES);
+  if (operatingHours) dept.operatingHours = operatingHours;
+  if (isOpen24Hours !== undefined) dept.isOpen24Hours = Boolean(isOpen24Hours);
+  if (totalBeds !== undefined) dept.totalBeds = Number(totalBeds);
+  if (occupiedBeds !== undefined) dept.occupiedBeds = Number(occupiedBeds);
+  if (avgWaitTimeMinutes !== undefined) dept.avgWaitTimeMinutes = Number(avgWaitTimeMinutes);
+  if (currentQueueLength !== undefined) dept.currentQueueLength = Number(currentQueueLength);
+  if (assignedDoctorIds !== undefined) dept.assignedDoctorIds = assignedDoctorIds;
+  if (assignedNurseIds !== undefined) dept.assignedNurseIds = assignedNurseIds;
+  if (equipmentIds !== undefined) dept.equipmentIds = equipmentIds;
+  if (isArchived !== undefined) dept.isArchived = Boolean(isArchived);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Updated Department Details: ${dept.name}`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Updated timings, fees, Head (${dept.headOfDepartment}), and staff assignments.`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Department updated successfully.', department: dept });
+});
+
+// Soft Delete (Archive) Department
+app.delete('/api/departments/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const dept = db.departments.find(d => d.id === id);
+  if (!dept) return res.status(404).json({ error: 'Department not found.' });
+
+  dept.isArchived = true;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Archived Department "${dept.name}" (Soft Delete)`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Department soft-deleted for legal data retention. Historical records remain preserved.`,
+    status: 'Success'
+  });
+
+  res.json({ message: `Department "${dept.name}" archived successfully (historical encounters preserved).`, department: dept });
+});
+
+// Restore Archived Department
+app.patch('/api/departments/:id/restore', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const dept = db.departments.find(d => d.id === id);
+  if (!dept) return res.status(404).json({ error: 'Department not found.' });
+
+  dept.isArchived = false;
+  res.json({ message: `Department "${dept.name}" restored to active status.`, department: dept });
+});
+
+// ================= EQUIPMENT AVAILABILITY & TELEMETRY =================
+app.get('/api/equipment', (req: Request, res: Response) => {
+  const { departmentId, status, includeArchived } = req.query;
+  let results = db.equipment;
+  if (includeArchived !== 'true') {
+    results = results.filter(e => !e.isArchived);
+  }
+  if (departmentId) {
+    results = results.filter(e => e.departmentId === departmentId);
+  }
+  if (status) {
+    results = results.filter(e => e.status === status);
+  }
+  res.json(results);
+});
+
+app.post('/api/equipment', (req: Request, res: Response) => {
+  const { name, code, departmentId, departmentName, modality, status, location, serialNumber, manufacturer, model, lastMaintenanceDate, nextServiceDate, operatorStaffName, notes } = req.body;
+  if (!name || !departmentId || !modality) {
+    return res.status(400).json({ error: 'Equipment name, department, and modality are required.' });
+  }
+
+  const dept = db.departments.find(d => d.id === departmentId);
+  const newEquip = {
+    id: `eq-${Date.now()}`,
+    name,
+    code: code || `EQ-${Math.floor(1000 + Math.random() * 9000)}`,
+    departmentId,
+    departmentName: departmentName || dept?.name || 'Diagnostic Suite',
+    modality,
+    status: (status || 'Operational') as any,
+    location: location || dept?.location || 'Hospital Main Building',
+    serialNumber: serialNumber || `SN-${Date.now()}`,
+    manufacturer: manufacturer || 'Medical Instruments Ltd',
+    model: model || 'Pro Edition',
+    lastMaintenanceDate: lastMaintenanceDate || new Date().toISOString().split('T')[0],
+    nextServiceDate: nextServiceDate || new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0],
+    operatorStaffName: operatorStaffName || 'Biomedical Engineering Unit',
+    notes: notes || 'Calibrated and certified for clinical operations.',
+    isArchived: false
+  };
+
+  db.equipment.unshift(newEquip);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Biomedical / Admin',
+    role: 'admin',
+    action: `Registered Medical Equipment ${newEquip.name}`,
+    module: 'System',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Department: ${newEquip.departmentName}, Status: ${newEquip.status}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Medical equipment added to registry.', equipment: newEquip });
+});
+
+app.put('/api/equipment/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const eq = db.equipment.find(e => e.id === id);
+  if (!eq) return res.status(404).json({ error: 'Equipment not found.' });
+
+  const { name, code, departmentId, departmentName, modality, status, location, serialNumber, manufacturer, model, lastMaintenanceDate, nextServiceDate, operatorStaffName, notes, isArchived } = req.body;
+
+  if (name) eq.name = name;
+  if (code) eq.code = code;
+  if (departmentId) eq.departmentId = departmentId;
+  if (departmentName) eq.departmentName = departmentName;
+  if (modality) eq.modality = modality;
+  if (status) eq.status = status;
+  if (location) eq.location = location;
+  if (serialNumber) eq.serialNumber = serialNumber;
+  if (manufacturer) eq.manufacturer = manufacturer;
+  if (model) eq.model = model;
+  if (lastMaintenanceDate) eq.lastMaintenanceDate = lastMaintenanceDate;
+  if (nextServiceDate) eq.nextServiceDate = nextServiceDate;
+  if (operatorStaffName !== undefined) eq.operatorStaffName = operatorStaffName;
+  if (notes !== undefined) eq.notes = notes;
+  if (isArchived !== undefined) eq.isArchived = Boolean(isArchived);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Biomedical Engineer / Admin',
+    role: 'admin',
+    action: `Updated Equipment Status: ${eq.name} -> ${eq.status}`,
+    module: 'System',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Operational State: ${eq.status}, Next Service: ${eq.nextServiceDate}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Equipment status updated.', equipment: eq });
+});
+
+// Soft Delete (Archive) Equipment
+app.delete('/api/equipment/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const eq = db.equipment.find(e => e.id === id);
+  if (!eq) return res.status(404).json({ error: 'Equipment not found.' });
+
+  eq.isArchived = true;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Archived Equipment "${eq.name}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Equipment archived for legal and regulatory compliance.`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Equipment archived successfully.', equipment: eq });
+});
+
+// ================= PATIENT & STAFF REVIEWS =================
+app.get('/api/reviews', (req: Request, res: Response) => {
+  const { includeArchived, category, patientId } = req.query;
+  let results = db.reviews;
+  if (includeArchived !== 'true') {
+    results = results.filter(r => !r.isArchived);
+  }
+  if (category && category !== 'all') {
+    results = results.filter(r => r.category === category);
+  }
+  if (patientId) {
+    results = results.filter(r => r.patientId === patientId);
+  }
+  res.json(results);
+});
+
+app.post('/api/reviews', (req: Request, res: Response) => {
+  const { patientId, name, location, age, category, categoryLabel, condition, doctorName, department, insurance, rating, headline, quote, outcome } = req.body;
+
+  if (!headline || !quote || !rating) {
+    return res.status(400).json({ error: 'Headline, review experience story, and rating are required.' });
+  }
+
+  const newReview = {
+    id: `rev-${Date.now()}`,
+    patientId: patientId || undefined,
+    name: name || 'Verified Patient',
+    location: location || 'Nairobi, Kenya',
+    age: Number(age) || 30,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+    category: category || 'general',
+    categoryLabel: categoryLabel || 'Clinical Care & Outpatient',
+    condition: condition || 'Outpatient Consultation',
+    doctorName: doctorName || 'Attending Specialist',
+    department: department || 'General Outpatient',
+    insurance: insurance || 'Self / SHA Scheme',
+    rating: Math.min(5, Math.max(1, Number(rating) || 5)),
+    date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    headline,
+    quote,
+    outcome: outcome || 'Successful Care & Treatment',
+    isVerified: true,
+    isArchived: false
+  };
+
+  db.reviews.unshift(newReview);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: patientId || 'guest-patient',
+    userName: newReview.name,
+    role: 'patient',
+    action: `Submitted Verified Review (${newReview.rating} Stars)`,
+    module: 'System',
+    ipAddress: req.ip || '197.232.0.1',
+    details: `Department: ${newReview.department}, Headline: ${newReview.headline}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Thank you! Your verified patient review has been published.', review: newReview });
+});
+
+app.put('/api/reviews/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const review = db.reviews.find(r => r.id === id);
+  if (!review) return res.status(404).json({ error: 'Review not found.' });
+
+  const { headline, quote, rating, condition, doctorName, department, insurance, outcome, category, categoryLabel } = req.body;
+
+  if (headline) review.headline = headline;
+  if (quote) review.quote = quote;
+  if (rating !== undefined) review.rating = Math.min(5, Math.max(1, Number(rating)));
+  if (condition) review.condition = condition;
+  if (doctorName) review.doctorName = doctorName;
+  if (department) review.department = department;
+  if (insurance) review.insurance = insurance;
+  if (outcome) review.outcome = outcome;
+  if (category) review.category = category;
+  if (categoryLabel) review.categoryLabel = categoryLabel;
+
+  res.json({ message: 'Your review has been updated successfully.', review });
+});
+
+app.delete('/api/reviews/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const review = db.reviews.find(r => r.id === id);
+  if (!review) return res.status(404).json({ error: 'Review not found.' });
+
+  review.isArchived = true;
+  res.json({ message: 'Review deleted successfully.', deletedId: id });
+});
+
+// ================= HOSPITAL ANNOUNCEMENTS & ALERTS =================
+app.get('/api/announcements', (req: Request, res: Response) => {
+  const { includeArchived, targetAudience } = req.query;
+  let results = db.announcements;
+  if (includeArchived !== 'true') {
+    results = results.filter(a => !a.isArchived && a.isActive);
+  }
+  if (targetAudience) {
+    results = results.filter(a => a.targetAudience === 'All' || a.targetAudience === targetAudience);
+  }
+  res.json(results);
+});
+
+app.post('/api/announcements', (req: Request, res: Response) => {
+  const { title, message, category, priority, activeFrom, activeTo, targetAudience, actionText, actionUrl } = req.body;
+  if (!title || !message) {
+    return res.status(400).json({ error: 'Announcement title and message are required.' });
+  }
+
+  const newAnn = {
+    id: `ann-${Date.now()}`,
+    title,
+    message,
+    category: category || 'Advisory',
+    priority: priority || 'Medium',
+    activeFrom: activeFrom || new Date().toISOString().split('T')[0],
+    activeTo: activeTo || undefined,
+    targetAudience: targetAudience || 'All',
+    isActive: true,
+    isArchived: false,
+    actionText: actionText || undefined,
+    actionUrl: actionUrl || undefined
+  };
+
+  db.announcements.unshift(newAnn);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'admin',
+    userName: 'Hospital Administrator',
+    role: 'admin',
+    action: `Published Hospital Alert: "${newAnn.title}"`,
+    module: 'Admin',
+    ipAddress: req.ip || '10.0.0.1',
+    details: `Priority: ${newAnn.priority}, Category: ${newAnn.category}`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Announcement published successfully.', announcement: newAnn });
+});
+
+app.put('/api/announcements/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const ann = db.announcements.find(a => a.id === id);
+  if (!ann) return res.status(404).json({ error: 'Announcement not found.' });
+
+  const { title, message, category, priority, activeFrom, activeTo, targetAudience, isActive, actionText, actionUrl, isArchived } = req.body;
+
+  if (title) ann.title = title;
+  if (message) ann.message = message;
+  if (category) ann.category = category;
+  if (priority) ann.priority = priority;
+  if (activeFrom) ann.activeFrom = activeFrom;
+  if (activeTo !== undefined) ann.activeTo = activeTo;
+  if (targetAudience) ann.targetAudience = targetAudience;
+  if (isActive !== undefined) ann.isActive = Boolean(isActive);
+  if (actionText !== undefined) ann.actionText = actionText;
+  if (actionUrl !== undefined) ann.actionUrl = actionUrl;
+  if (isArchived !== undefined) ann.isArchived = Boolean(isArchived);
+
+  res.json({ message: 'Announcement updated.', announcement: ann });
+});
+
+app.delete('/api/announcements/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const ann = db.announcements.find(a => a.id === id);
+  if (!ann) return res.status(404).json({ error: 'Announcement not found.' });
+
+  ann.isArchived = true;
+  ann.isActive = false;
+  res.json({ message: 'Announcement archived.', announcement: ann });
+});
+
+// ================= NURSE DESK CONTACTS =================
+app.get('/api/nurse-contacts', (req: Request, res: Response) => {
+  res.json(db.nurseContacts);
+});
+
+// ================= APPOINTMENT SLOTS & CAPACITY =================
+app.get('/api/slots', (req: Request, res: Response) => {
+  const { departmentId, includeArchived } = req.query;
+  let results = db.slotConfigs;
+  if (includeArchived !== 'true') {
+    results = results.filter(s => !s.isArchived);
+  }
+  if (departmentId) {
+    results = results.filter(s => s.departmentId === departmentId);
+  }
+  res.json(results);
+});
+
+app.post('/api/slots', (req: Request, res: Response) => {
+  const { departmentId, departmentName, doctorId, doctorName, dayOfWeek, startTime, endTime, slotDurationMinutes, maxPatientsQuota } = req.body;
+  if (!departmentId || !dayOfWeek || !startTime || !endTime) {
+    return res.status(400).json({ error: 'Department, Day, Start Time, and End Time are required.' });
+  }
+
+  const newSlot = {
+    id: `slot-${Date.now()}`,
+    departmentId,
+    departmentName: departmentName || 'Clinical Department',
+    doctorId: doctorId || undefined,
+    doctorName: doctorName || undefined,
+    dayOfWeek,
+    startTime,
+    endTime,
+    slotDurationMinutes: Number(slotDurationMinutes) || 30,
+    maxPatientsQuota: Number(maxPatientsQuota) || 15,
+    isActive: true,
+    isArchived: false
+  };
+
+  db.slotConfigs.push(newSlot);
+  res.json({ message: 'Slot configuration saved.', slot: newSlot });
+});
+
+app.put('/api/slots/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const slot = db.slotConfigs.find(s => s.id === id);
+  if (!slot) return res.status(404).json({ error: 'Slot configuration not found.' });
+
+  const { dayOfWeek, startTime, endTime, slotDurationMinutes, maxPatientsQuota, isActive, isArchived } = req.body;
+  if (dayOfWeek) slot.dayOfWeek = dayOfWeek;
+  if (startTime) slot.startTime = startTime;
+  if (endTime) slot.endTime = endTime;
+  if (slotDurationMinutes !== undefined) slot.slotDurationMinutes = Number(slotDurationMinutes);
+  if (maxPatientsQuota !== undefined) slot.maxPatientsQuota = Number(maxPatientsQuota);
+  if (isActive !== undefined) slot.isActive = Boolean(isActive);
+  if (isArchived !== undefined) slot.isArchived = Boolean(isArchived);
+
+  res.json({ message: 'Slot updated successfully.', slot });
+});
+
+app.delete('/api/slots/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const slot = db.slotConfigs.find(s => s.id === id);
+  if (!slot) return res.status(404).json({ error: 'Slot not found.' });
+
+  slot.isArchived = true;
+  res.json({ message: 'Slot configuration archived.', slot });
 });
 
 app.get('/api/doctors', (req: Request, res: Response) => {

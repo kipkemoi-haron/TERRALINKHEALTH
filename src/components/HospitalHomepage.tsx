@@ -59,6 +59,8 @@ interface HospitalHomepageProps {
   departments?: Department[];
   doctors?: Doctor[];
   insuranceProviders?: InsuranceProviderPlan[];
+  currentUser?: any;
+  currentPatient?: any;
   onNavigateToPortal: (portal: 'patient' | 'provider' | 'admin') => void;
   onOpenAuthModal?: (mode: 'patient_login' | 'patient_register' | 'staff_login') => void;
   onOpenRegister?: () => void;
@@ -71,6 +73,8 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   departments = mockDepartments,
   doctors = mockDoctors,
   insuranceProviders = INITIAL_INSURANCE_PROVIDERS,
+  currentUser,
+  currentPatient,
   onNavigateToPortal,
   onOpenAuthModal,
   onOpenRegister,
@@ -114,58 +118,164 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       );
   const calculatedAnnualPremium = calculatedMonthlyPremium * 12;
 
-  // Founder Profile Photo Upload State (Persisted in localStorage for Haron Kipkemoi)
-  const [founderPhoto, setFounderPhoto] = useState<string>(() => {
+  // Founder Profile Photo State (Initialized from stored photo or executive visual identity)
+  const [founderPhoto] = useState<string>(() => {
     try {
       return localStorage.getItem('terralink_founder_profile_picture') || '';
     } catch {
       return '';
     }
   });
-  const [isPhotoDragging, setIsPhotoDragging] = useState<boolean>(false);
-  const [photoNotification, setPhotoNotification] = useState<string>('');
-  const photoFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFounderPhotoUpload = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setPhotoNotification('Please upload a valid image file (PNG, JPG, JPEG, WebP).');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoNotification('Image file size must be less than 5MB.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      setFounderPhoto(base64);
-      try {
-        localStorage.setItem('terralink_founder_profile_picture', base64);
-        setPhotoNotification('Founder profile picture saved successfully!');
-        setTimeout(() => setPhotoNotification(''), 3500);
-      } catch (err) {
-        console.error('Failed to save to localStorage', err);
+  // Reviews Modal State, API Fetching & Dynamic Management
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState<boolean>(false);
+  const [reviewSearchQuery, setReviewSearchQuery] = useState<string>('');
+  const [activeStoryFilter, setActiveStoryFilter] = useState<string>('all');
+  const [liveReviews, setLiveReviews] = useState<any[]>([]);
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState<boolean>(false);
+  const [reviewFormMode, setReviewFormMode] = useState<'create' | 'edit'>('create');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
+  const [reviewNotification, setReviewNotification] = useState<string>('');
+
+  // Review Form Field State
+  const [reviewForm, setReviewForm] = useState({
+    name: currentPatient?.name || currentUser?.name || '',
+    location: currentPatient?.county ? `${currentPatient.county}, Kenya` : 'Nairobi, Kenya',
+    age: 32,
+    rating: 5,
+    category: 'general',
+    categoryLabel: 'Clinical Care & Outpatient',
+    condition: 'General Medical Consultation',
+    doctorName: 'Dr. David Ochieng',
+    department: 'Cardiology',
+    insurance: 'SHA Kenya / Self',
+    headline: '',
+    quote: '',
+    outcome: 'Successful Recovery & Excellent Care'
+  });
+
+  // Fetch reviews from API on mount & on modal open
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch('/api/reviews');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveReviews(data);
+        }
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn('Using local reviews fallback', err);
+    }
   };
 
-  const handleRemoveFounderPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFounderPhoto('');
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const openAddReviewModal = () => {
+    setReviewFormMode('create');
+    setEditingReviewId(null);
+    setReviewForm({
+      name: currentPatient?.name || currentUser?.name || 'Verified Patient',
+      location: currentPatient?.county ? `${currentPatient.county}, Kenya` : 'Nairobi, Kenya',
+      age: 32,
+      rating: 5,
+      category: 'general',
+      categoryLabel: 'Clinical Care & Outpatient',
+      condition: 'Consultation & Follow-up',
+      doctorName: 'Attending Specialist',
+      department: 'General Outpatient',
+      insurance: currentPatient?.insuranceProvider || 'SHA Kenya',
+      headline: '',
+      quote: '',
+      outcome: 'Full Recovery & Compassionate Treatment'
+    });
+    setIsReviewFormOpen(true);
+  };
+
+  const openEditReviewModal = (review: any) => {
+    setReviewFormMode('edit');
+    setEditingReviewId(review.id);
+    setReviewForm({
+      name: review.name || '',
+      location: review.location || 'Nairobi, Kenya',
+      age: review.age || 30,
+      rating: review.rating || 5,
+      category: review.category || 'general',
+      categoryLabel: review.categoryLabel || 'Clinical Care & Outpatient',
+      condition: review.condition || '',
+      doctorName: review.doctorName || '',
+      department: review.department || '',
+      insurance: review.insurance || 'SHA Kenya',
+      headline: review.headline || '',
+      quote: review.quote || '',
+      outcome: review.outcome || 'Successful Outcome'
+    });
+    setIsReviewFormOpen(true);
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm('Are you sure you want to delete/archive this review?')) return;
     try {
-      localStorage.removeItem('terralink_founder_profile_picture');
-      setPhotoNotification('Photo removed. Default placeholder active.');
-      setTimeout(() => setPhotoNotification(''), 3000);
+      const res = await fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setLiveReviews(prev => prev.filter(r => r.id !== reviewId));
+        setReviewNotification('Review successfully deleted.');
+        setTimeout(() => setReviewNotification(''), 3000);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Reviews Modal State & Dataset
-  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState<boolean>(false);
-  const [reviewSearchQuery, setReviewSearchQuery] = useState<string>('');
-  const [activeStoryFilter, setActiveStoryFilter] = useState<string>('all');
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewForm.headline.trim() || !reviewForm.quote.trim()) {
+      alert('Please provide a headline and your review story.');
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      const payload = {
+        ...reviewForm,
+        patientId: currentPatient?.id || currentUser?.id || undefined
+      };
+
+      if (reviewFormMode === 'create') {
+        const res = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLiveReviews(prev => [data.review, ...prev]);
+          setReviewNotification('Your review has been successfully posted!');
+          setIsReviewFormOpen(false);
+          setTimeout(() => setReviewNotification(''), 3500);
+        }
+      } else if (editingReviewId) {
+        const res = await fetch(`/api/reviews/${editingReviewId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLiveReviews(prev => prev.map(r => r.id === editingReviewId ? data.review : r));
+          setReviewNotification('Review updated successfully.');
+          setIsReviewFormOpen(false);
+          setTimeout(() => setReviewNotification(''), 3500);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const patientSuccessStories = [
     {
@@ -532,102 +642,38 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Hidden File Input for Founder Profile Picture */}
-        <input
-          type="file"
-          ref={photoFileInputRef}
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFounderPhotoUpload(file);
-          }}
-        />
-
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
           
           {/* Executive Bio & Profile Column */}
           <div className="lg:col-span-4 space-y-4 text-center lg:text-left border-b lg:border-b-0 lg:border-r border-white/15 pb-6 lg:pb-0 lg:pr-8">
             
-            {/* Interactive Picture Placeholder for Founder (Haron Kipkemoi) */}
-            <div className="relative inline-block mx-auto lg:mx-0 group">
-              <div 
-                onClick={() => photoFileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setIsPhotoDragging(true); }}
-                onDragLeave={() => setIsPhotoDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsPhotoDragging(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) handleFounderPhotoUpload(file);
-                }}
-                className={`w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 shadow-2xl transition-all cursor-pointer relative overflow-hidden ${
-                  isPhotoDragging
-                    ? 'bg-gradient-to-tr from-teal-400 to-emerald-300 ring-4 ring-teal-400 scale-105'
-                    : 'bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 hover:scale-102 hover:shadow-teal-500/40'
-                }`}
-                title="Click or drag a photo here to upload Founder Profile Picture"
-              >
+            {/* Executive Portrait Container for Founder (Haron Kipkemoi) */}
+            <div className="relative inline-block mx-auto lg:mx-0">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 shadow-2xl bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-400 relative overflow-hidden">
                 {founderPhoto ? (
-                  <div className="relative w-full h-full rounded-[22px] overflow-hidden group/img">
+                  <div className="relative w-full h-full rounded-[22px] overflow-hidden">
                     <img
                       src={founderPhoto}
                       alt="Haron Kipkemoi - Founder & CEO"
                       className="w-full h-full object-cover object-center"
                       referrerPolicy="no-referrer"
                     />
-                    {/* Hover Overlay to Change Photo */}
-                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center text-white opacity-0 group-hover/img:opacity-100 transition-opacity p-2 text-center">
-                      <Camera className="w-5 h-5 text-teal-300 mb-1" />
-                      <span className="text-[10px] font-bold">Change Photo</span>
-                    </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full rounded-[22px] bg-slate-900 hover:bg-slate-800 transition-colors flex flex-col items-center justify-center text-teal-300 border border-white/20 p-2 text-center">
-                    <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300 mb-1 border border-teal-400/30">
-                      <Camera className="w-4 h-4" />
+                  <div className="w-full h-full rounded-[22px] bg-slate-900 flex flex-col items-center justify-center text-teal-300 border border-white/20 p-2 text-center">
+                    <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300 mb-1.5 border border-teal-400/30 font-black text-sm shadow-inner">
+                      HK
                     </div>
-                    <span className="text-sm font-black tracking-tight text-white">HK</span>
-                    <span className="text-[9px] font-bold text-teal-400 tracking-wider uppercase mt-0.5">Upload Photo</span>
+                    <span className="text-xs font-black tracking-tight text-white">HARON KIPKEMOI</span>
+                    <span className="text-[9px] font-bold text-teal-400 tracking-wider uppercase mt-0.5">Founder & CEO</span>
                   </div>
                 )}
               </div>
 
-              {/* Status Badge & Photo Controls */}
+              {/* Verified Executive Badge */}
               <div className="absolute -bottom-2 -right-2 p-1.5 rounded-xl bg-teal-500 text-slate-950 shadow-md">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-            </div>
-
-            {/* Upload / Replace Action Buttons for Founder */}
-            <div className="flex flex-col items-center lg:items-start gap-1.5 pt-1">
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => photoFileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-teal-300 hover:text-white text-[11px] font-bold border border-teal-400/30 transition-all flex items-center space-x-1.5 cursor-pointer"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>{founderPhoto ? 'Update Photo' : 'Upload Founder Photo'}</span>
-                </button>
-
-                {founderPhoto && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveFounderPhoto}
-                    title="Remove custom photo"
-                    className="p-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/30 text-[11px] transition-all cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {photoNotification && (
-                <span className="text-[11px] text-teal-300 font-medium animate-fade-in text-center lg:text-left">
-                  {photoNotification}
-                </span>
-              )}
             </div>
 
             <div>
@@ -1233,91 +1279,355 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
             {/* Reviews List */}
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 bg-slate-50/50">
-              {patientSuccessStories
-                .filter((story) => {
+              {reviewNotification && (
+                <div className="p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold flex items-center justify-between animate-fade-in">
+                  <span>{reviewNotification}</span>
+                  <button onClick={() => setReviewNotification('')} className="text-teal-600 hover:text-teal-900">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Merged Live Reviews + Initial Stories */}
+              {(() => {
+                const combined = [
+                  ...liveReviews,
+                  ...patientSuccessStories.filter(s => !liveReviews.some(lr => lr.id === s.id))
+                ];
+
+                const filtered = combined.filter((story) => {
                   const matchesCategory = activeStoryFilter === 'all' || story.category === activeStoryFilter;
                   const q = reviewSearchQuery.toLowerCase().trim();
                   if (!q) return matchesCategory;
-                  const matchesSearch =
-                    story.name.toLowerCase().includes(q) ||
-                    story.doctorName.toLowerCase().includes(q) ||
-                    story.condition.toLowerCase().includes(q) ||
-                    story.quote.toLowerCase().includes(q) ||
-                    story.location.toLowerCase().includes(q);
-                  return matchesCategory && matchesSearch;
-                })
-                .map((story) => (
-                  <div
-                    key={story.id}
-                    className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={story.avatar}
-                          alt={story.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-teal-500/30 shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-sm font-bold text-slate-900">{story.name}</h4>
-                            <span className="text-[11px] text-slate-500">({story.age} yrs)</span>
-                            <span className="px-2 py-0.2 rounded bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200/60">
-                              {story.categoryLabel}
-                            </span>
+                  return (
+                    matchesCategory &&
+                    (story.name?.toLowerCase().includes(q) ||
+                      story.doctorName?.toLowerCase().includes(q) ||
+                      story.condition?.toLowerCase().includes(q) ||
+                      story.quote?.toLowerCase().includes(q) ||
+                      story.location?.toLowerCase().includes(q) ||
+                      story.department?.toLowerCase().includes(q))
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 text-xs space-y-2">
+                      <MessageSquareQuote className="w-8 h-8 text-slate-400 mx-auto" />
+                      <p className="font-semibold">No reviews found matching your search.</p>
+                      <p>Be the first verified patient to share your medical care journey!</p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((story) => {
+                  const isAuthor =
+                    (currentPatient?.id && story.patientId === currentPatient.id) ||
+                    (currentPatient?.name && story.name === currentPatient.name) ||
+                    (currentUser?.name && story.name === currentUser.name) ||
+                    currentUser?.role === 'admin';
+
+                  return (
+                    <div
+                      key={story.id}
+                      className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3 relative group"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={story.avatar || avatarWanjiku}
+                            alt={story.name}
+                            className="w-12 h-12 rounded-xl object-cover border border-teal-500/30 shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-sm font-bold text-slate-900">{story.name}</h4>
+                              {story.age && <span className="text-[11px] text-slate-500">({story.age} yrs)</span>}
+                              <span className="px-2 py-0.2 rounded bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200/60">
+                                {story.categoryLabel || story.department || 'Clinical Care'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-slate-500 text-[11px]">
+                              <MapPin className="w-3 h-3 text-teal-600" />
+                              <span>{story.location || 'Nairobi, Kenya'}</span>
+                              {story.date && <span className="text-slate-400">• {story.date}</span>}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-1 text-slate-500 text-[11px]">
-                            <MapPin className="w-3 h-3 text-teal-600" />
-                            <span>{story.location}</span>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-0.5 text-amber-400 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/50 self-start sm:self-auto">
+                            {[...Array(story.rating || 5)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            ))}
                           </div>
+
+                          {/* Patient Actions: Edit / Delete Review */}
+                          {isAuthor && (
+                            <div className="flex items-center space-x-1">
+                              <button
+                                type="button"
+                                onClick={() => openEditReviewModal(story)}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 text-xs font-semibold transition-all cursor-pointer"
+                                title="Edit My Review"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteReview(story.id)}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-semibold transition-all cursor-pointer"
+                                title="Delete My Review"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-0.5 text-amber-400 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/50 self-start sm:self-auto">
-                        {[...Array(story.rating)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        ))}
+                      <div className="space-y-1.5">
+                        <h5 className="text-xs font-bold text-teal-950">{story.headline}</h5>
+                        <p className="text-xs text-slate-600 italic leading-relaxed">
+                          "{story.quote}"
+                        </p>
                       </div>
-                    </div>
 
-                    <div className="space-y-1.5">
-                      <h5 className="text-xs font-bold text-teal-950">{story.headline}</h5>
-                      <p className="text-xs text-slate-600 italic leading-relaxed">
-                        "{story.quote}"
-                      </p>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] text-slate-500 gap-2">
-                      <div className="flex items-center space-x-3">
-                        <span>Attending: <strong className="text-slate-800">{story.doctorName}</strong></span>
-                        <span>Billing: <strong className="text-teal-700">{story.insurance}</strong></span>
+                      <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] text-slate-500 gap-2">
+                        <div className="flex items-center space-x-3">
+                          {story.doctorName && (
+                            <span>Attending: <strong className="text-slate-800">{story.doctorName}</strong></span>
+                          )}
+                          {story.department && (
+                            <span>Dept: <strong className="text-teal-700">{story.department}</strong></span>
+                          )}
+                          {story.insurance && (
+                            <span>Billing: <strong className="text-slate-700">{story.insurance}</strong></span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1 font-semibold text-emerald-700">
+                          <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{story.outcome || 'Successful Outcome'}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-1 font-semibold text-emerald-700">
-                        <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{story.outcome}</span>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                });
+              })()}
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-500">
-                KDPA 2019 & KMPDC Certified Patient Feedback
-              </span>
+            {/* Modal Footer with Add/Edit/Delete Review Button for Logged-In Patient */}
+            <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center space-x-2 text-xs text-slate-500">
+                <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0" />
+                <span>KDPA 2019 & KMPDC Certified Patient Feedback System</span>
+              </div>
+
+              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                {/* Button to Add or Manage Patient Review */}
+                <button
+                  type="button"
+                  onClick={openAddReviewModal}
+                  className="px-4 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs border border-teal-300 shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                  <span>+ Add Patient Review</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReviewsModalOpen(false);
+                    onNavigateToPortal('patient');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md shadow-teal-600/20 transition-all cursor-pointer"
+                >
+                  Book Appointment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ADD / EDIT PATIENT REVIEW FORM ================= */}
+      {isReviewFormOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div 
+            className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+                  <Star className="w-4 h-4 fill-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {reviewFormMode === 'create' ? 'Add Verified Patient Review' : 'Edit Your Patient Review'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Share your experience with doctors, nurses, triage, and hospital facilities.
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => {
-                  setIsReviewsModalOpen(false);
-                  onNavigateToPortal('patient');
-                }}
-                className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all cursor-pointer"
+                onClick={() => setIsReviewFormOpen(false)}
+                className="p-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 cursor-pointer"
               >
-                Book Appointment
+                <X className="w-4 h-4" />
               </button>
             </div>
+
+            <form onSubmit={handleSubmitReview} className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Your Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={reviewForm.name}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Jane Mutua"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Location / County</label>
+                  <input
+                    type="text"
+                    value={reviewForm.location}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="e.g. Westlands, Nairobi"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Rating (Stars)</label>
+                  <select
+                    value={reviewForm.rating}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, rating: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none font-bold text-amber-600"
+                  >
+                    <option value={5}>⭐⭐⭐⭐⭐ (5 - Exceptional)</option>
+                    <option value={4}>⭐⭐⭐⭐ (4 - Very Good)</option>
+                    <option value={3}>⭐⭐⭐ (3 - Satisfactory)</option>
+                    <option value={2}>⭐⭐ (2 - Needs Improvement)</option>
+                    <option value={1}>⭐ (1 - Unsatisfactory)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Department</label>
+                  <select
+                    value={reviewForm.department}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, department: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none"
+                  >
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Obstetrics & Gynaecology">OB/GYN & Maternity</option>
+                    <option value="Radiology & Imaging">Radiology</option>
+                    <option value="Emergency & Trauma">Emergency & Trauma</option>
+                    <option value="General Outpatient">General Outpatient</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Insurance / Scheme</label>
+                  <input
+                    type="text"
+                    value={reviewForm.insurance}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, insurance: e.target.value }))}
+                    placeholder="e.g. SHA Kenya / Jubilee"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Condition Treated / Reason</label>
+                  <input
+                    type="text"
+                    value={reviewForm.condition}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, condition: e.target.value }))}
+                    placeholder="e.g. Annual Cardiac Checkup & ECG"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Attending Doctor / Specialist</label>
+                  <input
+                    type="text"
+                    value={reviewForm.doctorName}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, doctorName: e.target.value }))}
+                    placeholder="e.g. Dr. David Ochieng"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Review Headline</label>
+                <input
+                  type="text"
+                  required
+                  value={reviewForm.headline}
+                  onChange={(e) => setReviewForm(prev => ({ ...prev, headline: e.target.value }))}
+                  placeholder="e.g. Fast emergency response and excellent pediatric care"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Your Detailed Experience & Story</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={reviewForm.quote}
+                  onChange={(e) => setReviewForm(prev => ({ ...prev, quote: e.target.value }))}
+                  placeholder="Describe your care experience, staff warmth, wait times, and clinical outcome..."
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Clinical Outcome</label>
+                <input
+                  type="text"
+                  value={reviewForm.outcome}
+                  onChange={(e) => setReviewForm(prev => ({ ...prev, outcome: e.target.value }))}
+                  placeholder="e.g. Full Recovery • Zero Complications"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReviewFormOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reviewSubmitting}
+                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md shadow-teal-600/20 disabled:opacity-50 cursor-pointer"
+                >
+                  {reviewSubmitting ? 'Submitting...' : reviewFormMode === 'create' ? 'Publish Review' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

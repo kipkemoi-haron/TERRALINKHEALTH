@@ -36,10 +36,16 @@ import {
   X,
   Smartphone,
   Bed,
-  Stethoscope
+  Stethoscope,
+  Cpu,
+  Megaphone
 } from 'lucide-react';
 import { AdminBedsTab } from './AdminBedsTab';
 import { AdminServicesTab } from './AdminServicesTab';
+import { AdminEquipmentManagement } from './AdminEquipmentManagement';
+import { AdminAnnouncementsManagement } from './AdminAnnouncementsManagement';
+import { AdminSlotsManagement } from './AdminSlotsManagement';
+import { AdminDepartmentManagement } from './AdminDepartmentManagement';
 import { 
   User, 
   PatientProfile, 
@@ -85,7 +91,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onAddDepartment,
   onRefreshData
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'staff' | 'patients' | 'audit_logs'>('billings');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'>('billings');
 
   // Invoices state
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
@@ -543,12 +549,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="flex overflow-x-auto pb-1 gap-2 border-b border-sky-200/50 text-xs font-semibold">
         {[
           { id: 'billings', label: `Patient Billings & Invoices (${invoices.length})`, icon: Receipt },
+          { id: 'departments', label: `Departments & Clinics (${departments.length})`, icon: Building2 },
+          { id: 'equipment', label: 'Medical Equipment & Assets', icon: Cpu },
+          { id: 'announcements', label: 'Patient Alerts & Broadcasts', icon: Megaphone },
+          { id: 'slots', label: 'Clinic Appointment Shifts & Slots', icon: Clock },
           { id: 'beds', label: 'Hospital Beds & Wards Capacity', icon: Bed },
           { id: 'services', label: 'Clinical Services & Tariffs Catalogue', icon: Stethoscope },
           { id: 'pricing', label: 'Hospital Pricing & Tariff (KES)', icon: DollarSign },
           { id: 'socials', label: 'Hospital Socials & Contact Channels', icon: Share2 },
           { id: 'analytics', label: 'Executive Analytics & KPIs', icon: BarChart3 },
-          { id: 'departments', label: `Departments & Clinics (${departments.length})`, icon: Building2 },
           { id: 'staff', label: `Staff & Role Access (${staffUsers.length})`, icon: Users },
           { id: 'patients', label: `Patient Master Index (${patients.length})`, icon: UserCheck },
           { id: 'audit_logs', label: `Security & Audit Logs (${auditLogs.length})`, icon: ShieldCheck }
@@ -1184,46 +1193,38 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* ================= TAB 5: DEPARTMENTS ================= */}
+      {/* ================= TAB: DEPARTMENTS ================= */}
       {activeTab === 'departments' && (
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 p-6 shadow-xs space-y-4">
-          <div className="flex justify-between items-center border-b border-slate-200/60 pb-3">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Hospital Departments & Specialized Clinics</h3>
-              <p className="text-xs text-slate-500">Configure consultation tariffs, operating hours, and heads of department.</p>
-            </div>
-            <button
-              onClick={() => setShowAddDeptModal(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Department</span>
-            </button>
-          </div>
+        <AdminDepartmentManagement
+          departments={departments}
+          doctors={doctors}
+          onAddDepartment={onAddDepartment}
+          onUpdateDepartmentFee={onUpdateDepartmentFee}
+          onRefresh={onRefreshData}
+        />
+      )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {departments.map((dept) => (
-              <div key={dept.id} className="border border-white/80 rounded-2xl p-4 bg-white/50 backdrop-blur-md space-y-3 shadow-xs">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      {dept.code} • {dept.category}
-                    </span>
-                    <h4 className="font-bold text-slate-900 text-sm mt-1">{dept.name}</h4>
-                    <p className="text-[11px] text-slate-500">{dept.location}</p>
-                  </div>
-                </div>
+      {/* ================= TAB: MEDICAL EQUIPMENT & FLEET ================= */}
+      {activeTab === 'equipment' && (
+        <AdminEquipmentManagement
+          departments={departments}
+          onRefresh={onRefreshData}
+        />
+      )}
 
-                <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center text-xs">
-                  <span className="text-slate-600">Consultation Tariff:</span>
-                  <div className="flex items-center space-x-1 font-mono font-bold text-emerald-700">
-                    <span>KES {dept.consultationFeeKES.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ================= TAB: PATIENT ANNOUNCEMENTS & BROADCASTS ================= */}
+      {activeTab === 'announcements' && (
+        <AdminAnnouncementsManagement
+          onRefresh={onRefreshData}
+        />
+      )}
+
+      {/* ================= TAB: CLINIC APPOINTMENT SLOTS & SHIFTS ================= */}
+      {activeTab === 'slots' && (
+        <AdminSlotsManagement
+          departments={departments}
+          onRefresh={onRefreshData}
+        />
       )}
 
       {/* ================= TAB 6: STAFF MANAGEMENT ================= */}

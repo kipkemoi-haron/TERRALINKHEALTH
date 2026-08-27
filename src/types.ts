@@ -56,6 +56,10 @@ export interface Department {
   occupiedBeds?: number;
   isOpen24Hours: boolean;
   operatingHours: string;
+  assignedDoctorIds?: string[];
+  assignedNurseIds?: string[];
+  equipmentIds?: string[];
+  isArchived?: boolean;
 }
 
 export interface Doctor {
@@ -501,3 +505,89 @@ export interface EmergencyStatusOverview {
   ambulancesDispatched: number;
   lastUpdated: string;
 }
+
+export type EquipmentStatus = 'Operational' | 'Maintenance' | 'Calibration' | 'Offline';
+
+export interface MedicalEquipment {
+  id: string;
+  name: string;
+  code: string;
+  departmentId: string;
+  departmentName: string;
+  modality: string;
+  status: EquipmentStatus;
+  location: string;
+  serialNumber: string;
+  manufacturer: string;
+  model: string;
+  lastMaintenanceDate: string;
+  nextServiceDate: string;
+  operatorStaffName?: string;
+  notes?: string;
+  isArchived?: boolean;
+}
+
+export interface PatientReview {
+  id: string;
+  patientId?: string;
+  name: string;
+  location: string;
+  age: number;
+  avatar?: string;
+  category: 'maternity' | 'cardiac' | 'ortho' | 'surgery' | 'chronic' | 'pediatric' | 'emergency' | 'general';
+  categoryLabel: string;
+  condition: string;
+  doctorName: string;
+  department: string;
+  insurance: string;
+  rating: number; // 1 to 5
+  date: string;
+  headline: string;
+  quote: string;
+  outcome: string;
+  isVerified: boolean;
+  isArchived?: boolean;
+}
+
+export interface HospitalAnnouncement {
+  id: string;
+  title: string;
+  message: string;
+  category: 'Emergency' | 'Advisory' | 'Clinic Update' | 'Accreditation';
+  priority: 'High' | 'Medium' | 'Low';
+  activeFrom: string;
+  activeTo?: string;
+  targetAudience: 'All' | 'Patients' | 'Staff';
+  isActive: boolean;
+  isArchived?: boolean;
+  actionText?: string;
+  actionUrl?: string;
+}
+
+export interface NurseDeskContact {
+  id: string;
+  departmentId: string;
+  departmentName: string;
+  nurseName: string;
+  nurseRole: string;
+  isOnline: boolean;
+  shiftHours: string;
+  avatar: string;
+  badgeNumber: string;
+}
+
+export interface AppointmentSlotConfig {
+  id: string;
+  departmentId: string;
+  departmentName: string;
+  doctorId?: string;
+  doctorName?: string;
+  dayOfWeek: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
+  startTime: string; // e.g. "08:30"
+  endTime: string;   // e.g. "17:00"
+  slotDurationMinutes: number; // e.g. 30
+  maxPatientsQuota: number;   // e.g. 15
+  isActive: boolean;
+  isArchived?: boolean;
+}
+

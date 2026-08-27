@@ -20,7 +20,12 @@ import {
   HospitalBed,
   AmbulanceUnit,
   HospitalServiceItem,
-  EmergencyStatusOverview
+  EmergencyStatusOverview,
+  MedicalEquipment,
+  PatientReview,
+  HospitalAnnouncement,
+  NurseDeskContact,
+  AppointmentSlotConfig
 } from './types';
 
 export const INITIAL_DEPARTMENTS: Department[] = [
@@ -2075,6 +2080,560 @@ export const INITIAL_EMERGENCY_STATUS: EmergencyStatusOverview = {
   lastUpdated: 'Live Telemetry Active'
 };
 
+export const INITIAL_EQUIPMENT: MedicalEquipment[] = [
+  // Cardiology Equipment
+  {
+    id: 'eq-card-1',
+    name: 'Philips Azurion 7 Biplane Catheterization Angiography Suite',
+    code: 'EQ-CATH-01',
+    departmentId: 'dept-cardiology',
+    departmentName: 'Cardiology Clinic',
+    modality: 'Cath Lab Angiography',
+    status: 'Operational',
+    location: 'Cath Lab Suite 1, 3rd Floor',
+    serialNumber: 'PH-AZ7-99412',
+    manufacturer: 'Philips Healthcare',
+    model: 'Azurion 7 B20/15',
+    lastMaintenanceDate: '2026-08-01',
+    nextServiceDate: '2026-11-01',
+    operatorStaffName: 'Dr. Kevin Omondi & Cath Lab Tech Team',
+    notes: 'Calibrated for coronary angioplasty, stenting, and pacemaker implants.'
+  },
+  {
+    id: 'eq-card-2',
+    name: 'GE Vivid E95 4D Cardiovascular Ultrasound (Echocardiography)',
+    code: 'EQ-ECHO-01',
+    departmentId: 'dept-cardiology',
+    departmentName: 'Cardiology Clinic',
+    modality: '4D Echocardiography',
+    status: 'Operational',
+    location: 'Echo Room 302, 3rd Floor',
+    serialNumber: 'GE-VE95-88231',
+    manufacturer: 'GE Healthcare',
+    model: 'Vivid E95 Ultra Edition',
+    lastMaintenanceDate: '2026-08-10',
+    nextServiceDate: '2026-11-10',
+    operatorStaffName: 'Cardiac Sonography Specialist',
+    notes: 'Strain imaging and transesophageal echocardiogram (TEE) enabled.'
+  },
+  {
+    id: 'eq-card-3',
+    name: 'Norav Medical 12-Lead Stress Treadmill ECG System',
+    code: 'EQ-STRESS-01',
+    departmentId: 'dept-cardiology',
+    departmentName: 'Cardiology Clinic',
+    modality: 'Stress ECG',
+    status: 'Operational',
+    location: 'Stress Test Suite 305, 3rd Floor',
+    serialNumber: 'NRV-12L-44120',
+    manufacturer: 'Norav Medical',
+    model: 'TM-1200 Pro',
+    lastMaintenanceDate: '2026-07-28',
+    nextServiceDate: '2026-10-28',
+    operatorStaffName: 'Sister Brenda Naliaka, Senior Cardiac Nurse',
+    notes: 'Cardiac arrest defibrillator sync attached.'
+  },
+
+  // Orthopedics Equipment
+  {
+    id: 'eq-ortho-1',
+    name: 'Stryker Mako Robotic-Arm Joint Arthroplasty System',
+    code: 'EQ-MAKO-01',
+    departmentId: 'dept-orthopedics',
+    departmentName: 'Orthopedic Surgery & Trauma',
+    modality: 'Robotic Surgery',
+    status: 'Operational',
+    location: 'Orthopedic Theatre 2, 2nd Floor',
+    serialNumber: 'STR-MK-55019',
+    manufacturer: 'Stryker',
+    model: 'Mako 3.2 System',
+    lastMaintenanceDate: '2026-08-15',
+    nextServiceDate: '2026-11-15',
+    operatorStaffName: 'Dr. Samuel Kiprop & Surgical Team',
+    notes: 'Precision kinematic alignment for total knee and hip replacements.'
+  },
+  {
+    id: 'eq-ortho-2',
+    name: 'Siemens Cios Alpha High-Definition Mobile C-Arm Fluoroscopy',
+    code: 'EQ-CARM-01',
+    departmentId: 'dept-orthopedics',
+    departmentName: 'Orthopedic Surgery & Trauma',
+    modality: 'Intraoperative Fluoroscopy',
+    status: 'Operational',
+    location: 'Trauma Theatre 1, 2nd Floor',
+    serialNumber: 'SIE-CA-22904',
+    manufacturer: 'Siemens Healthineers',
+    model: 'Cios Alpha Flat-Detector',
+    lastMaintenanceDate: '2026-08-05',
+    nextServiceDate: '2026-11-05',
+    operatorStaffName: 'Trauma Radiographer & Ortho Team',
+    notes: 'Live 3D intraoperative skeletal reconstruction.'
+  },
+
+  // Pediatrics Equipment
+  {
+    id: 'eq-peds-1',
+    name: 'GE Giraffe OmniBed Carestation Neonatal Incubator & Warmer',
+    code: 'EQ-NICU-01',
+    departmentId: 'dept-pediatrics',
+    departmentName: 'Pediatrics & Child Health',
+    modality: 'Neonatal Critical Care',
+    status: 'Operational',
+    location: 'NICU Pod 1, 2nd Floor',
+    serialNumber: 'GE-GIR-77123',
+    manufacturer: 'GE Healthcare',
+    model: 'Giraffe OmniBed Dual-System',
+    lastMaintenanceDate: '2026-08-18',
+    nextServiceDate: '2026-11-18',
+    operatorStaffName: 'Nurse Faith Chebet, NICU In-Charge',
+    notes: 'Continuous micro-environment humidity & temperature regulation.'
+  },
+  {
+    id: 'eq-peds-2',
+    name: 'Dräger Babylog VN500 High-Frequency Oscillatory Ventilator',
+    code: 'EQ-PVENT-01',
+    departmentId: 'dept-pediatrics',
+    departmentName: 'Pediatrics & Child Health',
+    modality: 'Neonatal & Pediatric Ventilation',
+    status: 'Operational',
+    location: 'PICU Bay 3, 2nd Floor',
+    serialNumber: 'DRG-BL-99381',
+    manufacturer: 'Dräger',
+    model: 'Babylog VN500',
+    lastMaintenanceDate: '2026-08-12',
+    nextServiceDate: '2026-11-12',
+    operatorStaffName: 'Dr. Sarah Odhiambo & NICU Team',
+    notes: 'Non-invasive surfactant administration & HFOV mode active.'
+  },
+
+  // OB/GYN Equipment
+  {
+    id: 'eq-obgyn-1',
+    name: 'GE Voluson E10 HDlive 4D High-Definition Obstetric Ultrasound',
+    code: 'EQ-VOLUSON-01',
+    departmentId: 'dept-obgyn',
+    departmentName: 'Obstetrics & Gynecology (Maternity)',
+    modality: '4D Obstetric Ultrasound',
+    status: 'Operational',
+    location: 'Antenatal Scan Room 204, 2nd Floor',
+    serialNumber: 'GE-VOL-44012',
+    manufacturer: 'GE Healthcare',
+    model: 'Voluson E10 BT21',
+    lastMaintenanceDate: '2026-08-08',
+    nextServiceDate: '2026-11-08',
+    operatorStaffName: 'Dr. Grace Wanjiku & Obstetric Sonographers',
+    notes: 'Fetal echocardiography, anatomical anomaly scans, and Doppler blood flows.'
+  },
+  {
+    id: 'eq-obgyn-2',
+    name: 'Philips Avalon CL Wireless Dual Fetal & Maternal CTG Telemetry',
+    code: 'EQ-CTG-01',
+    departmentId: 'dept-obgyn',
+    departmentName: 'Obstetrics & Gynecology (Maternity)',
+    modality: 'Cardiotocography (CTG)',
+    status: 'Operational',
+    location: 'Labour Ward Suite 201, 2nd Floor',
+    serialNumber: 'PH-AV-66190',
+    manufacturer: 'Philips Healthcare',
+    model: 'Avalon CL Wireless',
+    lastMaintenanceDate: '2026-08-20',
+    nextServiceDate: '2026-11-20',
+    operatorStaffName: 'Midwife Sarah Wambui & Maternity Nurses',
+    notes: 'Continuous fetal heart rate & uterine contraction tracing.'
+  },
+
+  // Radiology Equipment
+  {
+    id: 'eq-rad-1',
+    name: 'Siemens Magnetom Vida 3.0T High-Field MRI Scanner (BioMatrix)',
+    code: 'EQ-MRI-01',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    modality: '3.0 Tesla MRI',
+    status: 'Operational',
+    location: 'MRI Vault 1, Ground Floor Diagnostic Center',
+    serialNumber: 'SIE-VIDA-3T-1002',
+    manufacturer: 'Siemens Healthineers',
+    model: 'Magnetom Vida 3.0T',
+    lastMaintenanceDate: '2026-08-02',
+    nextServiceDate: '2026-11-02',
+    operatorStaffName: 'Dr. Miriam Wangari & Senior MRI Radiographers',
+    notes: 'Ultra-fast neuro, musculoskeletal, and cardiac MRI imaging.'
+  },
+  {
+    id: 'eq-rad-2',
+    name: 'GE Revolution Apex 128-Slice Low-Dose Multi-Detector CT Scanner',
+    code: 'EQ-CT-01',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    modality: '128-Slice CT',
+    status: 'Operational',
+    location: 'CT Suite 2, Ground Floor Diagnostic Center',
+    serialNumber: 'GE-APEX-128-552',
+    manufacturer: 'GE Healthcare',
+    model: 'Revolution Apex CT',
+    lastMaintenanceDate: '2026-08-14',
+    nextServiceDate: '2026-11-14',
+    operatorStaffName: 'CT Specialist Radiographers',
+    notes: 'Sub-second full body trauma and coronary CTA protocols.'
+  },
+  {
+    id: 'eq-rad-3',
+    name: 'Hologic Selenia Dimensions 3D Digital Breast Tomosynthesis',
+    code: 'EQ-MAMMO-01',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    modality: '3D Mammography',
+    status: 'Operational',
+    location: 'Women Diagnostic Suite 108, Ground Floor',
+    serialNumber: 'HOL-SEL-3D-909',
+    manufacturer: 'Hologic',
+    model: 'Selenia Dimensions 3D',
+    lastMaintenanceDate: '2026-07-30',
+    nextServiceDate: '2026-10-30',
+    operatorStaffName: 'Female Diagnostic Radiographer',
+    notes: 'High-contrast low-dose breast microcalcification screening.'
+  },
+  {
+    id: 'eq-rad-4',
+    name: 'Canon CXDI-710C Wireless Digital Radiography Flat Panel (X-Ray)',
+    code: 'EQ-XRAY-01',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    modality: 'Digital X-Ray',
+    status: 'Operational',
+    location: 'X-Ray Room 1, Ground Floor',
+    serialNumber: 'CAN-CXDI-710-334',
+    manufacturer: 'Canon Medical',
+    model: 'CXDI-710C Wireless',
+    lastMaintenanceDate: '2026-08-16',
+    nextServiceDate: '2026-11-16',
+    operatorStaffName: 'Tech Brian Oduor & Radiographers',
+    notes: 'Direct PACS instant sync within 3 seconds of exposure.'
+  },
+
+  // Emergency Equipment
+  {
+    id: 'eq-emg-1',
+    name: 'Zoll R Series ALS Multi-Parameter Defibrillator & External Pacer',
+    code: 'EQ-DEFIB-01',
+    departmentId: 'dept-ae',
+    departmentName: 'Accident & Emergency (A&E)',
+    modality: 'Emergency Resuscitation',
+    status: 'Operational',
+    location: 'Resuscitation Bay 1, Emergency Casualty',
+    serialNumber: 'ZOL-RS-99882',
+    manufacturer: 'Zoll Medical',
+    model: 'R Series ALS Defibrillator',
+    lastMaintenanceDate: '2026-08-22',
+    nextServiceDate: '2026-11-22',
+    operatorStaffName: 'Dr. Joseph Karanja & Emergency Resuscitation Nurses',
+    notes: 'Real-time CPR feedback and synchronized cardioversion.'
+  },
+  {
+    id: 'eq-emg-2',
+    name: 'Mindray Resona 7 Point-of-Care Trauma Ultrasound (e-FAST POCUS)',
+    code: 'EQ-POCUS-01',
+    departmentId: 'dept-ae',
+    departmentName: 'Accident & Emergency (A&E)',
+    modality: 'Point-of-Care Ultrasound',
+    status: 'Operational',
+    location: 'Casualty Trauma Bay 2, Ground Floor',
+    serialNumber: 'MDR-RES7-4401',
+    manufacturer: 'Mindray',
+    model: 'Resona 7 POCUS',
+    lastMaintenanceDate: '2026-08-11',
+    nextServiceDate: '2026-11-11',
+    operatorStaffName: 'Nurse John Otieno & Emergency MOs',
+    notes: 'Rapid bedside detection of hemoperitoneum, hemothorax, and pericardial tamponade.'
+  }
+];
+
+export const INITIAL_NURSE_CONTACTS: NurseDeskContact[] = [
+  {
+    id: 'nurse-card',
+    departmentId: 'dept-cardiology',
+    departmentName: 'Cardiology Clinic',
+    nurseName: 'Sister Brenda Naliaka',
+    nurseRole: 'Senior Cardiac Care Coordinator',
+    isOnline: true,
+    shiftHours: '07:30 AM - 05:30 PM (Mon-Sat)',
+    avatar: 'https://images.unsplash.com/photo-1594824813689-5309836371cf?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'NCK-RN-48902'
+  },
+  {
+    id: 'nurse-ortho',
+    departmentId: 'dept-orthopedics',
+    departmentName: 'Orthopedic Surgery & Trauma',
+    nurseName: 'Nurse Dennis Kipruto',
+    nurseRole: 'Orthopedic Trauma Care Nurse',
+    isOnline: true,
+    shiftHours: '08:00 AM - 06:00 PM (Mon-Sat)',
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'NCK-RN-55102'
+  },
+  {
+    id: 'nurse-peds',
+    departmentId: 'dept-pediatrics',
+    departmentName: 'Pediatrics & Child Health',
+    nurseName: 'Nurse Faith Chebet',
+    nurseRole: 'Pediatric & Neonatal Triage Specialist',
+    isOnline: true,
+    shiftHours: '08:00 AM - 05:00 PM (Mon-Sat)',
+    avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'NCK-RN-67120'
+  },
+  {
+    id: 'nurse-obgyn',
+    departmentId: 'dept-obgyn',
+    departmentName: 'Obstetrics & Gynecology (Maternity)',
+    nurseName: 'Midwife Sarah Wambui',
+    nurseRole: 'Head Midwife & Antenatal Coordinator',
+    isOnline: true,
+    shiftHours: '24/7 Rotational Roster',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'NCK-RM-33901'
+  },
+  {
+    id: 'nurse-rad',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    nurseName: 'Tech Brian Oduor',
+    nurseRole: 'Senior Imaging Technologist & Contrast Safety Officer',
+    isOnline: true,
+    shiftHours: '07:30 AM - 06:00 PM (Mon-Sat)',
+    avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'KRB-RT-88410'
+  },
+  {
+    id: 'nurse-emg',
+    departmentId: 'dept-ae',
+    departmentName: 'Accident & Emergency (A&E)',
+    nurseName: 'Nurse John Otieno',
+    nurseRole: 'Trauma & Resuscitation Charge Nurse',
+    isOnline: true,
+    shiftHours: '24/7 Emergency Casualty Desk',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+    badgeNumber: 'NCK-RN-22998'
+  }
+];
+
+export const INITIAL_ANNOUNCEMENTS: HospitalAnnouncement[] = [
+  {
+    id: 'ann-1',
+    title: 'Hospital Direct Billing & SHA Universal Pre-Auth Active',
+    message: 'All insured and statutory SHA / NHIF patients can now verify policy limits and clear outpatient consultations directly with zero cash deposit.',
+    category: 'Accreditation',
+    priority: 'High',
+    activeFrom: '2026-08-01',
+    targetAudience: 'All',
+    isActive: true,
+    actionText: 'Check Insurance Status',
+    actionUrl: '/patient#insurance'
+  },
+  {
+    id: 'ann-2',
+    title: '24/7 Stroke & Acute Coronary Fast-Track Protocol Live',
+    message: 'Direct catheterization angiography suite and 128-slice CT scanner available 24 hours daily with zero queue delays for acute cardiovascular emergencies.',
+    category: 'Emergency',
+    priority: 'High',
+    activeFrom: '2026-08-15',
+    targetAudience: 'All',
+    isActive: true,
+    actionText: 'Emergency Hotline: 0713544101',
+    actionUrl: 'tel:0713544101'
+  },
+  {
+    id: 'ann-3',
+    title: 'Saturday Well-Baby & Pediatric Vaccination Clinic Open',
+    message: 'Saturday morning pediatric immunization and developmental growth clinics run from 08:30 AM to 01:00 PM with Dr. Sarah Odhiambo.',
+    category: 'Clinic Update',
+    priority: 'Medium',
+    activeFrom: '2026-08-20',
+    targetAudience: 'Patients',
+    isActive: true,
+    actionText: 'Book Pediatric Visit',
+    actionUrl: '/patient#book'
+  }
+];
+
+export const INITIAL_SLOT_CONFIGS: AppointmentSlotConfig[] = [
+  {
+    id: 'slot-1',
+    departmentId: 'dept-cardiology',
+    departmentName: 'Cardiology Clinic',
+    doctorId: 'doc-2',
+    doctorName: 'Dr. Kevin Omondi',
+    dayOfWeek: 'Mon',
+    startTime: '08:30',
+    endTime: '16:30',
+    slotDurationMinutes: 30,
+    maxPatientsQuota: 14,
+    isActive: true
+  },
+  {
+    id: 'slot-2',
+    departmentId: 'dept-orthopedics',
+    departmentName: 'Orthopedic Surgery & Trauma',
+    doctorId: 'doc-4',
+    doctorName: 'Dr. Samuel Kiprop',
+    dayOfWeek: 'Tue',
+    startTime: '08:00',
+    endTime: '16:00',
+    slotDurationMinutes: 30,
+    maxPatientsQuota: 16,
+    isActive: true
+  },
+  {
+    id: 'slot-3',
+    departmentId: 'dept-pediatrics',
+    departmentName: 'Pediatrics & Child Health',
+    doctorId: 'doc-1',
+    doctorName: 'Dr. Sarah Odhiambo',
+    dayOfWeek: 'Mon',
+    startTime: '08:00',
+    endTime: '17:00',
+    slotDurationMinutes: 20,
+    maxPatientsQuota: 20,
+    isActive: true
+  },
+  {
+    id: 'slot-4',
+    departmentId: 'dept-obgyn',
+    departmentName: 'Obstetrics & Gynecology (Maternity)',
+    doctorId: 'doc-5',
+    doctorName: 'Dr. Grace Wanjiku',
+    dayOfWeek: 'Wed',
+    startTime: '08:30',
+    endTime: '17:00',
+    slotDurationMinutes: 30,
+    maxPatientsQuota: 15,
+    isActive: true
+  },
+  {
+    id: 'slot-5',
+    departmentId: 'dept-radiology',
+    departmentName: 'Radiology & Medical Imaging',
+    dayOfWeek: 'Mon',
+    startTime: '07:30',
+    endTime: '18:00',
+    slotDurationMinutes: 20,
+    maxPatientsQuota: 30,
+    isActive: true
+  },
+  {
+    id: 'slot-6',
+    departmentId: 'dept-ae',
+    departmentName: 'Accident & Emergency (A&E)',
+    doctorId: 'doc-6',
+    doctorName: 'Dr. Joseph Karanja',
+    dayOfWeek: 'Mon',
+    startTime: '00:00',
+    endTime: '23:59',
+    slotDurationMinutes: 15,
+    maxPatientsQuota: 99,
+    isActive: true
+  }
+];
+
+export const INITIAL_REVIEWS: PatientReview[] = [
+  {
+    id: 'story-1',
+    name: 'Wanjiku Muthoni',
+    location: 'Kilimani, Nairobi',
+    age: 34,
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+    category: 'maternity',
+    categoryLabel: 'Maternity & Neonatal Care',
+    condition: 'Emergency C-Section Twins Delivery',
+    doctorName: 'Dr. Grace Wanjiku',
+    department: 'Obstetrics & Gynecology (Maternity)',
+    insurance: 'Jubilee Insurance (Direct Billing)',
+    rating: 5,
+    date: 'August 2026',
+    headline: '“Safe twin delivery at 2 AM with instant EMR ultrasound history.”',
+    quote: 'When my labor went into distress at 2 AM, TERRALINKHEALTH’s emergency obstetric team was already prepared before we arrived. My previous antenatal scans from my patient portal were loaded onto the doctor’s tablet in seconds without repeating invasive tests. My twins are healthy, and our hospital bill was settled directly with Jubilee without any out-of-pocket delays.',
+    outcome: 'Healthy Twin Delivery • Zero Delays',
+    isVerified: true
+  },
+  {
+    id: 'story-2',
+    name: 'David Kiprono',
+    location: 'Eldoret / Westlands',
+    age: 42,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+    category: 'cardiac',
+    categoryLabel: 'Cardiology & Emergency Interventions',
+    condition: 'Acute Coronary Syndrome & Angioplasty',
+    doctorName: 'Dr. Kevin Omondi',
+    department: 'Cardiology Clinic',
+    insurance: 'SHA Kenya (Statutory Benefit)',
+    rating: 5,
+    date: 'July 2026',
+    headline: '“Paramedics dispatched via 0713544101 saved my life en route.”',
+    quote: 'I experienced sudden severe chest pain during a business conference. Calling the 24/7 hotline 0713544101 dispatched an ICU-equipped ambulance within 8 minutes. The onboard telemetry transmitted my 12-lead ECG directly to Dr. Omondi in the catheterization lab while we were on the expressway. By the time I arrived, pre-authorization was cleared under SHA and the stent was placed immediately.',
+    outcome: 'Successful Angioplasty • Full Recovery',
+    isVerified: true
+  },
+  {
+    id: 'story-3',
+    name: 'Mercy Achieng',
+    location: 'Kisumu / Parklands',
+    age: 29,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+    category: 'chronic',
+    categoryLabel: 'Oncology & Day Chemotherapy',
+    condition: 'Early Stage Breast Oncology Treatment',
+    doctorName: 'Dr. Patrick Njoroge',
+    department: 'Internal Medicine',
+    insurance: 'Britam HealthShield',
+    rating: 5,
+    date: 'August 2026',
+    headline: '“Digital biomarker trends & seamless M-PESA prescriptions.”',
+    quote: 'Navigating chemotherapy is emotionally tough, but the digital patient portal removed all administrative frustration. I download my blood counts the moment the laboratory finalizes them, and my oncologists review my vitals through the tele-consult module. Even my specialized supportive medications are dispatched seamlessly to my doorstep.',
+    outcome: 'Tumor Remission • Ongoing Wellness',
+    isVerified: true
+  },
+  {
+    id: 'story-4',
+    name: 'Dr. Arthur Omondi',
+    location: 'Machakos / Karen',
+    age: 55,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+    category: 'ortho',
+    categoryLabel: 'Orthopedic Surgery & Joint Care',
+    condition: 'Bilateral Total Knee Arthroplasty',
+    doctorName: 'Dr. Samuel Kiprop',
+    department: 'Orthopedic Surgery & Trauma',
+    insurance: 'AAR Health Insurance',
+    rating: 5,
+    date: 'June 2026',
+    headline: '“Walking unassisted in 3 weeks after advanced robotic knee replacement.”',
+    quote: 'As a retired university lecturer, severe osteoarthritis had restricted my mobility for five years. Dr. Kiprop performed a minimally invasive joint replacement in the newly commissioned surgical theatre. The physiotherapists guided my post-op exercises via the patient portal’s recovery tracker. I am back to walking 5 kilometers every morning without pain.',
+    outcome: 'Full Weight-Bearing Mobility in 21 Days',
+    isVerified: true
+  },
+  {
+    id: 'story-5',
+    name: 'Amina Abdi',
+    location: 'South C, Nairobi',
+    age: 26,
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+    category: 'pediatric',
+    categoryLabel: 'Pediatric Care & Allergen Lab',
+    condition: 'Severe Pediatric Asthma Crisis',
+    doctorName: 'Dr. Sarah Odhiambo',
+    department: 'Pediatrics & Child Health',
+    insurance: 'APA Insurance Kenya',
+    rating: 5,
+    date: 'August 2026',
+    headline: '“Pediatric high-flow oxygen response within 90 seconds.”',
+    quote: 'My 4-year-old son suffered an acute asthma spasm during Nairobi’s cold season. The triage nurses at the pediatric emergency wing initiated high-flow humidified oxygen and nebulization within 90 seconds of our arrival. Dr. Sarah Odhiambo tracked his lung peak flow continuously on the digital monitor. We were discharged safely 36 hours later with a clear digital home management plan.',
+    outcome: 'Airway Stabilized • Zero Hypoxia Complications',
+    isVerified: true
+  }
+];
+
 export const mockDepartments = INITIAL_DEPARTMENTS;
 export const mockDoctors = INITIAL_DOCTORS;
 export const mockPatients = INITIAL_PATIENT_PROFILES;
@@ -2088,4 +2647,10 @@ export const mockHospitalBeds = INITIAL_HOSPITAL_BEDS;
 export const mockAmbulances = INITIAL_AMBULANCES;
 export const mockHospitalServices = INITIAL_HOSPITAL_SERVICES;
 export const mockEmergencyStatus = INITIAL_EMERGENCY_STATUS;
+export const mockEquipment = INITIAL_EQUIPMENT;
+export const mockNurseContacts = INITIAL_NURSE_CONTACTS;
+export const mockAnnouncements = INITIAL_ANNOUNCEMENTS;
+export const mockSlotConfigs = INITIAL_SLOT_CONFIGS;
+export const mockReviews = INITIAL_REVIEWS;
+
 

@@ -54,10 +54,57 @@ export function App() {
   const [activePortal, setActivePortal] = useState<'home' | 'patient' | 'provider' | 'admin'>('home');
   const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProviderPlan[]>(INITIAL_INSURANCE_PROVIDERS);
 
-  // Current session user & token (null by default for unauthenticated public visitor)
-  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
-  const [currentPatient, setCurrentPatient] = useState<PatientProfile | null>(null);
-  const [authToken, setAuthToken] = useState<string | null>(null);
+  // Current session user & token with system memory and localStorage persistence
+  const [currentUser, setCurrentUser] = useState<UserType | null>(() => {
+    try {
+      const saved = localStorage.getItem('terralink_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [currentPatient, setCurrentPatient] = useState<PatientProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('terralink_current_patient_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    return localStorage.getItem('terralink_auth_token') || null;
+  });
+
+  // Keep localStorage in sync with currentUser and currentPatient
+  const handleSetUserSession = (user: UserType | null, profile?: PatientProfile | null, token?: string | null) => {
+    setCurrentUser(user);
+    if (profile !== undefined) setCurrentPatient(profile);
+    if (token !== undefined) setAuthToken(token);
+
+    try {
+      if (user) {
+        localStorage.setItem('terralink_current_user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('terralink_current_user');
+      }
+
+      if (profile) {
+        localStorage.setItem('terralink_current_patient_profile', JSON.stringify(profile));
+      } else if (profile === null) {
+        localStorage.removeItem('terralink_current_patient_profile');
+      }
+
+      if (token) {
+        localStorage.setItem('terralink_auth_token', token);
+      } else if (token === null) {
+        localStorage.removeItem('terralink_auth_token');
+      }
+    } catch (e) {
+      console.warn('Storage sync issue:', e);
+    }
+  };
 
   // Hospital Socials State
   const [socialLinks, setSocialLinks] = useState<HospitalSocialLinks>({
@@ -486,9 +533,7 @@ export function App() {
 
                 <button
                   onClick={() => {
-                    setCurrentUser(null);
-                    setCurrentPatient(null);
-                    setAuthToken(null);
+                    handleSetUserSession(null, null, null);
                     setActivePortal('home');
                     if (window.location.pathname.startsWith('/admin')) {
                       window.history.pushState(null, '', '/');
@@ -512,6 +557,8 @@ export function App() {
         
         {activePortal === 'home' && (
           <HospitalHomepage
+            currentUser={currentUser}
+            currentPatient={currentPatient}
             departments={departments}
             doctors={doctors}
             insuranceProviders={insuranceProviders}
@@ -542,7 +589,14 @@ export function App() {
           currentUser && currentUser.role === 'patient' && currentPatient ? (
             <PatientPortal
               patient={currentPatient}
-              onUpdatePatient={(updated) => setCurrentPatient(updated)}
+              onUpdatePatient={(updated) => {
+                setCurrentPatient(updated);
+                try {
+                  localStorage.setItem('terralink_current_patient_profile', JSON.stringify(updated));
+                } catch (e) {
+                  console.warn(e);
+                }
+              }}
               departments={departments}
               doctors={doctors}
               appointments={appointments.filter(a => a.patientId === currentPatient.id)}
@@ -560,9 +614,7 @@ export function App() {
           ) : (
             <PatientLoginGate
               onPatientAuthSuccess={(token, user, profile) => {
-                setAuthToken(token);
-                setCurrentUser(user);
-                if (profile) setCurrentPatient(profile);
+                handleSetUserSession(user, profile, token);
                 setActivePortal('patient');
                 refreshAllData();
               }}
@@ -610,8 +662,7 @@ export function App() {
           ) : (
             <ClinicalStaffLoginGate
               onStaffAuthSuccess={(token, user) => {
-                setAuthToken(token);
-                setCurrentUser(user);
+                handleSetUserSession(user, null, token);
                 if (user.mustChangePassword) {
                   setShowPasswordChangeModal(true);
                 } else {
@@ -648,8 +699,7 @@ export function App() {
           ) : (
             <AdminLoginGate
               onAdminAuthSuccess={(token, user) => {
-                setAuthToken(token);
-                setCurrentUser(user);
+                handleSetUserSession(user, null, token);
                 setActivePortal('admin');
                 refreshAllData();
               }}
@@ -669,14 +719,11 @@ export function App() {
         initialMode={authModalMode}
         onClose={() => setAuthModalOpen(false)}
         onPatientAuthSuccess={(token, user, profile) => {
-          setAuthToken(token);
-          setCurrentUser(user);
-          if (profile) setCurrentPatient(profile);
+          handleSetUserSession(user, profile, token);
           setActivePortal('patient');
         }}
         onStaffAuthSuccess={(token, user) => {
-          setAuthToken(token);
-          setCurrentUser(user);
+          handleSetUserSession(user, null, token);
           if (user.mustChangePassword) {
             setShowPasswordChangeModal(true);
           } else {
