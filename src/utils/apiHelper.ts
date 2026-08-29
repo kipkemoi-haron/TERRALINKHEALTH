@@ -247,10 +247,15 @@ function getLocalCredentials(): Record<string, string> {
     creds['32901188'] = 'Slate#1206';
     creds['usr-admin-hk'] = 'Slate#1206';
     
+    // Seed Maxx Roy Staff
+    creds['maxxroy961@gmail.com'] = 'Pay@1206';
+    creds['usr-staff-maxxroy'] = 'Pay@1206';
+    
     return creds;
   } catch {
     return {
       'kipkemoiharon57@gmail.com': 'Slate#1206',
+      'maxxroy961@gmail.com': 'Pay@1206',
       'admin': 'admin123'
     };
   }

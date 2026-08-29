@@ -25,7 +25,8 @@ import {
   PatientReview,
   HospitalAnnouncement,
   NurseDeskContact,
-  AppointmentSlotConfig
+  AppointmentSlotConfig,
+  InpatientAdmission
 } from './types';
 
 export const INITIAL_DEPARTMENTS: Department[] = [
@@ -433,10 +434,43 @@ export const INITIAL_DOCTORS: Doctor[] = [
     availableHours: '24 Hours Emergency Roster',
     rating: 4.9,
     avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300'
+  },
+  {
+    id: 'doc-maxxroy',
+    userId: 'usr-staff-maxxroy',
+    name: 'Dr. Maxx Roy',
+    title: 'Consultant Physician & Clinical Lead',
+    departmentId: 'dept-opd',
+    departmentName: 'Outpatient Department (OPD)',
+    specialization: 'General Family Medicine, Inpatient Care & Telemedicine',
+    qualifications: 'MBChB (UoN), MMed, Fellow College of Physicians',
+    licenseNumber: 'KMPDC-A96120',
+    experienceYears: 10,
+    consultationFeeKES: 1800,
+    telemedicineAvailable: true,
+    availableDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    availableHours: '08:00 AM - 06:00 PM',
+    rating: 5.0,
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'
   }
 ];
 
 export const INITIAL_USERS: User[] = [
+  {
+    id: 'usr-staff-maxxroy',
+    name: 'Dr. Maxx Roy, MBChB',
+    email: 'maxxroy961@gmail.com',
+    phone: '+254712060000',
+    role: 'doctor',
+    departmentId: 'dept-opd',
+    departmentName: 'Outpatient Department (OPD)',
+    specialization: 'Consultant Physician & Clinical Lead',
+    licenseNumber: 'KMPDC-A96120',
+    mustChangePassword: false,
+    status: 'active',
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    createdAt: '2026-01-01T08:00:00Z'
+  },
   {
     id: 'usr-admin-1',
     name: 'Kipkemoi Haron',
@@ -588,6 +622,7 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     dob: '1994-06-18',
     gender: 'Female',
     bloodGroup: 'O+',
+    maritalStatus: 'Married',
     address: 'Apartment 4B, Kilimani, Nairobi',
     county: 'Nairobi County',
     emergencyContact: {
@@ -597,8 +632,11 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     },
     allergies: ['Penicillin (Moderate rash)', 'Sulfa drugs'],
     chronicConditions: ['Mild Asthma (Well-controlled)', 'Seasonal Allergic Rhinitis'],
-    insuranceProvider: 'NHIF / SHIF Comprehensive Scheme',
-    insurancePolicyNumber: 'SHIF-NRB-8831920',
+    insuranceProvider: 'Social Health Authority (SHA / NHIF)',
+    insurancePolicyNumber: 'SHA-NRB-8831920',
+    shaNumber: 'SHA-8831920-KEN',
+    shaDocumentName: 'SHA_E-Card_FaithChebet.pdf',
+    shaDocumentUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=400',
     createdAt: '2026-02-01T14:30:00Z'
   },
   {
@@ -611,6 +649,7 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     dob: '1988-11-04',
     gender: 'Male',
     bloodGroup: 'A+',
+    maritalStatus: 'Single',
     address: 'Estate 12, Westlands, Nairobi',
     county: 'Nairobi County',
     emergencyContact: {
@@ -622,6 +661,8 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     chronicConditions: ['Essential Hypertension'],
     insuranceProvider: 'Jubilee Health Insurance',
     insurancePolicyNumber: 'JUB-MED-49102',
+    shaNumber: 'SHA-491028-KEN',
+    shaDocumentName: 'SHA_Certificate_BrianMwangi.pdf',
     createdAt: '2026-02-05T10:15:00Z'
   },
   {
@@ -634,6 +675,7 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     dob: '1975-03-22',
     gender: 'Female',
     bloodGroup: 'B+',
+    maritalStatus: 'Married',
     address: 'House 8, Langata Road, Nairobi',
     county: 'Nairobi County',
     emergencyContact: {
@@ -645,6 +687,7 @@ export const INITIAL_PATIENT_PROFILES: PatientProfile[] = [
     chronicConditions: ['Type 2 Diabetes Mellitus', 'Dyslipidemia'],
     insuranceProvider: 'AAR Insurance Kenya',
     insurancePolicyNumber: 'AAR-CORP-91028',
+    shaNumber: 'SHA-910283-KEN',
     createdAt: '2026-02-10T11:45:00Z'
   }
 ];
@@ -2642,6 +2685,108 @@ export const mockAnalytics = INITIAL_ANALYTICS;
 export const mockAuditLogs = INITIAL_AUDIT_LOGS;
 export const mockSocialLinks = INITIAL_SOCIAL_LINKS;
 export const mockInsuranceProviders = INITIAL_INSURANCE_PROVIDERS;
+export const INITIAL_ADMISSIONS: InpatientAdmission[] = [
+  {
+    id: 'adm-req-101',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    patientPhone: '+254712345678',
+    patientNationalId: '32849102',
+    bloodGroup: 'O+',
+    age: 31,
+    gender: 'Female',
+    reason: 'Acute Right Lower Quadrant Abdominal Pain & Suspected Appendicitis',
+    urgency: 'Urgent',
+    preferredWard: 'St. Luke Surgical Wing',
+    symptoms: 'Constant sharp pain in right iliac fossa for 14 hours, rebound tenderness, low grade fever (38.2°C), mild nausea.',
+    referringDoctor: 'Dr. Amina Hassan',
+    insuranceScheme: 'Social Health Authority (SHA / NHIF)',
+    shaNumber: 'SHA-8831920-KEN',
+    shaDocumentUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=400',
+    status: 'PENDING',
+    requestedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
+  },
+  {
+    id: 'adm-act-102',
+    patientId: 'pat-2',
+    patientName: 'Brian Mwangi Kimani',
+    patientPhone: '+254723456789',
+    patientNationalId: '29817463',
+    bloodGroup: 'A+',
+    age: 37,
+    gender: 'Male',
+    reason: 'Hypertensive Urgency & Chest Discomfort Observation',
+    urgency: 'Emergency',
+    preferredWard: 'High Dependency Unit (HDU)',
+    symptoms: 'BP 185/115 mmHg upon admission, occipital headache, palpitations.',
+    insuranceScheme: 'Jubilee Health Insurance',
+    status: 'ADMITTED',
+    requestedAt: '2026-08-27T08:30:00Z',
+    admittedAt: '2026-08-27T09:15:00Z',
+    assignedBedId: 'bed-102',
+    assignedBedNumber: 'HDU-02',
+    assignedWard: 'Critical Care HDU Wing',
+    attendingDoctorId: 'doc-2',
+    attendingDoctorName: 'Dr. Kevin Omondi (Cardiologist)',
+    attendingNurseName: 'Nurse Faith Chepkorir',
+    dailyBedRateKES: 12000,
+    dailyAccruedBillKES: 34500,
+    inpatientDiagnosis: 'Essential Hypertension Stage 3 with Hypertensive Urgency'
+  },
+  {
+    id: 'adm-dis-103',
+    patientId: 'pat-3',
+    patientName: 'Beatrice Nyambura Karanja',
+    patientPhone: '+254734567890',
+    patientNationalId: '21948301',
+    bloodGroup: 'B+',
+    age: 51,
+    gender: 'Female',
+    reason: 'Post-Operative Laparoscopic Cholecystectomy Recovery',
+    urgency: 'Elective',
+    preferredWard: 'Executive Private Ward',
+    insuranceScheme: 'AAR Insurance Kenya',
+    status: 'DISCHARGED',
+    requestedAt: '2026-08-22T07:00:00Z',
+    admittedAt: '2026-08-22T08:00:00Z',
+    assignedBedId: 'bed-301',
+    assignedBedNumber: 'PVT-04',
+    assignedWard: 'Executive Private Wing',
+    attendingDoctorId: 'doc-4',
+    attendingDoctorName: 'Dr. Samuel Kiprop',
+    dailyBedRateKES: 6500,
+    dailyAccruedBillKES: 68400,
+    inpatientDiagnosis: 'Symptomatic Cholelithiasis (Successful Laparoscopic Cholecystectomy)',
+    dischargedAt: '2026-08-25T14:30:00Z',
+    dischargeSummary: {
+      finalDiagnosis: 'Status Post Uncomplicated Laparoscopic Cholecystectomy',
+      conditionOnDischarge: 'Recovered',
+      dischargeNotes: 'Patient ambulating comfortably, surgical port sites clean and dry, tolerating regular low-fat diet. Vital signs stable (BP 124/78, HR 70 bpm, Afebrile).',
+      homeMedications: [
+        'Tab. Paracetamol 1g PO TDS x 4 days',
+        'Tab. Cefuroxime Axetil 500mg PO BD x 5 days',
+        'Tab. Pantoprazole 40mg PO OD mane x 14 days'
+      ],
+      followUpDate: '2026-09-08',
+      dischargedByDoctor: 'Dr. Samuel Kiprop, Consultant Surgeon'
+    },
+    finalBill: {
+      totalKES: 68400,
+      shaCoverageKES: 52000,
+      patientPayableKES: 16400,
+      mpesaReceiptNumber: 'QK89104829',
+      paymentStatus: 'Paid',
+      itemizedBreakdown: [
+        { category: 'Surgical Theatre', description: 'Laparoscopic Cholecystectomy Suite Fee', amountKES: 35000 },
+        { category: 'Bed & Nursing', description: 'Private Room (3 Nights @ 6,500/night)', amountKES: 19500 },
+        { category: 'Pharmacy', description: 'Inpatient IV Antibiotics & Post-op Analgesia', amountKES: 7800 },
+        { category: 'Laboratory', description: 'Pre-op Full Blood Count & Liver Enzymes', amountKES: 4200 },
+        { category: 'Physiotherapy', description: 'Post-op Chest & Mobility Rehab', amountKES: 1900 }
+      ]
+    }
+  }
+];
+
 export const mockInsurancePolicies = INITIAL_INSURANCE_POLICIES;
 export const mockHospitalBeds = INITIAL_HOSPITAL_BEDS;
 export const mockAmbulances = INITIAL_AMBULANCES;
@@ -2652,5 +2797,7 @@ export const mockNurseContacts = INITIAL_NURSE_CONTACTS;
 export const mockAnnouncements = INITIAL_ANNOUNCEMENTS;
 export const mockSlotConfigs = INITIAL_SLOT_CONFIGS;
 export const mockReviews = INITIAL_REVIEWS;
+export const mockAdmissions = INITIAL_ADMISSIONS;
+
 
 

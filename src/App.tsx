@@ -627,6 +627,10 @@ export function App() {
               onBookAppointment={handleBookAppointment}
               onCancelAppointment={handleCancelAppointment}
               onPayInvoice={handlePayInvoice}
+              onLogout={() => {
+                handleSetUserSession(null, null, null);
+                setActivePortal('home');
+              }}
             />
           ) : (
             <PatientLoginGate
@@ -674,6 +678,18 @@ export function App() {
                   body: JSON.stringify({ status })
                 });
                 setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, status } : a));
+              }}
+              onUpdateUser={(updated) => {
+                setCurrentUser(updated);
+                try {
+                  localStorage.setItem('terralink_current_user', JSON.stringify(updated));
+                } catch (e) {
+                  console.warn(e);
+                }
+              }}
+              onLogout={() => {
+                handleSetUserSession(null, null, null);
+                setActivePortal('home');
               }}
             />
           ) : (

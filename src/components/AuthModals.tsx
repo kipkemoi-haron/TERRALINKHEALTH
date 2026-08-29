@@ -958,14 +958,58 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                 </p>
               </div>
 
+              {/* 1-Click Fast Staff Access */}
+              <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-2 text-center">
+                <div className="flex items-center justify-between text-[11px] text-teal-900 font-bold">
+                  <span>Dr. Maxx Roy (Staff Portal)</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSUsername('maxxroy961@gmail.com');
+                      setSPassword('Pay@1206');
+                    }}
+                    className="text-teal-700 hover:text-teal-900 underline cursor-pointer text-[10px]"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSUsername('maxxroy961@gmail.com');
+                    setSPassword('Pay@1206');
+                    setTimeout(() => {
+                      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                      handleStaffLogin(fakeEvent);
+                    }, 50);
+                  }}
+                  className="w-full py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
+                  <span>⚡ 1-Click Staff Login (maxxroy961@gmail.com)</span>
+                </button>
+              </div>
+
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Staff Username or Work ID *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">Staff Username or Email *</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSUsername('maxxroy961@gmail.com');
+                      setSPassword('Pay@1206');
+                    }}
+                    className="text-[10px] text-teal-700 hover:underline cursor-pointer"
+                  >
+                    Use Maxx Roy Login
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
                   value={sUsername}
                   onChange={(e) => setSUsername(e.target.value)}
-                  placeholder="Enter staff username or employee ID"
+                  placeholder="maxxroy961@gmail.com or username"
                   className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                 />
               </div>

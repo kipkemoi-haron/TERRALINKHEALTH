@@ -14,8 +14,19 @@ export interface User {
   mustChangePassword?: boolean;
   status: 'active' | 'suspended';
   avatar?: string;
+  notificationPreferences?: {
+    smsAlerts: boolean;
+    emailReports: boolean;
+    queueAlerts: boolean;
+    criticalLabPanicAlerts?: boolean;
+    statRadiologyAlerts?: boolean;
+    emergencyTraumaAlerts?: boolean;
+    pharmacyDispenseAlerts?: boolean;
+  };
   createdAt: string;
 }
+
+export type MaritalStatus = 'Single' | 'Married' | 'Divorced' | 'Widowed' | 'Separated';
 
 export interface PatientProfile {
   id: string;
@@ -27,6 +38,7 @@ export interface PatientProfile {
   dob: string;
   gender: 'Male' | 'Female' | 'Other';
   bloodGroup: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  maritalStatus?: MaritalStatus;
   address: string;
   county: string;
   emergencyContact: {
@@ -38,6 +50,18 @@ export interface PatientProfile {
   chronicConditions: string[];
   insuranceProvider?: string;
   insurancePolicyNumber?: string;
+  shaNumber?: string;
+  shaDocumentName?: string;
+  shaDocumentUrl?: string;
+  avatar?: string;
+  notificationPreferences?: {
+    smsAlerts: boolean;
+    emailReports: boolean;
+    queueAlerts: boolean;
+    refillReminders: boolean;
+    insuranceAlerts: boolean;
+    emergencyTraumaAlerts: boolean;
+  };
   createdAt: string;
 }
 
@@ -590,4 +614,77 @@ export interface AppointmentSlotConfig {
   isActive: boolean;
   isArchived?: boolean;
 }
+
+export type AdmissionStatus = 'PENDING' | 'ADMITTED' | 'DISCHARGED' | 'CANCELLED';
+
+export interface InpatientAdmission {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  patientNationalId: string;
+  bloodGroup?: string;
+  age?: number;
+  gender?: string;
+  reason: string; // e.g. "Acute Appendicitis / Surgical Observation"
+  urgency: 'Elective' | 'Urgent' | 'Emergency' | 'Maternity / Delivery';
+  preferredWard?: string;
+  symptoms?: string;
+  referringDoctor?: string;
+  insuranceScheme?: string;
+  shaNumber?: string;
+  shaDocumentUrl?: string;
+  status: AdmissionStatus;
+  requestedAt: string;
+  // Filled upon admission
+  admittedAt?: string;
+  assignedBedId?: string;
+  assignedBedNumber?: string;
+  assignedWard?: string;
+  attendingDoctorId?: string;
+  attendingDoctorName?: string;
+  attendingNurseName?: string;
+  dailyBedRateKES?: number;
+  dailyAccruedBillKES?: number;
+  inpatientDiagnosis?: string;
+  // Filled upon discharge
+  dischargedAt?: string;
+  dischargeSummary?: {
+    finalDiagnosis: string;
+    conditionOnDischarge: 'Recovered' | 'Improved' | 'Stable';
+    dischargeNotes: string;
+    homeMedications: string[];
+    followUpDate: string;
+    dischargedByDoctor: string;
+  };
+  finalBill?: {
+    totalKES: number;
+    shaCoverageKES: number;
+    patientPayableKES: number;
+    mpesaReceiptNumber?: string;
+    paymentStatus: 'Paid' | 'Pending';
+    itemizedBreakdown: {
+      category: string;
+      description: string;
+      amountKES: number;
+    }[];
+  };
+}
+
+/**
+ * Calculates dynamic patient age in years from their Date of Birth string (YYYY-MM-DD)
+ */
+export function calculateAge(dobString?: string): number {
+  if (!dobString) return 0;
+  const birth = new Date(dobString);
+  if (isNaN(birth.getTime())) return 0;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return Math.max(0, age);
+}
+
 

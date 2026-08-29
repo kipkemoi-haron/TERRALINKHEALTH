@@ -33,7 +33,8 @@ import {
   INITIAL_REVIEWS,
   INITIAL_ANNOUNCEMENTS,
   INITIAL_SLOT_CONFIGS,
-  INITIAL_NURSE_CONTACTS
+  INITIAL_NURSE_CONTACTS,
+  INITIAL_ADMISSIONS
 } from './src/mockData';
 import { Doctor } from './src/types';
 
@@ -59,6 +60,7 @@ const db = {
   insuranceProviders: [...INITIAL_INSURANCE_PROVIDERS],
   insurancePolicies: [...INITIAL_INSURANCE_POLICIES],
   beds: [...INITIAL_HOSPITAL_BEDS],
+  admissions: [...INITIAL_ADMISSIONS],
   ambulances: [...INITIAL_AMBULANCES],
   services: [...INITIAL_HOSPITAL_SERVICES],
   equipment: [...INITIAL_EQUIPMENT],
@@ -90,6 +92,8 @@ INITIAL_USERS.forEach(u => {
   let defaultPass = u.role === 'admin' ? 'admin123' : u.role === 'patient' ? '123456' : 'Hospital#2026';
   if (u.email && u.email.toLowerCase() === 'kipkemoiharon57@gmail.com') {
     defaultPass = 'Slate#1206';
+  } else if (u.email && u.email.toLowerCase() === 'maxxroy961@gmail.com') {
+    defaultPass = 'Pay@1206';
   }
   db.credentials.set(u.id, defaultPass);
   if (u.email) db.credentials.set(u.email.toLowerCase(), defaultPass);
@@ -115,6 +119,31 @@ if (haronAdmin) {
   };
   db.users.push(newAdminUser);
   db.credentials.set(newAdminUser.id, 'Slate#1206');
+}
+
+// Explicitly memorize Staff Portal credentials for Dr. Maxx Roy
+db.credentials.set('maxxroy961@gmail.com', 'Pay@1206');
+const maxxRoyUser = db.users.find(u => u.email && u.email.toLowerCase() === 'maxxroy961@gmail.com');
+if (maxxRoyUser) {
+  db.credentials.set(maxxRoyUser.id, 'Pay@1206');
+} else {
+  const newStaffUser = {
+    id: 'usr-staff-maxxroy',
+    name: 'Dr. Maxx Roy, MBChB',
+    email: 'maxxroy961@gmail.com',
+    phone: '+254712060000',
+    role: 'doctor' as const,
+    departmentId: 'dept-opd',
+    departmentName: 'Outpatient Department (OPD)',
+    specialization: 'Consultant Physician & Clinical Lead',
+    licenseNumber: 'KMPDC-A96120',
+    mustChangePassword: false,
+    status: 'active' as const,
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
+    createdAt: new Date().toISOString()
+  };
+  db.users.push(newStaffUser);
+  db.credentials.set(newStaffUser.id, 'Pay@1206');
 }
 
 // Lazy Gemini client helper
@@ -734,6 +763,116 @@ app.post('/api/auth/staff/change-password', (req: Request, res: Response) => {
   });
 
   res.json({ message: 'Password updated and memorized successfully. Account is now fully active.', user });
+});
+
+// Generic Change Password for any logged-in user (Patient, Doctor, Staff, Admin)
+app.post('/api/auth/change-password', (req: Request, res: Response) => {
+  const { userId, identifier, currentPassword, newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+  }
+
+  let user = null;
+  if (userId) {
+    user = db.users.find(u => u.id === userId);
+  }
+  if (!user && identifier) {
+    const idLower = identifier.toLowerCase().trim();
+    user = db.users.find(u => 
+      u.id === identifier || 
+      u.email.toLowerCase() === idLower || 
+      u.phone === identifier.trim() || 
+      u.nationalId === identifier.trim()
+    );
+  }
+
+  if (!user) {
+    return res.status(404).json({ error: 'User account not found in system records.' });
+  }
+
+  // If current password provided, verify it
+  if (currentPassword) {
+    const memorized = 
+      db.credentials.get(user.id) || 
+      db.credentials.get(user.email.toLowerCase()) || 
+      db.credentials.get(user.phone) || 
+      (user.nationalId ? db.credentials.get(user.nationalId) : null);
+    
+    if (memorized && memorized !== currentPassword.trim()) {
+      return res.status(400).json({ error: 'Current password does not match system records.' });
+    }
+  }
+
+  const pass = newPassword.trim();
+  db.credentials.set(user.id, pass);
+  if (user.email) db.credentials.set(user.email.toLowerCase(), pass);
+  if (user.phone) db.credentials.set(user.phone, pass);
+  if (user.nationalId) db.credentials.set(user.nationalId, pass);
+  user.mustChangePassword = false;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: user.id,
+    userName: user.name,
+    role: user.role,
+    action: 'Password Changed & Memorized',
+    module: 'Auth',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Password changed for user ${user.name} (${user.role})`,
+    status: 'Success'
+  });
+
+  res.json({ message: 'Password changed and saved successfully!', success: true, user });
+});
+
+// Update User Profile Avatar or Notification Settings
+app.patch('/api/users/:id/avatar', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { avatar } = req.body;
+
+  const user = db.users.find(u => u.id === id);
+  if (user && avatar) {
+    user.avatar = avatar;
+  }
+
+  // Also update patient profile if applicable
+  const patient = db.patientProfiles.find(p => p.id === id || p.userId === id);
+  if (patient && avatar) {
+    (patient as any).avatar = avatar;
+  }
+
+  // Also update doctor avatar if applicable
+  const doc = db.doctors.find(d => d.id === id || d.userId === id);
+  if (doc && avatar) {
+    doc.avatar = avatar;
+  }
+
+  res.json({ message: 'Avatar updated successfully.', avatar, user, patient });
+});
+
+// Update User Settings (Notifications, Profile details)
+app.put('/api/users/:id/settings', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { notificationPreferences, phone, email, address } = req.body;
+
+  const user = db.users.find(u => u.id === id);
+  if (user) {
+    if (notificationPreferences) user.notificationPreferences = notificationPreferences;
+    if (phone) user.phone = phone;
+    if (email) user.email = email;
+  }
+
+  const patient = db.patientProfiles.find(p => p.id === id || p.userId === id);
+  if (patient) {
+    if (notificationPreferences) (patient as any).notificationPreferences = notificationPreferences;
+    if (phone) patient.phone = phone;
+    if (email) patient.email = email;
+    if (address) patient.address = address;
+  }
+
+  res.json({ message: 'Settings saved successfully.', user, patient });
 });
 
 // Staff Management (Admin)
@@ -2392,6 +2531,301 @@ app.delete('/api/beds/:id', (req: Request, res: Response) => {
 
   res.json({ message: 'Bed removed successfully.', deletedBed: deleted });
 });
+
+// ==================== INPATIENT ADMISSIONS WORKFLOW ====================
+// 1. Get all admissions (optional filters: patientId, status)
+app.get('/api/admissions', (req: Request, res: Response) => {
+  const { patientId, status } = req.query;
+  let results = db.admissions;
+  if (patientId) {
+    results = results.filter(a => a.patientId === patientId);
+  }
+  if (status) {
+    results = results.filter(a => a.status === status);
+  }
+  res.json(results);
+});
+
+// 2. Patient Requests Admission (Status = PENDING)
+app.post('/api/admissions/request', (req: Request, res: Response) => {
+  const {
+    patientId,
+    patientName,
+    patientPhone,
+    patientNationalId,
+    bloodGroup,
+    age,
+    gender,
+    reason,
+    urgency,
+    preferredWard,
+    symptoms,
+    referringDoctor,
+    insuranceScheme,
+    shaNumber,
+    shaDocumentUrl
+  } = req.body;
+
+  if (!patientId || !patientName || !reason) {
+    return res.status(400).json({ error: 'Patient information and reason for admission request are required.' });
+  }
+
+  const newAdmission = {
+    id: `adm-req-${Date.now()}`,
+    patientId,
+    patientName,
+    patientPhone: patientPhone || '+254700000000',
+    patientNationalId: patientNationalId || 'N/A',
+    bloodGroup: bloodGroup || 'O+',
+    age: age ? Number(age) : 30,
+    gender: gender || 'Not Specified',
+    reason,
+    urgency: (urgency || 'Urgent') as any,
+    preferredWard: preferredWard || 'General Inpatient Ward',
+    symptoms: symptoms || 'Patient self-reported acute clinical indication requiring hospital inpatient care.',
+    referringDoctor: referringDoctor || 'Outpatient Triage / Attending Physician',
+    insuranceScheme: insuranceScheme || 'Social Health Authority (SHA / NHIF)',
+    shaNumber: shaNumber || undefined,
+    shaDocumentUrl: shaDocumentUrl || undefined,
+    status: 'PENDING' as const,
+    requestedAt: new Date().toISOString()
+  };
+
+  db.admissions.unshift(newAdmission);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: patientId,
+    userName: patientName,
+    role: 'patient',
+    action: `Requested Pre-Admission File [${newAdmission.id}]`,
+    module: 'EMR',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `Pre-admission created with status PENDING for "${newAdmission.reason}". Urgency: ${newAdmission.urgency}`,
+    status: 'Success'
+  });
+
+  res.status(201).json({
+    message: 'Pre-admission file submitted successfully. Hospital reception has placed your record in the immediate intake queue.',
+    admission: newAdmission
+  });
+});
+
+// 3. Hospital Reception Converts to Full Admission in One Click (Status -> ADMITTED)
+app.patch('/api/admissions/:id/admit', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { bedId, bedNumber, ward, attendingDoctorId, attendingDoctorName, attendingNurseName, dailyBedRateKES, inpatientDiagnosis } = req.body;
+
+  const admission = db.admissions.find(a => a.id === id);
+  if (!admission) return res.status(404).json({ error: 'Admission file not found.' });
+
+  // Locate available bed or allocate selected bed
+  let targetBed = bedId ? db.beds.find(b => b.id === bedId) : db.beds.find(b => b.status === 'Available');
+  if (targetBed) {
+    targetBed.status = 'Occupied';
+    targetBed.patientId = admission.patientId;
+    targetBed.patientName = admission.patientName;
+    targetBed.admissionDate = new Date().toISOString().split('T')[0];
+  }
+
+  admission.status = 'ADMITTED';
+  admission.admittedAt = new Date().toISOString();
+  admission.assignedBedId = targetBed ? targetBed.id : `bed-${Date.now()}`;
+  admission.assignedBedNumber = bedNumber || (targetBed ? targetBed.bedNumber : 'WARD-01');
+  admission.assignedWard = ward || (targetBed ? targetBed.ward : admission.preferredWard || 'General Inpatient Ward');
+  admission.attendingDoctorId = attendingDoctorId || 'doc-1';
+  admission.attendingDoctorName = attendingDoctorName || 'Dr. Amina Hassan, Consultant Physician';
+  admission.attendingNurseName = attendingNurseName || 'Nurse Faith Chepkorir';
+  admission.dailyBedRateKES = dailyBedRateKES ? Number(dailyBedRateKES) : (targetBed ? targetBed.dailyRateKES : 3500);
+  admission.dailyAccruedBillKES = admission.dailyBedRateKES;
+  admission.inpatientDiagnosis = inpatientDiagnosis || admission.reason;
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'reception',
+    userName: 'Hospital Reception & Bed Manager',
+    role: 'admin',
+    action: `Converted Pre-Admission to Full Inpatient Stay [${admission.id}]`,
+    module: 'EMR',
+    ipAddress: req.ip || '10.0.1.5',
+    details: `Patient ${admission.patientName} assigned to Bed ${admission.assignedBedNumber} (${admission.assignedWard}). Attending: ${admission.attendingDoctorName}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Patient ${admission.patientName} is now officially admitted to Bed ${admission.assignedBedNumber}.`,
+    admission
+  });
+});
+
+// 4. Discharge Inpatient with Summary Note & Final Invoice (Status -> DISCHARGED)
+app.patch('/api/admissions/:id/discharge', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const {
+    finalDiagnosis,
+    conditionOnDischarge,
+    dischargeNotes,
+    homeMedications,
+    followUpDate,
+    dischargedByDoctor,
+    totalBillKES,
+    shaCoverageKES
+  } = req.body;
+
+  const admission = db.admissions.find(a => a.id === id);
+  if (!admission) return res.status(404).json({ error: 'Admission file not found.' });
+
+  // Free up the bed in db.beds
+  if (admission.assignedBedId) {
+    const bed = db.beds.find(b => b.id === admission.assignedBedId || b.bedNumber === admission.assignedBedNumber);
+    if (bed) {
+      bed.status = 'Available';
+      bed.patientId = undefined;
+      bed.patientName = undefined;
+      bed.admissionDate = undefined;
+    }
+  }
+
+  const total = Number(totalBillKES) || admission.dailyAccruedBillKES || 32000;
+  const sha = Number(shaCoverageKES) || (admission.insuranceScheme?.includes('SHA') ? Math.min(total, 24000) : 0);
+  const patientPayable = Math.max(0, total - sha);
+  const mpesaReceipt = `QK${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+  admission.status = 'DISCHARGED';
+  admission.dischargedAt = new Date().toISOString();
+  admission.dischargeSummary = {
+    finalDiagnosis: finalDiagnosis || admission.inpatientDiagnosis || admission.reason,
+    conditionOnDischarge: conditionOnDischarge || 'Recovered',
+    dischargeNotes: dischargeNotes || 'Patient completed inpatient treatment cycle with full recovery of clinical baseline and stable vital signs.',
+    homeMedications: homeMedications && homeMedications.length > 0 ? homeMedications : [
+      'Tab. Paracetamol 1g PO TDS x 4 days PRN',
+      'Tab. Amoxicillin/Clavulanate 625mg PO BD x 7 days',
+      'Tab. Pantoprazole 40mg PO OD mane x 10 days'
+    ],
+    followUpDate: followUpDate || new Date(Date.now() + 14 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    dischargedByDoctor: dischargedByDoctor || admission.attendingDoctorName || 'Dr. Amina Hassan, Consultant'
+  };
+
+  admission.finalBill = {
+    totalKES: total,
+    shaCoverageKES: sha,
+    patientPayableKES: patientPayable,
+    mpesaReceiptNumber: mpesaReceipt,
+    paymentStatus: patientPayable === 0 ? 'Paid' : 'Pending',
+    itemizedBreakdown: [
+      { category: 'Bed & Nursing Care', description: `Inpatient Bed Tariff (${admission.assignedWard || 'Ward'})`, amountKES: Math.round(total * 0.45) },
+      { category: 'Laboratory & Diagnostic', description: 'Inpatient Diagnostic Workup & Daily Profiles', amountKES: Math.round(total * 0.25) },
+      { category: 'Pharmacy & Medications', description: 'Inpatient IV Medications & Infusions', amountKES: Math.round(total * 0.20) },
+      { category: 'Consultant Clinical Rounds', description: 'Attending Physician Daily Clinical Reviews', amountKES: Math.round(total * 0.10) }
+    ]
+  };
+
+  // Generate an official invoice in db.invoices
+  const newInvoice = {
+    id: `INV-ADM-${Date.now().toString().slice(-6)}`,
+    patientId: admission.patientId,
+    patientName: admission.patientName,
+    patientPhone: admission.patientPhone,
+    date: new Date().toISOString().split('T')[0],
+    dueDate: new Date().toISOString().split('T')[0],
+    status: (patientPayable === 0 ? 'Paid' : 'Unpaid') as any,
+    items: admission.finalBill.itemizedBreakdown.map((item, idx) => ({
+      id: `inv-item-${idx + 1}`,
+      description: item.description,
+      category: item.category.includes('Bed') ? 'Bed Charge' : item.category.includes('Lab') ? 'Laboratory' : item.category.includes('Pharm') ? 'Pharmacy' : 'Consultation' as any,
+      amountKES: item.amountKES
+    })),
+    totalKES: total,
+    totalAmountKES: total,
+    paidAmountKES: sha + (patientPayable === 0 ? patientPayable : 0),
+    balanceKES: patientPayable,
+    notes: `Inpatient discharge bill for Admission #${admission.id} (SHA Benefit Coverage: KES ${sha.toLocaleString()})`
+  };
+  db.invoices.unshift(newInvoice);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: 'staff',
+    userName: admission.dischargeSummary.dischargedByDoctor,
+    role: 'doctor',
+    action: `Discharged Inpatient [${admission.id}]`,
+    module: 'EMR',
+    ipAddress: req.ip || '10.0.1.5',
+    details: `Patient ${admission.patientName} discharged. Condition: ${admission.dischargeSummary.conditionOnDischarge}. Total Bill: KES ${total.toLocaleString()}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `Patient ${admission.patientName} successfully discharged. Discharge summary and invoice generated.`,
+    admission,
+    invoice: newInvoice
+  });
+});
+
+// 5. Pay Inpatient Accrued Bill / Discharge Balance via M-PESA
+app.post('/api/admissions/:id/pay-bill', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { amountKES, phone } = req.body;
+
+  const admission = db.admissions.find(a => a.id === id);
+  if (!admission) return res.status(404).json({ error: 'Admission file not found.' });
+
+  const receipt = `QK${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+  if (admission.finalBill) {
+    admission.finalBill.paymentStatus = 'Paid';
+    admission.finalBill.mpesaReceiptNumber = receipt;
+  }
+
+  // Record M-PESA transaction
+  const mpesaTx = {
+    id: `mpesa-adm-${Date.now()}`,
+    patientId: admission.patientId,
+    patientName: admission.patientName,
+    phone: phone || admission.patientPhone,
+    amountKES: Number(amountKES) || 5000,
+    reference: `ADM-${admission.id.slice(-6)}`,
+    serviceType: 'Inpatient' as const,
+    status: 'Completed' as const,
+    mpesaReceiptNumber: receipt,
+    transactionDate: new Date().toISOString()
+  };
+  db.mpesaPayments.unshift(mpesaTx);
+
+  db.auditLogs.unshift({
+    id: `aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    userId: admission.patientId,
+    userName: admission.patientName,
+    role: 'patient',
+    action: `Paid Inpatient Bill via M-PESA (${receipt})`,
+    module: 'Billing',
+    ipAddress: req.ip || '197.232.88.10',
+    details: `KES ${mpesaTx.amountKES.toLocaleString()} paid for admission #${admission.id}`,
+    status: 'Success'
+  });
+
+  res.json({
+    message: `M-PESA payment of KES ${mpesaTx.amountKES.toLocaleString()} confirmed successfully (Receipt: ${receipt}).`,
+    mpesaReceipt: receipt,
+    admission
+  });
+});
+
+// 6. Cancel Pending Pre-Admission
+app.patch('/api/admissions/:id/cancel', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const admission = db.admissions.find(a => a.id === id);
+  if (!admission) return res.status(404).json({ error: 'Admission file not found.' });
+
+  admission.status = 'CANCELLED';
+
+  res.json({ message: 'Admission request cancelled.', admission });
+});
+
 
 // Ambulances Fleet Management
 app.get('/api/ambulances', (req: Request, res: Response) => {
