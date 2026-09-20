@@ -377,7 +377,7 @@ export interface PatientInsurancePolicy {
   principalMemberName: string;
   relationshipToPrincipal: 'Self' | 'Spouse' | 'Child' | 'Parent' | 'Dependent';
   planTier: string;
-  status: 'Pending Verification' | 'Approved & Verified' | 'Pre-Authorized' | 'Suspended' | 'Expired';
+  status: 'Pending Verification' | 'Approved & Verified' | 'Pre-Authorized' | 'Suspended' | 'Expired' | 'PENDING' | 'ACTIVE';
   monthlyPremiumKES: number;
   annualPremiumKES: number;
   annualInpatientLimitKES: number;

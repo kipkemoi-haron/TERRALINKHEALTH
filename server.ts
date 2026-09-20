@@ -2188,6 +2188,56 @@ app.get('/api/insurance/providers', (req: Request, res: Response) => {
   res.json(db.insuranceProviders);
 });
 
+app.post('/api/insurance/providers', (req: Request, res: Response) => {
+  const { providerName, providerCode, category, planTiers } = req.body;
+  if (!providerName) {
+    return res.status(400).json({ error: 'Provider name is required.' });
+  }
+
+  const existingIndex = db.insuranceProviders.findIndex(
+    p => p.providerName.toLowerCase() === providerName.toLowerCase() || (providerCode && p.providerCode === providerCode)
+  );
+
+  if (existingIndex >= 0) {
+    // Update existing provider
+    db.insuranceProviders[existingIndex] = {
+      ...db.insuranceProviders[existingIndex],
+      ...req.body
+    };
+    return res.json({ message: 'Insurance provider updated successfully.', provider: db.insuranceProviders[existingIndex] });
+  } else {
+    // Add new provider
+    const newProvider = {
+      id: `ins-prov-${Date.now()}`,
+      providerName,
+      providerCode: providerCode || `IRA-${Math.floor(100 + Math.random() * 900)}`,
+      category: category || 'Private Underwriter',
+      planTiers: planTiers && planTiers.length > 0 ? planTiers : [
+        {
+          tierName: `${providerName} Comprehensive Standard`,
+          tierCode: `${providerName.substring(0, 3).toUpperCase()}-STD`,
+          monthlyPremiumKES: 4000,
+          annualPremiumKES: 48000,
+          inpatientLimitKES: 4000000,
+          outpatientLimitKES: 250000,
+          maternityLimitKES: 180000,
+          dentalLimitKES: 40000,
+          opticalLimitKES: 35000,
+          copayKES: 200,
+          preAuthRequiredAboveKES: 35000,
+          coverageHighlights: [
+            'IRA Licensed Health Insurance Plan',
+            'Full direct settlement at TERRALINKHEALTH HOSPITAL',
+            'Diagnostic and inpatient cover included'
+          ]
+        }
+      ]
+    };
+    db.insuranceProviders.push(newProvider);
+    return res.json({ message: 'IRA-licensed insurer registered successfully.', provider: newProvider });
+  }
+});
+
 app.get('/api/insurance/policies', (req: Request, res: Response) => {
   const { patientId } = req.query;
   if (patientId) {
@@ -2236,7 +2286,7 @@ app.post('/api/insurance/policies', (req: Request, res: Response) => {
     principalMemberName: principalMemberName || patientName,
     relationshipToPrincipal: relationshipToPrincipal || 'Self',
     planTier: planTier || matchedTier?.tierName || 'Standard Health Cover',
-    status: 'Pending Verification' as const,
+    status: (req.body.status || 'PENDING') as any,
     monthlyPremiumKES: Number(monthlyPremiumKES) || matchedTier?.monthlyPremiumKES || 1500,
     annualPremiumKES: Number(annualPremiumKES) || matchedTier?.annualPremiumKES || 18000,
     annualInpatientLimitKES: Number(annualInpatientLimitKES) || matchedTier?.inpatientLimitKES || 2000000,
@@ -2278,7 +2328,7 @@ app.patch('/api/insurance/policies/:id/status', (req: Request, res: Response) =>
 
   if (status) policy.status = status;
   if (verifiedBy) policy.verifiedBy = verifiedBy;
-  if (status === 'Approved & Verified' || status === 'Pre-Authorized') {
+  if (status === 'Approved & Verified' || status === 'Pre-Authorized' || status === 'ACTIVE') {
     policy.verifiedAt = new Date().toISOString();
     if (!policy.verifiedBy) policy.verifiedBy = 'Hospital Billing Desk - TERRALINKHEALTH';
   }

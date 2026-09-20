@@ -55,8 +55,14 @@ import {
   AuditLog, 
   HospitalAnalytics,
   HospitalSocialLinks,
-  SystemPricing
+  SystemPricing,
+  PatientInsurancePolicy,
+  InsuranceProviderPlan
 } from '../types';
+import {
+  INITIAL_INSURANCE_PROVIDERS,
+  INITIAL_INSURANCE_POLICIES
+} from '../mockData';
 
 interface AdminPortalProps {
   currentUser: User;
@@ -91,7 +97,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onAddDepartment,
   onRefreshData
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'>('billings');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'insurance' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'>('billings');
+
+  // Insurance State
+  const [adminInsurancePolicies, setAdminInsurancePolicies] = useState<PatientInsurancePolicy[]>(INITIAL_INSURANCE_POLICIES);
+  const [adminInsuranceProviders, setAdminInsuranceProviders] = useState<InsuranceProviderPlan[]>(INITIAL_INSURANCE_PROVIDERS);
+  const [showAddProviderModal, setShowAddProviderModal] = useState(false);
+  const [newProvName, setNewProvName] = useState('');
+  const [newProvRegNumber, setNewProvRegNumber] = useState('');
+  const [newProvTier, setNewProvTier] = useState('Comprehensive Health Cover');
+  const [newProvInpatientLimit, setNewProvInpatientLimit] = useState(2000000);
+  const [newProvOutpatientLimit, setNewProvOutpatientLimit] = useState(150000);
+  const [approvingPolicyId, setApprovingPolicyId] = useState<string | null>(null);
+  const [insuranceToast, setInsuranceToast] = useState('');
 
   // Invoices state
   const [invoices, setInvoices] = useState<Invoice[]>(initialInvoices);
@@ -226,7 +244,103 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         if (data && data.facebook) setSocialLinks(data);
       })
       .catch(err => console.warn('Socials load fallback:', err));
+
+    fetch('/api/insurance/policies')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setAdminInsurancePolicies(data);
+      })
+      .catch(() => {});
+
+    fetch('/api/insurance/providers')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setAdminInsuranceProviders(data);
+      })
+      .catch(() => {});
   }, []);
+
+  // Approve Pending Insurance Policy
+  const handleApproveInsurancePolicy = async (policyId: string) => {
+    setApprovingPolicyId(policyId);
+    try {
+      const res = await fetch(`/api/insurance/policies/${policyId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ACTIVE', verifiedBy: 'Admin: Kipkemoi Haron' })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setAdminInsurancePolicies(prev => prev.map(p => p.id === policyId ? updated : p));
+      } else {
+        setAdminInsurancePolicies(prev => prev.map(p => p.id === policyId ? { ...p, status: 'ACTIVE' } : p));
+      }
+      setInsuranceToast('Insurance verification request approved! Policy status is now ACTIVE.');
+      setTimeout(() => setInsuranceToast(''), 4000);
+    } catch (e) {
+      setAdminInsurancePolicies(prev => prev.map(p => p.id === policyId ? { ...p, status: 'ACTIVE' } : p));
+      setInsuranceToast('Insurance status updated to ACTIVE.');
+      setTimeout(() => setInsuranceToast(''), 4000);
+    } finally {
+      setApprovingPolicyId(null);
+    }
+  };
+
+  // Add new IRA Licensed Provider
+  const handleAddInsuranceProvider = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProvName.trim()) return;
+
+    try {
+      const payload = {
+        providerName: newProvName.trim(),
+        iraRegistrationNumber: newProvRegNumber.trim() || `IRA/INS/${Date.now().toString().slice(-4)}`,
+        planTiers: [
+          {
+            tierName: newProvTier.trim() || 'Standard Medical Cover',
+            inpatientLimitKES: Number(newProvInpatientLimit) || 2000000,
+            outpatientLimitKES: Number(newProvOutpatientLimit) || 150000,
+            dentalLimitKES: 30000,
+            opticalLimitKES: 30000,
+            maternityLimitKES: 100000,
+            preAuthRequired: true
+          }
+        ]
+      };
+
+      const res = await fetch('/api/insurance/providers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const saved = await res.json();
+        setAdminInsuranceProviders(prev => [...prev, saved]);
+      } else {
+        setAdminInsuranceProviders(prev => [
+          ...prev,
+          {
+            id: `ins-${Date.now()}`,
+            providerName: newProvName.trim(),
+            iraRegistrationNumber: newProvRegNumber.trim() || `IRA/INS/${Date.now().toString().slice(-4)}`,
+            licenseStatus: 'Active & Licensed',
+            contactPhone: '+254 20 7600000',
+            portalUrl: 'https://ira.go.ke',
+            planTiers: payload.planTiers
+          }
+        ]);
+      }
+
+      setInsuranceToast(`Provider "${newProvName}" registered under IRA licensed catalogue.`);
+      setTimeout(() => setInsuranceToast(''), 4000);
+      setNewProvName('');
+      setNewProvRegNumber('');
+      setShowAddProviderModal(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Synchronize invoices with props
   useEffect(() => {
@@ -508,6 +622,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
+      {insuranceToast && (
+        <div className="bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+          <div className="flex items-center space-x-2.5 text-xs font-semibold">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <span>{insuranceToast}</span>
+          </div>
+          <button onClick={() => setInsuranceToast('')} className="p-1 hover:bg-white/20 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Admin Top Banner - Frosted Glass */}
       <div className="bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-indigo-950/90 backdrop-blur-2xl rounded-3xl p-6 text-white shadow-xl border border-white/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
@@ -549,6 +675,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="flex overflow-x-auto pb-1 gap-2 border-b border-sky-200/50 text-xs font-semibold">
         {[
           { id: 'billings', label: `Patient Billings & Invoices (${invoices.length})`, icon: Receipt },
+          { id: 'insurance', label: `Insurance & IRA Approvals (${adminInsurancePolicies.filter(p => p.status === 'PENDING').length > 0 ? `${adminInsurancePolicies.filter(p => p.status === 'PENDING').length} Pending` : 'IRA Active'})`, icon: ShieldCheck },
           { id: 'departments', label: `Departments & Clinics (${departments.length})`, icon: Building2 },
           { id: 'equipment', label: 'Medical Equipment & Assets', icon: Cpu },
           { id: 'announcements', label: 'Patient Alerts & Broadcasts', icon: Megaphone },
@@ -755,6 +882,209 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* ================= TAB: INSURANCE & IRA PROVIDERS MANAGEMENT ================= */}
+      {activeTab === 'insurance' && (
+        <div className="space-y-6">
+          {/* Header & Action */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-base font-bold text-slate-900">Insurance & IRA Provider Administration</h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Verify patient insurance submissions, approve policies to ACTIVE status, and manage the Kenyan IRA licensed insurers directory.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddProviderModal(true)}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-600/20 cursor-pointer self-start md:self-auto"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Licensed Underwriter (IRA)</span>
+            </button>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-3xl p-5 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                <span>Pending Verifications</span>
+                <Clock className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="text-2xl font-bold font-mono text-amber-600">
+                {adminInsurancePolicies.filter(p => p.status === 'PENDING').length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Awaiting admin or insurer approval</p>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-3xl p-5 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                <span>Active Covered Policies</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div className="text-2xl font-bold font-mono text-emerald-600">
+                {adminInsurancePolicies.filter(p => p.status === 'ACTIVE').length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Approved & cleared for hospital billing</p>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-3xl p-5 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                <span>IRA Licensed Providers</span>
+                <ShieldCheck className="w-4 h-4 text-sky-600" />
+              </div>
+              <div className="text-2xl font-bold font-mono text-sky-700">
+                {adminInsuranceProviders.length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Regulated Kenyan medical underwriters</p>
+            </div>
+          </div>
+
+          {/* Section 1: Pending Policy Approvals */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span>Pending Policy Verification Requests</span>
+                  <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                    {adminInsurancePolicies.filter(p => p.status === 'PENDING').length} Pending
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">Review member numbers and activate coverage once verified with the insurer.</p>
+              </div>
+            </div>
+
+            {adminInsurancePolicies.filter(p => p.status === 'PENDING').length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-xs">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-60" />
+                <p className="font-semibold text-slate-700">All submissions verified!</p>
+                <p className="text-slate-400 mt-0.5">There are no pending insurance policies waiting for verification.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {adminInsurancePolicies.filter(p => p.status === 'PENDING').map(policy => (
+                  <div key={policy.id} className="p-4 bg-white/80 rounded-2xl border border-amber-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm">{policy.providerName}</span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          PENDING VERIFICATION
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                        <span><strong>Policy #:</strong> <span className="font-mono">{policy.policyNumber}</span></span>
+                        <span><strong>Member #:</strong> <span className="font-mono">{policy.memberNumber}</span></span>
+                        <span><strong>Principal:</strong> {policy.principalMemberName}</span>
+                        {policy.planTier && <span><strong>Plan:</strong> {policy.planTier}</span>}
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Submitted for verification on {new Date(policy.submittedAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleApproveInsurancePolicy(policy.id)}
+                      disabled={approvingPolicyId === policy.id}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>{approvingPolicyId === policy.id ? 'Approving...' : 'Approve & Activate'}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: Active Verified Policies */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 p-6 shadow-xs space-y-4">
+            <div className="border-b border-slate-200/60 pb-3">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Active Verified Policies ({adminInsurancePolicies.filter(p => p.status === 'ACTIVE').length})</span>
+              </h4>
+              <p className="text-xs text-slate-500 mt-0.5">Approved policies eligible for direct copay, outpatient and inpatient claims.</p>
+            </div>
+
+            <div className="border border-white/80 rounded-2xl overflow-hidden text-xs bg-white/40 backdrop-blur-md shadow-xs">
+              <table className="w-full text-left">
+                <thead className="bg-white/70 text-slate-700 font-semibold border-b border-white/80">
+                  <tr>
+                    <th className="py-3 px-3.5">Insurer / Scheme</th>
+                    <th className="py-3 px-3.5">Policy & Member #</th>
+                    <th className="py-3 px-3.5">Principal Member</th>
+                    <th className="py-3 px-3.5">Coverage Limits</th>
+                    <th className="py-3 px-3.5">Status</th>
+                    <th className="py-3 px-3.5">Verified By</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/50">
+                  {adminInsurancePolicies.filter(p => p.status === 'ACTIVE').map(policy => (
+                    <tr key={policy.id} className="hover:bg-white/60 transition-colors">
+                      <td className="py-3 px-3.5 font-bold text-slate-900">{policy.providerName}</td>
+                      <td className="py-3 px-3.5">
+                        <div className="font-mono text-slate-800">{policy.policyNumber}</div>
+                        <div className="text-[11px] font-mono text-slate-500">M: {policy.memberNumber}</div>
+                      </td>
+                      <td className="py-3 px-3.5 text-slate-700">{policy.principalMemberName}</td>
+                      <td className="py-3 px-3.5">
+                        <div className="text-slate-800 font-medium">IP: KES {policy.inpatientLimitKES?.toLocaleString() || 'Unlimited'}</div>
+                        <div className="text-slate-500 text-[11px]">OP: KES {policy.outpatientLimitKES?.toLocaleString() || 'Comprehensive'}</div>
+                      </td>
+                      <td className="py-3 px-3.5">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          ACTIVE
+                        </span>
+                      </td>
+                      <td className="py-3 px-3.5 text-slate-500 text-[11px]">
+                        {policy.verifiedBy || 'Admin Verified'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Section 3: IRA Licensed Insurers Catalogue */}
+          <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white/80 p-6 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Kenyan Insurance Regulatory Authority (IRA) Licensed Underwriters</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Approved medical insurance companies configured for Terralink Health EMR claims routing.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {adminInsuranceProviders.map(provider => (
+                <div key={provider.id} className="p-4 bg-white/75 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-xs">{provider.providerName}</h5>
+                      <span className="font-mono text-[10px] text-slate-500">{provider.iraRegistrationNumber}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      IRA Regulated
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 space-y-0.5 pt-1 border-t border-slate-100">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Contact:</span>
+                      <span className="font-medium">{provider.contactPhone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Plan Tiers:</span>
+                      <span className="font-semibold text-slate-800">{provider.planTiers?.length || 1} Tier(s)</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -2162,6 +2492,88 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold cursor-pointer shadow-md"
                 >
                   Save Department
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ADD IRA LICENSED INSURER ================= */}
+      {showAddProviderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-sm">Add Licensed Medical Insurer (IRA)</h3>
+              </div>
+              <button onClick={() => setShowAddProviderModal(false)} className="text-slate-400 hover:text-white cursor-pointer">✕</button>
+            </div>
+            <form onSubmit={handleAddInsuranceProvider} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Insurance Company Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Sanlam General Insurance, First Assurance"
+                  value={newProvName}
+                  onChange={(e) => setNewProvName(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">IRA Registration Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. IRA/05/112/2026"
+                  value={newProvRegNumber}
+                  onChange={(e) => setNewProvRegNumber(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Default Plan Tier Name</label>
+                <input
+                  type="text"
+                  value={newProvTier}
+                  onChange={(e) => setNewProvTier(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Inpatient Limit (KES)</label>
+                  <input
+                    type="number"
+                    value={newProvInpatientLimit}
+                    onChange={(e) => setNewProvInpatientLimit(Number(e.target.value))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Outpatient Limit (KES)</label>
+                  <input
+                    type="number"
+                    value={newProvOutpatientLimit}
+                    onChange={(e) => setNewProvOutpatientLimit(Number(e.target.value))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowAddProviderModal(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold cursor-pointer shadow-sm"
+                >
+                  Register Insurer
                 </button>
               </div>
             </form>

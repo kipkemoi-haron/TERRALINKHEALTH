@@ -768,8 +768,8 @@ export const INITIAL_ENCOUNTERS: ClinicalEncounter[] = [
     departmentName: 'Outpatient Department (OPD)',
     visitDate: '2026-07-15',
     visitType: 'Outpatient',
-    chiefComplaint: 'Intermittent fatigue, mild morning dizziness, and dry cough for 5 days.',
-    historyOfPresentIllness: '32-year-old female presents with 5 days of upper airway dry cough, no fever, no hemoptysis. Notes slight dizziness when standing quickly. Current medications: Salbutamol inhaler PRN.',
+    chiefComplaint: 'Upper Respiratory Infection - Intermittent fatigue, mild dizziness, and dry cough for 5 days.',
+    historyOfPresentIllness: '32-year-old female presents with 5 days of upper airway dry cough, no fever, no hemoptysis. Notes slight dizziness when standing quickly.',
     vitals: {
       bloodPressureSystolic: 118,
       bloodPressureDiastolic: 76,
@@ -783,12 +783,41 @@ export const INITIAL_ENCOUNTERS: ClinicalEncounter[] = [
     },
     examinationNotes: 'Chest clear bilaterally, good air entry. Heart sounds S1 S2 present, no murmurs. Throat mildly hyperemic, no tonsillar exudates.',
     diagnoses: [
-      { code: 'J06.9', name: 'Acute upper respiratory infection, unspecified', type: 'Primary' },
+      { code: 'J06.9', name: 'Upper Respiratory Infection (Acute, Unspecified)', type: 'Primary' },
       { code: 'R53.83', name: 'Fatigue and generalized malaise', type: 'Secondary' }
     ],
-    treatmentPlan: '1. Oral hydration and steam inhalation.\n2. Prescribed Cetirizine 10mg OD x 7 days and Paracetamol 1g TDS PRN.\n3. Ordered Full Hemogram and Serum Ferritin to rule out microcytic anemia.\n4. Review in 2 weeks if symptoms persist.',
+    treatmentPlan: '1. Oral hydration and steam inhalation.\n2. Prescribed Paracetamol 500mg and Amoxicillin 250mg Suspension.\n3. Ordered Routine Labs & Review.',
     admissionStatus: 'None',
     followUpDate: '2026-07-29'
+  },
+  {
+    id: 'enc-203',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    doctorId: 'doc-2',
+    doctorName: 'Dr. Kevin Omondi',
+    departmentName: 'Inpatient Medicine Ward',
+    visitDate: '2026-06-18',
+    visitType: 'Inpatient',
+    chiefComplaint: 'Discharge Summary - Inpatient Pneumonia (3 days admission)',
+    historyOfPresentIllness: 'Admitted on 2026-06-15 with acute bacterial lobar pneumonia. Successfully completed 72h IV Ceftriaxone and supportive bronchodilator nebulization. Afebrile for >48 hours, SpO2 98% on room air.',
+    vitals: {
+      bloodPressureSystolic: 120,
+      bloodPressureDiastolic: 78,
+      heartRateBpm: 76,
+      respiratoryRateBpm: 16,
+      temperatureCelsius: 36.5,
+      oxygenSaturationPercent: 98,
+      bmi: 22.4,
+      recordedAt: '2026-06-18T11:00:00Z',
+      recordedBy: 'Nurse Faith Chepkorir'
+    },
+    examinationNotes: 'Vesicular breath sounds bilateral, resolution of right base crackles. Ambulatory without respiratory distress.',
+    diagnoses: [
+      { code: 'J18.9', name: 'Discharge Summary - Inpatient Pneumonia (Resolved)', type: 'Primary' }
+    ],
+    treatmentPlan: 'Discharged on oral Amoxicillin-Clavulanic Acid 625mg BD for 5 days. Rest at home for 3 days. Return to clinic if fever or dyspnea reoccurs.',
+    admissionStatus: 'Discharged'
   },
   {
     id: 'enc-202',
@@ -833,72 +862,72 @@ export const INITIAL_PRESCRIPTIONS: Prescription[] = [
     status: 'Dispensed',
     medications: [
       {
-        drugName: 'Cetirizine Hydrochloride 10mg Tablets',
-        dosage: '10mg',
-        frequency: 'Once Daily at bedtime',
-        duration: '7 Days',
-        route: 'Oral',
-        instructions: 'Take 1 tablet at night with water. May cause mild drowsiness.',
-        priceKES: 350,
-        dispensedQuantity: 7,
-        batchNumber: 'BN-CTZ-2026-09'
-      },
-      {
-        drugName: 'Paracetamol 500mg Tablets',
+        drugName: 'Paracetamol 500mg Tabs',
         dosage: '1000mg (2 tabs)',
         frequency: 'Three times daily PRN',
         duration: '5 Days',
         route: 'Oral',
-        instructions: 'Take 2 tablets every 8 hours after meals only when in pain or discomfort.',
+        instructions: 'Take 2 tablets every 8 hours after meals only when in pain or fever.',
         priceKES: 200,
         dispensedQuantity: 20,
         batchNumber: 'BN-PCM-88412'
-      },
-      {
-        drugName: 'Salbutamol 100mcg Inhaler',
-        dosage: '2 Puffs (200mcg)',
-        frequency: 'As needed for shortness of breath',
-        duration: '30 Days',
-        route: 'Inhalation',
-        instructions: 'Inhale 2 puffs using spacer device during wheezing episodes. Rinse mouth after use.',
-        priceKES: 650,
-        dispensedQuantity: 1,
-        batchNumber: 'BN-SLB-55310'
       }
     ],
-    totalPriceKES: 1200,
+    totalPriceKES: 200,
     dispensedBy: 'Pharm. Lucy Njeri',
     dispensedAt: '2026-07-15T10:45:00Z'
   },
   {
     id: 'rx-302',
-    patientId: 'pat-2',
-    patientName: 'Brian Mwangi Kimani',
-    doctorId: 'doc-2',
-    doctorName: 'Dr. Kevin Omondi',
-    prescribedDate: '2026-08-26',
-    status: 'Pending',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    doctorId: 'doc-3',
+    doctorName: 'Dr. Amina Hassan',
+    encounterId: 'enc-201',
+    prescribedDate: '2026-07-15',
+    status: 'Dispensed',
     medications: [
       {
-        drugName: 'Amlodipine Besylate 5mg Tablets',
-        dosage: '5mg',
-        frequency: 'Once Daily in the morning',
-        duration: '30 Days',
+        drugName: 'Amoxicillin 250mg Suspension',
+        dosage: '500mg (10ml)',
+        frequency: 'Three times daily',
+        duration: '7 Days',
         route: 'Oral',
-        instructions: 'Take 1 tablet every morning with or without food. Monitor ankle swelling.',
-        priceKES: 900
-      },
-      {
-        drugName: 'Telmisartan 40mg Tablets',
-        dosage: '40mg',
-        frequency: 'Once Daily',
-        duration: '30 Days',
-        route: 'Oral',
-        instructions: 'Take daily at the same time to control blood pressure.',
-        priceKES: 1400
+        instructions: 'Take 10ml three times daily after meals. Shake well before use. Complete full course.',
+        priceKES: 650,
+        dispensedQuantity: 1,
+        batchNumber: 'BN-AMX-2026-04'
       }
     ],
-    totalPriceKES: 2300
+    totalPriceKES: 650,
+    dispensedBy: 'Pharm. Lucy Njeri',
+    dispensedAt: '2026-07-15T11:00:00Z'
+  },
+  {
+    id: 'rx-303',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    doctorId: 'doc-2',
+    doctorName: 'Dr. Kevin Omondi',
+    encounterId: 'enc-203',
+    prescribedDate: '2026-06-15',
+    status: 'Dispensed',
+    medications: [
+      {
+        drugName: 'Amoxicillin-Clavulanic Acid 625mg',
+        dosage: '625mg (1 tab)',
+        frequency: 'Twice Daily (every 12 hours)',
+        duration: '5 Days',
+        route: 'Oral',
+        instructions: 'Take 1 tablet every 12 hours with meals to treat respiratory infection.',
+        priceKES: 1400,
+        dispensedQuantity: 10,
+        batchNumber: 'BN-AUG-99120'
+      }
+    ],
+    totalPriceKES: 1400,
+    dispensedBy: 'Pharm. Lucy Njeri',
+    dispensedAt: '2026-06-18T11:30:00Z'
   }
 ];
 
@@ -911,16 +940,16 @@ export const INITIAL_LAB_ORDERS: LabOrder[] = [
     patientGender: 'Female',
     doctorId: 'doc-3',
     doctorName: 'Dr. Amina Hassan',
-    departmentName: 'Outpatient Department (OPD)',
-    orderedDate: '2026-07-15',
+    departmentName: 'Medical Laboratory',
+    orderedDate: '2026-07-08',
     clinicalIndication: 'Workup for generalized fatigue, mild dizziness, and routine annual wellness assessment.',
     priority: 'Routine',
     status: 'Results Ready',
-    testName: 'Full Hemogram (Complete Blood Count)',
+    testName: 'Complete Blood Count (CBC)',
     testCategory: 'Hematology',
     priceKES: 1200,
     sampleType: 'Whole Blood (EDTA Tube)',
-    sampleCollectedAt: '2026-07-15T09:30:00Z',
+    sampleCollectedAt: '2026-07-08T09:30:00Z',
     results: [
       { parameter: 'Hemoglobin (Hb)', value: '13.4', unit: 'g/dL', referenceRange: '12.0 - 15.5', flag: 'Normal' },
       { parameter: 'White Blood Cell Count (WBC)', value: '6.8', unit: 'x10^9/L', referenceRange: '4.0 - 10.5', flag: 'Normal' },
@@ -933,7 +962,7 @@ export const INITIAL_LAB_ORDERS: LabOrder[] = [
     ],
     technicianNotes: 'Normal red blood cell morphology. Adequate platelets on peripheral blood smear. No abnormal blasts seen.',
     criticalAlert: false,
-    completedAt: '2026-07-15T11:00:00Z',
+    completedAt: '2026-07-08T11:00:00Z',
     conductedByLabTech: 'Mr. Dennis Kipkoech (Chief Lab Scientist)'
   },
   {
@@ -944,26 +973,56 @@ export const INITIAL_LAB_ORDERS: LabOrder[] = [
     patientGender: 'Female',
     doctorId: 'doc-3',
     doctorName: 'Dr. Amina Hassan',
-    departmentName: 'Outpatient Department (OPD)',
-    orderedDate: '2026-07-15',
+    departmentName: 'Medical Laboratory',
+    orderedDate: '2026-07-08',
     clinicalIndication: 'Fast lipid screening & cardiovascular risk profiling.',
     priority: 'Routine',
     status: 'Results Ready',
-    testName: 'Lipid Profile Panel (Fasting)',
+    testName: 'Lipid Panel (Fasting)',
     testCategory: 'Biochemistry',
     priceKES: 2400,
     sampleType: 'Serum (SST Gel Tube)',
-    sampleCollectedAt: '2026-07-15T09:30:00Z',
+    sampleCollectedAt: '2026-07-08T09:30:00Z',
     results: [
-      { parameter: 'Total Cholesterol', value: '4.8', unit: 'mmol/L', referenceRange: '< 5.2', flag: 'Normal' },
-      { parameter: 'Triglycerides', value: '1.2', unit: 'mmol/L', referenceRange: '< 1.7', flag: 'Normal' },
-      { parameter: 'HDL Cholesterol (Good)', value: '1.6', unit: 'mmol/L', referenceRange: '> 1.3', flag: 'Normal' },
-      { parameter: 'LDL Cholesterol (Direct)', value: '2.6', unit: 'mmol/L', referenceRange: '< 3.0', flag: 'Normal' },
-      { parameter: 'Cholesterol / HDL Ratio', value: '3.0', unit: 'ratio', referenceRange: '< 4.5', flag: 'Normal' }
+      { parameter: 'Total Cholesterol', value: '5.4', unit: 'mmol/L', referenceRange: '< 5.2', flag: 'High' },
+      { parameter: 'Triglycerides', value: '1.5', unit: 'mmol/L', referenceRange: '< 1.7', flag: 'Normal' },
+      { parameter: 'HDL Cholesterol (Good)', value: '1.4', unit: 'mmol/L', referenceRange: '> 1.3', flag: 'Normal' },
+      { parameter: 'LDL Cholesterol (Direct)', value: '3.3', unit: 'mmol/L', referenceRange: '< 3.0', flag: 'High' },
+      { parameter: 'Cholesterol / HDL Ratio', value: '3.8', unit: 'ratio', referenceRange: '< 4.5', flag: 'Normal' }
     ],
-    technicianNotes: 'Patient was fasted for 10 hours prior to collection. Good metabolic lipid index.',
+    technicianNotes: 'Patient was fasted for 10 hours prior to collection. Mild borderline total cholesterol.',
     criticalAlert: false,
-    completedAt: '2026-07-15T11:45:00Z',
+    completedAt: '2026-07-08T11:45:00Z',
+    conductedByLabTech: 'Mr. Dennis Kipkoech (Chief Lab Scientist)'
+  },
+  {
+    id: 'lab-405',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    patientAge: 32,
+    patientGender: 'Female',
+    doctorId: 'doc-3',
+    doctorName: 'Dr. Amina Hassan',
+    departmentName: 'Medical Laboratory',
+    orderedDate: '2026-07-08',
+    clinicalIndication: 'Baseline kidney function assessment alongside routine metabolic panel.',
+    priority: 'Routine',
+    status: 'Results Ready',
+    testName: 'Renal Function Tests (RFT)',
+    testCategory: 'Biochemistry',
+    priceKES: 2200,
+    sampleType: 'Serum (SST Gel Tube)',
+    sampleCollectedAt: '2026-07-08T09:30:00Z',
+    results: [
+      { parameter: 'Serum Creatinine', value: '68', unit: 'umol/L', referenceRange: '44 - 80', flag: 'Normal' },
+      { parameter: 'Blood Urea Nitrogen (BUN)', value: '4.2', unit: 'mmol/L', referenceRange: '2.5 - 7.1', flag: 'Normal' },
+      { parameter: 'Estimated GFR (eGFR)', value: '> 90', unit: 'mL/min/1.73m2', referenceRange: '> 60', flag: 'Normal' },
+      { parameter: 'Serum Sodium (Na+)', value: '139', unit: 'mmol/L', referenceRange: '135 - 145', flag: 'Normal' },
+      { parameter: 'Serum Potassium (K+)', value: '4.1', unit: 'mmol/L', referenceRange: '3.5 - 5.1', flag: 'Normal' }
+    ],
+    technicianNotes: 'Kidney filtration biomarkers well within normal physiological reference ranges.',
+    criticalAlert: false,
+    completedAt: '2026-07-08T12:15:00Z',
     conductedByLabTech: 'Mr. Dennis Kipkoech (Chief Lab Scientist)'
   },
   {
@@ -1007,15 +1066,35 @@ export const INITIAL_LAB_ORDERS: LabOrder[] = [
 
 export const INITIAL_RADIOLOGY_ORDERS: RadiologyOrder[] = [
   {
+    id: 'rad-500',
+    patientId: 'pat-1',
+    patientName: 'Faith Chebet Koech',
+    doctorId: 'doc-1',
+    doctorName: 'Dr. Sarah Odhiambo',
+    orderedDate: '2026-07-10',
+    modality: 'X-Ray',
+    bodyPart: 'X-Ray Left Knee (AP/Lateral)',
+    clinicalHistory: '32-year-old female presents following minor athletic slip. Mild left knee effusion, assessing for joint line disruption, fracture or patellar malalignment.',
+    priority: 'Routine',
+    status: 'Report Generated',
+    priceKES: 2500,
+    findings: 'Two views of the left knee (AP and Lateral) demonstrate no fracture, dislocation, or focal bone lesion. Joint spaces are preserved. Patellofemoral articulation is anatomically normal. Minimal suprapatellar soft tissue fullness without lipohemarthrosis.',
+    impression: 'No acute osseous injury or radiographically evident joint damage. Benign soft tissue contusion/sprain.',
+    recommendations: 'RICE protocol, supportive elastocrepe bandage, clinical review in 10 days.',
+    radiologistName: 'Dr. Miriam Wangari, MBChB, MMed (Radiology)',
+    completedAt: '2026-07-10T14:15:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800'
+  },
+  {
     id: 'rad-501',
     patientId: 'pat-1',
     patientName: 'Faith Chebet Koech',
     doctorId: 'doc-3',
     doctorName: 'Dr. Amina Hassan',
-    orderedDate: '2026-07-15',
+    orderedDate: '2026-07-10',
     modality: 'X-Ray',
-    bodyPart: 'Chest PA View (Digital Radiography)',
-    clinicalHistory: '32-year-old female with persistent dry cough, assessing for pulmonary infiltrates, consolidation, or hilar adenopathy.',
+    bodyPart: 'Chest X-Ray PA',
+    clinicalHistory: '32-year-old female with resolving cough, assessing for pulmonary infiltrates, consolidation, or hilar adenopathy.',
     priority: 'Routine',
     status: 'Report Generated',
     priceKES: 2000,
@@ -1023,7 +1102,7 @@ export const INITIAL_RADIOLOGY_ORDERS: RadiologyOrder[] = [
     impression: 'Normal digital chest radiograph. No evidence of active pneumonia, tuberculosis, or pleural effusion.',
     recommendations: 'Symptomatic outpatient management appropriate.',
     radiologistName: 'Dr. Miriam Wangari, MBChB, MMed (Radiology)',
-    completedAt: '2026-07-15T12:30:00Z',
+    completedAt: '2026-07-10T15:30:00Z',
     imageUrl: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800'
   },
   {
@@ -1082,59 +1161,85 @@ export const INITIAL_IMMUNIZATIONS: ImmunizationRecord[] = [
 
 export const INITIAL_INVOICES: Invoice[] = [
   {
-    id: 'inv-601',
+    id: 'INV-2026-001',
     patientId: 'pat-1',
-    patientName: 'Faith Chebet Koech',
+    patientName: 'Edgar Rivar',
     patientPhone: '+254712345678',
     date: '2026-07-15',
     dueDate: '2026-07-15',
     status: 'Paid',
     items: [
-      { description: 'Outpatient Consultation Fee (Dr. Amina Hassan)', category: 'Consultation', amountKES: 1500 },
-      { description: 'Full Hemogram (Complete Blood Count)', category: 'Laboratory', amountKES: 1200 },
-      { description: 'Lipid Profile Panel (Fasting)', category: 'Laboratory', amountKES: 2400 },
-      { description: 'Digital Chest X-Ray (PA View)', category: 'Radiology', amountKES: 2000 },
-      { description: 'Pharmacy Prescription Dispensing (Cetirizine, PCM, Salbutamol)', category: 'Pharmacy', amountKES: 1200 }
+      { description: 'Pediatrics Consultation + Vaccination', category: 'Consultation', amountKES: 3500 }
     ],
-    totalKES: 8300,
-    paidAmountKES: 8300,
+    totalKES: 3500,
+    paidAmountKES: 3500,
     balanceKES: 0,
     paymentMethod: 'M-PESA Express',
     mpesaReceipt: 'QHK91A44LL'
   },
   {
-    id: 'inv-602',
+    id: 'INV-2026-002',
     patientId: 'pat-1',
-    patientName: 'Faith Chebet Koech',
+    patientName: 'Edgar Rivar',
     patientPhone: '+254712345678',
-    date: '2026-08-25',
-    dueDate: '2026-08-27',
+    date: '2026-07-10',
+    dueDate: '2026-07-24',
+    status: 'Unpaid',
+    items: [
+      { description: 'Orthopedic Consultation + X-Ray', category: 'Consultation', amountKES: 8500 }
+    ],
+    totalKES: 8500,
+    paidAmountKES: 0,
+    balanceKES: 8500
+  },
+  {
+    id: 'INV-2026-003',
+    patientId: 'pat-1',
+    patientName: 'Edgar Rivar',
+    patientPhone: '+254712345678',
+    date: '2026-07-08',
+    dueDate: '2026-07-08',
     status: 'Paid',
     items: [
-      { description: 'Pediatrics Specialist Consultation (Dr. Sarah Odhiambo)', category: 'Consultation', amountKES: 2800 }
+      { description: 'Lab Work - CBC, Lipid Panel', category: 'Laboratory', amountKES: 4200 }
     ],
-    totalKES: 2800,
-    paidAmountKES: 2800,
+    totalKES: 4200,
+    paidAmountKES: 4200,
     balanceKES: 0,
     paymentMethod: 'M-PESA STK Push',
     mpesaReceipt: 'QHK88X92LM'
   },
   {
-    id: 'inv-603',
-    patientId: 'pat-2',
-    patientName: 'Brian Mwangi Kimani',
-    patientPhone: '+254723456789',
-    date: '2026-08-26',
-    dueDate: '2026-08-26',
-    status: 'Unpaid',
+    id: 'INV-2026-004',
+    patientId: 'pat-1',
+    patientName: 'Edgar Rivar',
+    patientPhone: '+254712345678',
+    date: '2026-06-15',
+    dueDate: '2026-06-15',
+    status: 'Paid',
     items: [
-      { description: 'Cardiology Specialist Consultation (Dr. Kevin Omondi)', category: 'Consultation', amountKES: 3500 },
-      { description: 'Renal Function Tests (Urea, Creatinine, Electrolytes)', category: 'Laboratory', amountKES: 2200 },
-      { description: 'Pharmacy (Amlodipine & Telmisartan)', category: 'Pharmacy', amountKES: 2300 }
+      { description: 'Inpatient - Pneumonia Treatment (3 days)', category: 'Procedure', amountKES: 45000 }
     ],
-    totalKES: 8000,
-    paidAmountKES: 3500,
-    balanceKES: 4500
+    totalKES: 45000,
+    paidAmountKES: 45000,
+    balanceKES: 0,
+    paymentMethod: 'M-PESA Express',
+    mpesaReceipt: 'QHK77P33JK'
+  },
+  {
+    id: 'INV-2026-005',
+    patientId: 'pat-1',
+    patientName: 'Edgar Rivar',
+    patientPhone: '+254712345678',
+    date: '2026-06-01',
+    dueDate: '2026-06-15',
+    status: 'Overdue',
+    items: [
+      { description: 'Cardiology Consultation', category: 'Consultation', amountKES: 5000 }
+    ],
+    totalKES: 5000,
+    paidAmountKES: 0,
+    balanceKES: 5000
   }
 ];
 
@@ -1379,47 +1484,53 @@ export const INITIAL_INSURANCE_PROVIDERS: InsuranceProviderPlan[] = [
     ]
   },
   {
-    id: 'ins-prov-jubilee',
-    providerName: 'Jubilee Health Insurance Kenya',
-    providerCode: 'JUBILEE-HLTH',
+    id: 'ins-prov-aar',
+    providerName: 'AAR Insurance Kenya',
+    providerCode: 'AAR-KENYA',
     category: 'Private Underwriter',
     planTiers: [
       {
-        tierName: 'Jubilee J-Care Gold Comprehensive',
-        tierCode: 'JUB-GOLD',
-        monthlyPremiumKES: 4500,
-        annualPremiumKES: 54000,
-        inpatientLimitKES: 5000000,
-        outpatientLimitKES: 250000,
-        maternityLimitKES: 200000,
-        dentalLimitKES: 50000,
-        opticalLimitKES: 40000,
+        tierName: 'AAR ProHealth Executive',
+        tierCode: 'AAR-EXEC',
+        monthlyPremiumKES: 5200,
+        annualPremiumKES: 62400,
+        inpatientLimitKES: 6000000,
+        outpatientLimitKES: 300000,
+        maternityLimitKES: 250000,
+        dentalLimitKES: 60000,
+        opticalLimitKES: 50000,
         copayKES: 200,
-        preAuthRequiredAboveKES: 40000,
+        preAuthRequiredAboveKES: 45000,
         coverageHighlights: [
-          'Full direct billing at TERRALINKHEALTH HOSPITAL',
-          'Private en-suite room inpatient bed allocation',
-          'Free annual wellness checkup and executive cancer screening',
-          'International emergency evacuation cover'
+          'Direct SMART cardless digital verification',
+          'Post-hospitalization recuperation allowance',
+          'Emergency local air and road evacuation cover'
         ]
-      },
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-apa',
+    providerName: 'APA Insurance Kenya',
+    providerCode: 'APA-KENYA',
+    category: 'Private Underwriter',
+    planTiers: [
       {
-        tierName: 'Jubilee Executive Platinum Care',
-        tierCode: 'JUB-PLATINUM',
-        monthlyPremiumKES: 8200,
-        annualPremiumKES: 98400,
-        inpatientLimitKES: 10000000,
-        outpatientLimitKES: 500000,
-        maternityLimitKES: 350000,
-        dentalLimitKES: 100000,
-        opticalLimitKES: 75000,
-        copayKES: 0,
-        preAuthRequiredAboveKES: 100000,
+        tierName: 'APA Jamii Plus Health Cover',
+        tierCode: 'APA-JAMII',
+        monthlyPremiumKES: 4100,
+        annualPremiumKES: 49200,
+        inpatientLimitKES: 4000000,
+        outpatientLimitKES: 220000,
+        maternityLimitKES: 180000,
+        dentalLimitKES: 40000,
+        opticalLimitKES: 35000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 35000,
         coverageHighlights: [
-          'Unlimited tele-consultations and home drug delivery',
-          'VIP presidential wing inpatient accommodation',
-          'Zero co-pay on all diagnostics, MRI, CT scans, and surgeries',
-          'Comprehensive organ transplant and international treatment rider'
+          'Wide empanelment across Nairobi and all 47 counties',
+          'Coverage for chronic, congenital and pre-existing conditions',
+          'Funeral expense benefit and personal accident rider'
         ]
       }
     ]
@@ -1451,34 +1562,8 @@ export const INITIAL_INSURANCE_PROVIDERS: InsuranceProviderPlan[] = [
     ]
   },
   {
-    id: 'ins-prov-aar',
-    providerName: 'AAR Insurance Kenya',
-    providerCode: 'AAR-KENYA',
-    category: 'Private Underwriter',
-    planTiers: [
-      {
-        tierName: 'AAR ProHealth Executive',
-        tierCode: 'AAR-EXEC',
-        monthlyPremiumKES: 5200,
-        annualPremiumKES: 62400,
-        inpatientLimitKES: 6000000,
-        outpatientLimitKES: 300000,
-        maternityLimitKES: 250000,
-        dentalLimitKES: 60000,
-        opticalLimitKES: 50000,
-        copayKES: 200,
-        preAuthRequiredAboveKES: 45000,
-        coverageHighlights: [
-          'Direct SMART cardless digital verification',
-          'Post-hospitalization recuperation allowance',
-          'Emergency local air and road evacuation cover'
-        ]
-      }
-    ]
-  },
-  {
     id: 'ins-prov-cic',
-    providerName: 'CIC Family Health & Corporate Medical',
+    providerName: 'CIC Insurance Group',
     providerCode: 'CIC-MED',
     category: 'Private Underwriter',
     planTiers: [
@@ -1503,8 +1588,191 @@ export const INITIAL_INSURANCE_PROVIDERS: InsuranceProviderPlan[] = [
     ]
   },
   {
+    id: 'ins-prov-ga',
+    providerName: 'GA Insurance Kenya',
+    providerCode: 'GA-KENYA',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'GA Afya Care Comprehensive',
+        tierCode: 'GA-AFYA',
+        monthlyPremiumKES: 4200,
+        annualPremiumKES: 50400,
+        inpatientLimitKES: 4500000,
+        outpatientLimitKES: 250000,
+        maternityLimitKES: 200000,
+        dentalLimitKES: 45000,
+        opticalLimitKES: 40000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'High limit inpatient cover with critical illness protection',
+          'Emergency room treatment at TERRALINKHEALTH 24/7',
+          'Day-care surgical procedures covered in full'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-heritage',
+    providerName: 'Heritage Insurance Kenya',
+    providerCode: 'HERITAGE-KENYA',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Heritage First Assurance Health',
+        tierCode: 'HRT-FIRST',
+        monthlyPremiumKES: 4600,
+        annualPremiumKES: 55200,
+        inpatientLimitKES: 5000000,
+        outpatientLimitKES: 260000,
+        maternityLimitKES: 220000,
+        dentalLimitKES: 50000,
+        opticalLimitKES: 40000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'Liberty Blue network integration',
+          'Direct admission authorization within 15 minutes',
+          'Maternity package with newborn pediatric checkups'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-icealion',
+    providerName: 'ICEA LION General Insurance',
+    providerCode: 'ICEA-LION',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'ICEA LION Medi-Plus Comprehensive',
+        tierCode: 'ICEA-MEDIPLUS',
+        monthlyPremiumKES: 4800,
+        annualPremiumKES: 57600,
+        inpatientLimitKES: 5000000,
+        outpatientLimitKES: 280000,
+        maternityLimitKES: 220000,
+        dentalLimitKES: 50000,
+        opticalLimitKES: 45000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'Seamless digital claiming with zero paper documentation',
+          'Free annual biometric wellness check at TERRALINKHEALTH',
+          'Specialist consultation referrals covered without prior approvals'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-jubilee',
+    providerName: 'Jubilee Health Insurance',
+    providerCode: 'JUBILEE-HLTH',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Jubilee J-Care Gold Comprehensive',
+        tierCode: 'JUB-GOLD',
+        monthlyPremiumKES: 4500,
+        annualPremiumKES: 54000,
+        inpatientLimitKES: 5000000,
+        outpatientLimitKES: 250000,
+        maternityLimitKES: 200000,
+        dentalLimitKES: 50000,
+        opticalLimitKES: 40000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 40000,
+        coverageHighlights: [
+          'Full direct billing at TERRALINKHEALTH HOSPITAL',
+          'Private en-suite room inpatient bed allocation',
+          'Free annual wellness checkup and executive cancer screening',
+          'International emergency evacuation cover'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-kenindia',
+    providerName: 'Kenindia Assurance',
+    providerCode: 'KENINDIA-ASSUR',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Kenindia Health Security Cover',
+        tierCode: 'KEN-HEALTH',
+        monthlyPremiumKES: 3600,
+        annualPremiumKES: 43200,
+        inpatientLimitKES: 3000000,
+        outpatientLimitKES: 190000,
+        maternityLimitKES: 130000,
+        dentalLimitKES: 30000,
+        opticalLimitKES: 25000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 30000,
+        coverageHighlights: [
+          'Established hospital network with 40+ years in Kenya',
+          'Prompt direct reimbursement and claim approval',
+          'Diagnostic imaging & lab coverage at standard hospital tariffs'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-madison',
+    providerName: 'Madison Insurance Kenya',
+    providerCode: 'MADISON-INS',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'Madison Betterlife Health Plan',
+        tierCode: 'MADISON-BETTERLIFE',
+        monthlyPremiumKES: 3900,
+        annualPremiumKES: 46800,
+        inpatientLimitKES: 3500000,
+        outpatientLimitKES: 210000,
+        maternityLimitKES: 150000,
+        dentalLimitKES: 35000,
+        opticalLimitKES: 30000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 35000,
+        coverageHighlights: [
+          'Integrated electronic billing with TERRALINKHEALTH EMR',
+          'Comprehensive paediatric vaccination & wellness care',
+          'Affordable co-pay structure for families'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ins-prov-mua',
+    providerName: 'MUA Insurance Kenya',
+    providerCode: 'MUA-KENYA',
+    category: 'Private Underwriter',
+    planTiers: [
+      {
+        tierName: 'MUA Shield Health Plan',
+        tierCode: 'MUA-SHIELD',
+        monthlyPremiumKES: 4300,
+        annualPremiumKES: 51600,
+        inpatientLimitKES: 4000000,
+        outpatientLimitKES: 230000,
+        maternityLimitKES: 170000,
+        dentalLimitKES: 40000,
+        opticalLimitKES: 35000,
+        copayKES: 200,
+        preAuthRequiredAboveKES: 35000,
+        coverageHighlights: [
+          'Fast claim settlement and real-time electronic pre-auth',
+          'Cover for inpatient pathology, scans, and doctor fees',
+          'Emergency casualty attendance 24/7'
+        ]
+      }
+    ]
+  },
+  {
     id: 'ins-prov-oldmutual',
-    providerName: 'Old Mutual Health Kenya (UAP)',
+    providerName: 'Old Mutual Health Insurance (UAP)',
     providerCode: 'OLD-MUTUAL',
     category: 'Private Underwriter',
     planTiers: [

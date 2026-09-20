@@ -59,7 +59,15 @@ export function App() {
   const [currentUser, setCurrentUser] = useState<UserType | null>(() => {
     try {
       const saved = localStorage.getItem('terralink_current_user');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+      return {
+        id: 'usr-pat-1',
+        name: 'Faith Chebet Koech',
+        email: 'faith.chebet@gmail.com',
+        phone: '+254712345678',
+        role: 'patient',
+        status: 'active'
+      };
     } catch {
       return null;
     }
@@ -68,9 +76,10 @@ export function App() {
   const [currentPatient, setCurrentPatient] = useState<PatientProfile | null>(() => {
     try {
       const saved = localStorage.getItem('terralink_current_patient_profile');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+      return mockPatients[0] || null;
     } catch {
-      return null;
+      return mockPatients[0] || null;
     }
   });
 
@@ -246,13 +255,15 @@ export function App() {
     setAppointments(prev => prev.map(a => a.id === aptId ? { ...a, status: 'Cancelled' } : a));
   };
 
-  const handlePayInvoice = async (invoiceId: string, receipt: string) => {
+  const handlePayInvoice = async (invoiceId: string, receipt: string, amount?: number) => {
+    const targetInv = invoices.find(i => i.id === invoiceId);
+    const payAmt = amount || targetInv?.balanceKES || targetInv?.totalKES || 0;
     const result = await safeFetchJson(`/api/billing/invoices/${invoiceId}/pay`, {
       method: 'POST',
-      body: JSON.stringify({ amountKES: 1500, mpesaReceipt: receipt })
+      body: JSON.stringify({ amountKES: payAmt, mpesaReceipt: receipt })
     });
-    const updated = result.ok && result.data ? result.data : { status: 'Paid', balanceKES: 0 };
-    setInvoices(prev => prev.map(i => i.id === invoiceId ? { ...i, ...updated } : i));
+    const updated = result.ok && result.data ? result.data : { status: 'Paid', balanceKES: 0, paidAmountKES: payAmt };
+    setInvoices(prev => prev.map(i => i.id === invoiceId ? { ...i, ...updated, status: 'Paid', balanceKES: 0 } : i));
     refreshAllData();
   };
 
@@ -402,175 +413,179 @@ export function App() {
         <div className="absolute bottom-10 left-1/4 w-96 h-96 bg-blue-100/60 rounded-full blur-3xl" />
       </div>
 
-      {/* Top Emergency & Hospital Indicator Strip with Glass Effect */}
-      <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <span className="flex items-center space-x-1.5 text-teal-400 font-semibold">
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-sm shadow-teal-400" />
-            <span>Nairobi County Digital Hospital Network</span>
-          </span>
-          <span className="hidden md:inline text-slate-600">|</span>
-          <span className="hidden md:inline text-slate-400">
-            Kenya Data Protection Act (KDPA 2019) • KMPDC Certified
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1.5 text-emerald-400 font-medium text-[10px] sm:text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>24/7 Outpatient & Emergency Open</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Hospital Navigation Header - Frosted Glass Bar */}
-      <header className="relative z-40 bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm shadow-slate-200/50 sticky top-0">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
-          
-          {/* Logo & Platform Name */}
-          <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0" onClick={() => {
-            setActivePortal('home');
-            if (window.location.pathname.startsWith('/admin')) {
-              window.history.pushState(null, '', '/');
-            }
-          }}>
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white rounded-full flex items-center justify-center">
-                <div className="w-1 h-3 sm:h-3.5 bg-white rounded-full"></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
-                <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 text-[9px] sm:text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
-              </div>
-              <p className="hidden xs:block sm:block text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] sm:max-w-none">TERRALINKHEALTH Hospital Nairobi</p>
-            </div>
+      {/* Top Emergency & Hospital Indicator Strip with Glass Effect - Only on Provider / Admin portals */}
+      {activePortal !== 'home' && activePortal !== 'patient' && (
+        <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <span className="flex items-center space-x-1.5 text-teal-400 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-sm shadow-teal-400" />
+              <span>Nairobi County Digital Hospital Network</span>
+            </span>
+            <span className="hidden md:inline text-slate-600">|</span>
+            <span className="hidden md:inline text-slate-400">
+              Kenya Data Protection Act (KDPA 2019) • KMPDC Certified
+            </span>
           </div>
 
-          {/* Portals Switcher / Navigation */}
-          {currentUser && (
-            <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
-              <button
-                onClick={() => {
-                  setActivePortal('home');
-                  if (window.location.pathname.startsWith('/admin')) {
-                    window.history.pushState(null, '', '/');
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                  activePortal === 'home' 
-                    ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Hospital Home</span>
-              </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1.5 text-emerald-400 font-medium text-[10px] sm:text-[11px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>24/7 Outpatient & Emergency Open</span>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {currentUser.role === 'patient' && (
-                <button
-                  onClick={() => {
-                    setActivePortal('patient');
-                    if (window.location.pathname.startsWith('/admin')) {
-                      window.history.pushState(null, '', '/');
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    activePortal === 'patient' 
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                  }`}
-                >
-                  <Heart className="w-3.5 h-3.5 text-rose-400" />
-                  <span>My Patient Portal</span>
-                </button>
-              )}
-
-              {currentUser.role !== 'patient' && (
-                <button
-                  onClick={() => {
-                    setActivePortal('provider');
-                    if (window.location.pathname.startsWith('/admin')) {
-                      window.history.pushState(null, '', '/');
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    activePortal === 'provider' 
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                  }`}
-                >
-                  <Stethoscope className="w-3.5 h-3.5" />
-                  <span>Clinical Workspace</span>
-                </button>
-              )}
-
-              {isAdminUser && (
-                <button
-                  onClick={() => {
-                    setActivePortal('admin');
-                  }}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    activePortal === 'admin' 
-                      ? 'bg-slate-900 text-emerald-400 shadow-md' 
-                      : 'text-emerald-700 hover:bg-emerald-50'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Admin</span>
-                </button>
-              )}
-            </nav>
-          )}
-
-          {/* Right User Actions / Emergency Contact */}
-          <div className="flex items-center space-x-2 shrink-0">
+      {/* Main Hospital Navigation Header - Only on Provider / Admin portals */}
+      {activePortal !== 'home' && activePortal !== 'patient' && (
+        <header className="relative z-40 bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm shadow-slate-200/50 sticky top-0">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
             
-            {!currentUser ? (
-              <a
-                href="tel:0713544101"
-                className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center space-x-1 sm:space-x-1.5 shadow-xs transition-all shrink-0 whitespace-nowrap"
-              >
-                <Phone className="w-3.5 h-3.5 text-rose-600 animate-pulse shrink-0" />
-                <span className="hidden sm:inline">24/7 Hotline:</span>
-                <span className="font-mono">0713544101</span>
-              </a>
-            ) : (
-              <div className="flex items-center space-x-2.5">
-                <div className="flex items-center space-x-2.5 pl-2">
-                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/60">
-                    {currentUser.name?.charAt(0) || 'U'}
-                  </div>
-                  <div className="hidden sm:block text-left">
-                    <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[130px]">{currentUser.name}</span>
-                    <span className="text-[10px] text-teal-700 font-semibold uppercase tracking-wide">{currentUser.role?.replace('_', ' ')}</span>
-                  </div>
+            {/* Logo & Platform Name */}
+            <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0" onClick={() => {
+              setActivePortal('home');
+              if (window.location.pathname.startsWith('/admin')) {
+                window.history.pushState(null, '', '/');
+              }
+            }}>
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white rounded-full flex items-center justify-center">
+                  <div className="w-1 h-3 sm:h-3.5 bg-white rounded-full"></div>
                 </div>
+              </div>
+              <div>
+                <div className="flex items-center space-x-1.5 sm:space-x-2">
+                  <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
+                  <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 text-[9px] sm:text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
+                </div>
+                <p className="hidden xs:block sm:block text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] sm:max-w-none">TERRALINKHEALTH Hospital Nairobi</p>
+              </div>
+            </div>
 
+            {/* Portals Switcher / Navigation */}
+            {currentUser && (
+              <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
                 <button
                   onClick={() => {
-                    handleSetUserSession(null, null, null);
                     setActivePortal('home');
                     if (window.location.pathname.startsWith('/admin')) {
                       window.history.pushState(null, '', '/');
                     }
                   }}
-                  title="Sign out of current account"
-                  className="p-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-xs transition-all cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    activePortal === 'home' 
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Hospital Home</span>
                 </button>
-              </div>
+
+                {currentUser.role === 'patient' && (
+                  <button
+                    onClick={() => {
+                      setActivePortal('patient');
+                      if (window.location.pathname.startsWith('/admin')) {
+                        window.history.pushState(null, '', '/');
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      activePortal === 'patient' 
+                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
+                  >
+                    <Heart className="w-3.5 h-3.5 text-rose-400" />
+                    <span>My Patient Portal</span>
+                  </button>
+                )}
+
+                {currentUser.role !== 'patient' && (
+                  <button
+                    onClick={() => {
+                      setActivePortal('provider');
+                      if (window.location.pathname.startsWith('/admin')) {
+                        window.history.pushState(null, '', '/');
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      activePortal === 'provider' 
+                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
+                  >
+                    <Stethoscope className="w-3.5 h-3.5" />
+                    <span>Clinical Workspace</span>
+                  </button>
+                )}
+
+                {isAdminUser && (
+                  <button
+                    onClick={() => {
+                      setActivePortal('admin');
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                      activePortal === 'admin' 
+                        ? 'bg-slate-900 text-emerald-400 shadow-md' 
+                        : 'text-emerald-700 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Admin</span>
+                  </button>
+                )}
+              </nav>
             )}
 
-          </div>
+            {/* Right User Actions / Emergency Contact */}
+            <div className="flex items-center space-x-2 shrink-0">
+              
+              {!currentUser ? (
+                <a
+                  href="tel:0713544101"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold flex items-center space-x-1 sm:space-x-1.5 shadow-xs transition-all shrink-0 whitespace-nowrap"
+                >
+                  <Phone className="w-3.5 h-3.5 text-rose-600 animate-pulse shrink-0" />
+                  <span className="hidden sm:inline">24/7 Hotline:</span>
+                  <span className="font-mono">0713544101</span>
+                </a>
+              ) : (
+                <div className="flex items-center space-x-2.5">
+                  <div className="flex items-center space-x-2.5 pl-2">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/60">
+                      {currentUser.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[130px]">{currentUser.name}</span>
+                      <span className="text-[10px] text-teal-700 font-semibold uppercase tracking-wide">{currentUser.role?.replace('_', ' ')}</span>
+                    </div>
+                  </div>
 
-        </div>
-      </header>
+                  <button
+                    onClick={() => {
+                      handleSetUserSession(null, null, null);
+                      setActivePortal('home');
+                      if (window.location.pathname.startsWith('/admin')) {
+                        window.history.pushState(null, '', '/');
+                      }
+                    }}
+                    title="Sign out of current account"
+                    className="p-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-xs transition-all cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+            </div>
+
+          </div>
+        </header>
+      )}
 
       {/* Main Active Portal Container */}
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className={`relative z-10 flex-1 w-full ${activePortal === 'home' || activePortal === 'patient' ? 'p-0 max-w-none' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         
         {activePortal === 'home' && (
           <HospitalHomepage
@@ -631,6 +646,7 @@ export function App() {
                 handleSetUserSession(null, null, null);
                 setActivePortal('home');
               }}
+              onNavigateToHome={() => setActivePortal('home')}
             />
           ) : (
             <PatientLoginGate
@@ -785,88 +801,90 @@ export function App() {
         }}
       />
 
-      {/* Footer with Frosted Glass Theme & Hospital Social Channels */}
-      <footer className="relative z-10 bg-white/40 backdrop-blur-xl border-t border-white/60 text-slate-600 text-xs py-8 mt-12 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-teal-500/20">
-                TL
+      {/* Footer with Frosted Glass Theme & Hospital Social Channels - Only on Provider / Admin portals */}
+      {activePortal !== 'home' && activePortal !== 'patient' && (
+        <footer className="relative z-10 bg-white/40 backdrop-blur-xl border-t border-white/60 text-slate-600 text-xs py-8 mt-12 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-teal-500/20">
+                  TL
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 text-sm">TERRALINKHEALTH HOSPITAL SYSTEM</span>
+                  <p className="text-[11px] text-slate-500">{socialLinks.physicalAddress}</p>
+                </div>
               </div>
+
+              {/* Social Media & Direct Contact Channels */}
+              <div className="flex items-center flex-wrap gap-2 text-xs">
+                {socialLinks.facebook && (
+                  <a
+                    href={socialLinks.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-white/80 hover:bg-white text-blue-600 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
+                    title="Official Facebook Page"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Facebook</span>
+                  </a>
+                )}
+
+                {socialLinks.twitter && (
+                  <a
+                    href={socialLinks.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-white/80 hover:bg-white text-slate-900 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
+                    title="Official X (Twitter)"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">X (Twitter)</span>
+                  </a>
+                )}
+
+                {socialLinks.instagram && (
+                  <a
+                    href={socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-white/80 hover:bg-white text-pink-600 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
+                    title="Official Instagram"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Instagram</span>
+                  </a>
+                )}
+
+                {socialLinks.whatsapp && (
+                  <a
+                    href={socialLinks.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
+                    title="WhatsApp Business Hotline"
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
               <div>
-                <span className="font-bold text-slate-900 text-sm">TERRALINKHEALTH HOSPITAL SYSTEM</span>
-                <p className="text-[11px] text-slate-500">{socialLinks.physicalAddress}</p>
+                ISO 27001 Certified • HL7 FHIR Compliant • KDPA 2019
+              </div>
+              <div className="flex items-center space-x-3">
+                <span>All tariffs in Kenyan Shillings (KES)</span>
               </div>
             </div>
 
-            {/* Social Media & Direct Contact Channels */}
-            <div className="flex items-center flex-wrap gap-2 text-xs">
-              {socialLinks.facebook && (
-                <a
-                  href={socialLinks.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/80 hover:bg-white text-blue-600 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
-                  title="Official Facebook Page"
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Facebook</span>
-                </a>
-              )}
-
-              {socialLinks.twitter && (
-                <a
-                  href={socialLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/80 hover:bg-white text-slate-900 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
-                  title="Official X (Twitter)"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">X (Twitter)</span>
-                </a>
-              )}
-
-              {socialLinks.instagram && (
-                <a
-                  href={socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/80 hover:bg-white text-pink-600 rounded-xl border border-white shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
-                  title="Official Instagram"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Instagram</span>
-                </a>
-              )}
-
-              {socialLinks.whatsapp && (
-                <a
-                  href={socialLinks.whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs transition-all flex items-center space-x-1 font-semibold cursor-pointer"
-                  title="WhatsApp Business Hotline"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
-              )}
-            </div>
           </div>
-
-          <div className="pt-4 border-t border-slate-200/60 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
-            <div>
-              ISO 27001 Certified • HL7 FHIR Compliant • KDPA 2019
-            </div>
-            <div className="flex items-center space-x-3">
-              <span>All tariffs in Kenyan Shillings (KES)</span>
-            </div>
-          </div>
-
-        </div>
-      </footer>
+        </footer>
+      )}
 
     </div>
   );
