@@ -217,103 +217,103 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </header>
 
       {/* ================= 2. HERO SECTION ================= */}
-      <section className="relative w-full overflow-hidden pt-8 sm:pt-14 pb-14 sm:pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative w-full overflow-hidden pt-6 sm:pt-10 md:pt-14 pb-8 sm:pb-12 md:pb-16 px-4 sm:px-6 lg:px-8">
         
-        {/* Clearly Visible Healthcare Professional on Far Right (Soft Blended Left Edge matching Reference) */}
-        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[50%] md:w-[48%] lg:w-[46%] xl:w-[43%] pointer-events-none select-none z-0 overflow-hidden flex justify-end">
-          <div className="relative w-full h-full [mask-image:linear-gradient(to_right,transparent_0%,black_20%,black_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_20%,black_100%)]">
+        {/* Healthcare Professional on Far Right: subtle & blended on mobile, fully visible on desktop */}
+        <div className="absolute right-0 top-0 bottom-0 w-[42%] sm:w-[46%] md:w-[45%] lg:w-[43%] xl:w-[41%] pointer-events-none select-none z-0 overflow-hidden flex justify-end">
+          <div className="relative w-full h-full [mask-image:linear-gradient(to_right,transparent_0%,black_35%,black_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_35%,black_100%)]">
             <img
               src={doctorPhoto}
               alt="Doctor at TERRALINK Health"
-              className="w-full h-full object-cover object-[center_top] opacity-90 sm:opacity-95 lg:opacity-100 filter brightness-[1.02] contrast-[1.02]"
+              className="w-full h-full object-cover object-[center_top] opacity-40 sm:opacity-75 md:opacity-90 lg:opacity-100 filter brightness-[1.02] contrast-[1.02]"
               referrerPolicy="no-referrer"
             />
-            {/* Subtle feathering on left edge to melt seamlessly into hero background canvas */}
-            <div className="absolute inset-y-0 left-0 w-24 sm:w-36 bg-gradient-to-r from-[#e8f4fc] via-[#e8f4fc]/50 to-transparent" />
-            {/* Subtle bottom fade into the section transition */}
-            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/90 via-white/40 to-transparent" />
+            {/* Smooth gradient blend on the left edge */}
+            <div className="absolute inset-y-0 left-0 w-16 sm:w-28 md:w-36 bg-gradient-to-r from-[#e8f4fc] via-[#e8f4fc]/60 to-transparent" />
+            {/* Subtle bottom fade */}
+            <div className="absolute bottom-0 inset-x-0 h-8 sm:h-12 bg-gradient-to-t from-white/80 via-transparent to-transparent" />
           </div>
         </div>
 
-        {/* Hero Content - Clean, High-Contrast Text on Left */}
-        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-start text-left">
+        {/* Hero Content - Clean Light/White Background on Left, No Overlap with Image */}
+        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-start text-left w-full pr-[38%] sm:pr-[38%] md:pr-0">
           
           {/* Transforming Healthcare Eyebrow */}
-          <div className="inline-flex items-center space-x-1.5 text-[#0284c7] font-semibold text-xs sm:text-sm tracking-wide mb-3 sm:mb-4">
-            <Sparkles className="w-4 h-4 text-[#0284c7]" />
+          <div className="inline-flex items-center space-x-1.5 text-[#0284c7] font-semibold text-[11px] sm:text-xs md:text-sm tracking-wide mb-2 sm:mb-3">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0284c7]" />
             <span>Transforming Healthcare in Kenya</span>
           </div>
 
           {/* Main Bold Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold text-slate-900 tracking-tight leading-[1.08]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold text-slate-900 tracking-tight leading-[1.1]">
             TERRALINK Health
           </h1>
 
-          {/* Subheading - Single Line on Desktop */}
-          <h2 className="text-xl sm:text-2xl lg:text-[25px] xl:text-[28px] font-bold text-slate-800 tracking-tight mt-3 sm:mt-4 whitespace-normal lg:whitespace-nowrap leading-tight">
+          {/* Subheading: Fits neatly on one or two balanced lines without overlapping image */}
+          <h2 className="text-base sm:text-xl md:text-2xl lg:text-[25px] xl:text-[27px] font-bold text-slate-800 tracking-tight mt-2 sm:mt-3 leading-snug lg:whitespace-nowrap">
             Enhancing Hospital Operations &amp; Patient Experience
           </h2>
 
           {/* Paragraph Description */}
-          <p className="text-slate-600 text-sm sm:text-base lg:text-[17px] leading-relaxed mt-4 sm:mt-5 max-w-xl">
+          <p className="text-slate-600 text-xs sm:text-sm md:text-base lg:text-[17px] leading-relaxed mt-2.5 sm:mt-4 max-w-xl">
             An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics — built for Kenyan hospitals.
           </p>
         </div>
       </section>
 
       {/* ================= 3. KEY BENEFITS SECTION ================= */}
-      <section className="w-full py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-200/50 bg-white/40">
+      <section className="w-full py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200/50 bg-white/40">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-8">
             
             {/* 1. Reduced Wait Times */}
-            <div className="flex flex-col items-start text-left">
-              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
-                <Clock className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-start text-left p-3.5 sm:p-5 rounded-2xl bg-white/70 sm:bg-transparent border border-slate-100/80 sm:border-0 shadow-2xs sm:shadow-none">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-2.5 sm:mb-3 shrink-0 shadow-2xs">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 leading-snug">
                 Reduced Wait Times
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-snug sm:leading-relaxed">
                 Real-time queue tracking &amp; online appointment booking.
               </p>
             </div>
 
             {/* 2. Secure Records */}
-            <div className="flex flex-col items-start text-left">
-              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
-                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-start text-left p-3.5 sm:p-5 rounded-2xl bg-white/70 sm:bg-transparent border border-slate-100/80 sm:border-0 shadow-2xs sm:shadow-none">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-2.5 sm:mb-3 shrink-0 shadow-2xs">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 leading-snug">
                 Secure Records
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-snug sm:leading-relaxed">
                 Encrypted patient data with role-based access control.
               </p>
             </div>
 
             {/* 3. Telemedicine */}
-            <div className="flex flex-col items-start text-left">
-              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
-                <Video className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-start text-left p-3.5 sm:p-5 rounded-2xl bg-white/70 sm:bg-transparent border border-slate-100/80 sm:border-0 shadow-2xs sm:shadow-none">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-2.5 sm:mb-3 shrink-0 shadow-2xs">
+                <Video className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 leading-snug">
                 Telemedicine
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-snug sm:leading-relaxed">
                 Virtual consultations from anywhere in Kenya.
               </p>
             </div>
 
             {/* 4. Real-Time Analytics */}
-            <div className="flex flex-col items-start text-left">
-              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
-                <Activity className="w-5 h-5 stroke-[2.2]" />
+            <div className="flex flex-col items-start text-left p-3.5 sm:p-5 rounded-2xl bg-white/70 sm:bg-transparent border border-slate-100/80 sm:border-0 shadow-2xs sm:shadow-none">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-2.5 sm:mb-3 shrink-0 shadow-2xs">
+                <Activity className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 leading-snug">
                 Real-Time Analytics
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-snug sm:leading-relaxed">
                 Live dashboards for hospital performance monitoring.
               </p>
             </div>
@@ -323,44 +323,44 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </section>
 
       {/* ================= 4. ACCESS YOUR PORTAL SECTION ================= */}
-      <section className="w-full py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <section className="w-full py-8 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           
           {/* Section Header */}
-          <div className="text-center space-y-2">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <div className="text-center space-y-1.5 sm:space-y-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
               Access Your Portal
             </h2>
-            <p className="text-sm sm:text-base text-slate-500">
+            <p className="text-xs sm:text-sm md:text-base text-slate-500">
               Choose how you'd like to access TERRALINK Health
             </p>
           </div>
 
           {/* Two Portal Cards: Side-by-Side on Desktop, Stacked on Mobile */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 max-w-4xl mx-auto mt-10 sm:mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-8 max-w-4xl mx-auto mt-6 sm:mt-10">
             
             {/* Card 1: Patient Portal */}
-            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
               
               <div className="flex flex-col items-center">
                 {/* Blue Rounded Square Icon Badge */}
-                <div className="w-16 h-16 rounded-2xl bg-[#0284c7] text-white flex items-center justify-center mb-6 shadow-xs">
-                  <User className="w-8 h-8 stroke-[2.2]" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0284c7] text-white flex items-center justify-center mb-4 sm:mb-6 shadow-xs">
+                  <User className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Patient Portal
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
+                <p className="text-xs sm:text-sm text-slate-500 mt-2 sm:mt-2.5 leading-relaxed max-w-xs">
                   Book appointments, view medical records, pay bills, and access telemedicine services.
                 </p>
               </div>
 
               {/* Action Buttons Matching Reference Design */}
-              <div className="w-full space-y-3.5 pt-8">
+              <div className="w-full space-y-3 pt-6 sm:pt-8">
                 
                 {/* Primary: Get Started */}
                 <button
@@ -371,7 +371,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                       handleOpenAuth('patient_register');
                     }
                   }}
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
+                  className="w-full py-3 sm:py-3.5 px-5 sm:px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
                 >
                   <User className="w-4 h-4 stroke-[2.2]" />
                   <span>Get Started</span>
@@ -386,7 +386,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                       handleOpenAuth('patient_login');
                     }
                   }}
-                  className="w-full py-3.5 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
+                  className="w-full py-3 sm:py-3.5 px-5 sm:px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
                 >
                   <ArrowRight className="w-4 h-4 text-slate-500" />
                   <span>Patient Sign In</span>
@@ -396,27 +396,27 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             </div>
 
             {/* Card 2: Staff Portal */}
-            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
               
               <div className="flex flex-col items-center">
                 {/* Teal Rounded Square Icon Badge */}
-                <div className="w-16 h-16 rounded-2xl bg-[#0891b2] text-white flex items-center justify-center mb-6 shadow-xs">
-                  <Stethoscope className="w-8 h-8 stroke-[2.2]" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0891b2] text-white flex items-center justify-center mb-4 sm:mb-6 shadow-xs">
+                  <Stethoscope className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
                   Staff Portal
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
+                <p className="text-xs sm:text-sm text-slate-500 mt-2 sm:mt-2.5 leading-relaxed max-w-xs">
                   Clinical workspace for doctors, nurses, pharmacists, lab technologists, and hospital administration.
                 </p>
               </div>
 
               {/* Action Buttons Matching Reference Design */}
-              <div className="w-full space-y-3.5 pt-8">
+              <div className="w-full space-y-3 pt-6 sm:pt-8">
                 
                 {/* Primary: Staff Sign In */}
                 <button
@@ -427,7 +427,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                       handleOpenAuth('staff_login');
                     }
                   }}
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
+                  className="w-full py-3 sm:py-3.5 px-5 sm:px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
                 >
                   <Stethoscope className="w-4 h-4 stroke-[2.2]" />
                   <span>Staff Sign In</span>
@@ -438,7 +438,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   onClick={() => {
                     onNavigateToPortal('admin');
                   }}
-                  className="w-full py-3.5 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
+                  className="w-full py-3 sm:py-3.5 px-5 sm:px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
                 >
                   <Lock className="w-4 h-4 text-slate-500" />
                   <span>Admin Access / Demo</span>
@@ -453,7 +453,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </section>
 
       {/* ================= 5. FOOTER ================= */}
-      <footer className="w-full py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200/60 bg-white/50 text-center space-y-4 text-xs text-slate-500">
+      <footer className="w-full py-8 sm:py-10 px-4 sm:px-6 lg:px-8 border-t border-slate-200/60 bg-white/50 text-center space-y-3.5 text-xs text-slate-500">
         <div className="max-w-4xl mx-auto space-y-3">
           
           {/* Institutional Copyright */}
