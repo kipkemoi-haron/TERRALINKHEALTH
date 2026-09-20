@@ -122,6 +122,19 @@ export const HARON_ADMIN_USER: User = {
   createdAt: '2026-01-01T00:00:00.000Z'
 };
 
+// Healthcare Provider & Administrator Marko Bare Profile
+export const MARKO_BARE_USER: User = {
+  id: 'usr-admin-marko',
+  name: 'Marko Bare',
+  email: 'markobare25@gmail.com',
+  phone: '0713544101',
+  role: 'admin',
+  licenseNumber: 'KMPDC/2026/0491',
+  departmentName: 'Administrator',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z'
+};
+
 // Recognized Admin Passwords for Haron Kipkemoi and System Administrators
 export const ACCEPTED_ADMIN_PASSWORDS = [
   'Slate#1206',
@@ -147,6 +160,10 @@ export function getLocalUsers(): User[] {
     // Add Haron Admin if not already present
     if (!merged.some(u => u.email?.toLowerCase() === 'kipkemoiharon57@gmail.com')) {
       merged.unshift(HARON_ADMIN_USER);
+    }
+    // Add Marko Bare if not already present
+    if (!merged.some(u => u.email?.toLowerCase() === 'markobare25@gmail.com')) {
+      merged.unshift(MARKO_BARE_USER);
     }
     
     for (const u of stored) {

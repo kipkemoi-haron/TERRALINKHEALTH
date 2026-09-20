@@ -16,7 +16,8 @@ import {
   HeartPulse,
   ArrowRight,
   Zap,
-  Sparkles
+  Sparkles,
+  Activity
 } from 'lucide-react';
 import { User, PatientProfile } from '../types';
 import { 
@@ -471,19 +472,23 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-6">
         
-        {/* Header */}
-        <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
-              TL
+        {/* Header matching exact brand styling from screenshot */}
+        <div className="bg-[#023545] px-6 py-4 text-white flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-[#13b886] flex items-center justify-center text-white shrink-0 shadow-xs">
+              <Activity className="w-5 h-5 text-white stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="font-bold text-base">TERRALINKHEALTH Access</h3>
-              <p className="text-xs text-slate-300">Secure Hospital Information System</p>
+              <h3 className="font-bold text-base leading-tight tracking-tight text-white">TERRALINK Health</h3>
+              <p className="text-xs text-[#82b8c7] font-normal leading-tight mt-0.5">Secure Healthcare Portal</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button 
+            onClick={onClose} 
+            className="w-6 h-6 rounded-full border-2 border-[#6fa3b2] hover:border-white transition-colors flex items-center justify-center text-white cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-3.5 h-3.5 text-[#82b8c7] hover:text-white" />
           </button>
         </div>
 
@@ -492,7 +497,9 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           <button
             onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
             className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'patient_login' || mode === 'forgot_password' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+              mode === 'patient_login' || mode === 'forgot_password' 
+                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             Patient Sign In
@@ -500,7 +507,9 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           <button
             onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
             className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'patient_register' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+              mode === 'patient_register' 
+                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             New Patient
@@ -508,7 +517,9 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           <button
             onClick={() => { setMode('staff_login'); setErrorMsg(''); }}
             className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'staff_login' ? 'bg-white text-emerald-700 border-b-2 border-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+              mode === 'staff_login' 
+                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             Clinical Staff
@@ -572,7 +583,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Patient Portal</span>}
               </button>
@@ -582,7 +593,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                 <button
                   type="button"
                   onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-                  className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                  className="text-[#023545] font-bold hover:underline cursor-pointer"
                 >
                   Register New Patient →
                 </button>
@@ -948,69 +959,75 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           {/* 3. Clinical Staff Login */}
           {mode === 'staff_login' && (
             <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600">
-                <p className="font-semibold text-slate-800 flex items-center space-x-1.5">
-                  <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Authorized Clinical Staff Access</span>
+              <div className="bg-[#023545]/5 border border-[#023545]/15 rounded-xl p-3 text-[11px] text-slate-700">
+                <p className="font-semibold text-[#023545] flex items-center space-x-1.5">
+                  <Stethoscope className="w-3.5 h-3.5 text-[#0b4c5e]" />
+                  <span>Authorized Healthcare Provider & Clinical Staff Access</span>
                 </p>
                 <p className="mt-1 text-slate-500">
-                  Secure access for registered medical practitioners, nursing staff, laboratory technologists, and pharmacists.
+                  Secure access for registered medical practitioners, administrators, nursing staff, laboratory technologists, and pharmacists.
                 </p>
               </div>
 
               {/* 1-Click Fast Staff Access */}
-              <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-2 text-center">
-                <div className="flex items-center justify-between text-[11px] text-teal-900 font-bold">
-                  <span>Dr. Maxx Roy (Staff Portal)</span>
+              <div className="space-y-2">
+                {/* Marko Bare (Healthcare Provider / Admin) */}
+                <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-1.5 text-left">
+                  <div className="flex items-center justify-between text-[11px] text-[#023545] font-bold">
+                    <span>Marko Bare (Administrator · Healthcare Provider)</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSUsername('markobare@gmail.com');
+                        setSPassword('Pay@1206');
+                      }}
+                      className="text-[#0b4c5e] hover:underline cursor-pointer text-[10px] font-semibold"
+                    >
+                      Fill Info
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSUsername('markobare@gmail.com');
+                      setSPassword('Pay@1206');
+                      setTimeout(() => {
+                        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                        handleStaffLogin(fakeEvent);
+                      }, 50);
+                    }}
+                    className="w-full py-2 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-emerald-300 fill-current" />
+                    <span>⚡ Quick Sign In as Marko Bare</span>
+                  </button>
+                </div>
+
+                {/* Dr. Maxx Roy */}
+                <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-[11px]">
+                  <span className="text-slate-700 font-medium">Dr. Maxx Roy (Clinician)</span>
                   <button
                     type="button"
                     onClick={() => {
                       setSUsername('maxxroy961@gmail.com');
                       setSPassword('Pay@1206');
                     }}
-                    className="text-teal-700 hover:text-teal-900 underline cursor-pointer text-[10px]"
+                    className="text-[#0b4c5e] hover:underline cursor-pointer text-[11px] font-semibold"
                   >
-                    Auto-Fill
+                    Use Maxx Roy →
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSUsername('maxxroy961@gmail.com');
-                    setSPassword('Pay@1206');
-                    setTimeout(() => {
-                      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                      handleStaffLogin(fakeEvent);
-                    }, 50);
-                  }}
-                  className="w-full py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-300 fill-current" />
-                  <span>⚡ 1-Click Staff Login (maxxroy961@gmail.com)</span>
-                </button>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block font-semibold text-slate-700">Staff Username or Email *</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSUsername('maxxroy961@gmail.com');
-                      setSPassword('Pay@1206');
-                    }}
-                    className="text-[10px] text-teal-700 hover:underline cursor-pointer"
-                  >
-                    Use Maxx Roy Login
-                  </button>
-                </div>
+                <label className="block font-semibold text-slate-700 mb-1">Staff Username or Email *</label>
                 <input
                   type="text"
                   required
                   value={sUsername}
                   onChange={(e) => setSUsername(e.target.value)}
-                  placeholder="maxxroy961@gmail.com or username"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  placeholder="e.g. markobare@gmail.com or username"
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden"
                 />
               </div>
 
@@ -1022,14 +1039,14 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   value={sPassword}
                   onChange={(e) => setSPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Clinical Workspace</span>}
               </button>
@@ -1114,12 +1131,12 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
         <div className="p-6 sm:p-8 space-y-6">
           
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white mx-auto flex items-center justify-center shadow-sm">
-              <ShieldCheck className="w-6 h-6 text-sky-400" />
+            <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
+              <Activity className="w-6 h-6 text-white stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">TERRALINK Health</h2>
-              <p className="text-xs font-semibold text-slate-500 mt-0.5">Admin Portal Sign In</p>
+              <h2 className="text-xl font-bold tracking-tight text-[#023545]">TERRALINK Health</h2>
+              <p className="text-xs font-semibold text-[#0b4c5e] mt-0.5">Admin & Executive Portal</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
               Enter your administrator email and password to access hospital operations, billing, and insurance approvals.
@@ -1127,17 +1144,17 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
           </div>
 
           {/* Quick Admin Credential Autofill Helper */}
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-center">
-            <div className="flex items-center justify-center space-x-1.5 text-xs text-slate-700 font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-2 text-center">
+            <div className="flex items-center justify-center space-x-1.5 text-xs text-[#023545] font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
               <span>Authorized Admin (Haron Kipkemoi)</span>
             </div>
             <button
               type="button"
               onClick={() => handleAdminSubmit(undefined, HARON_ADMIN_USER)}
-              className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+              className="w-full py-2 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
             >
-              <Zap className="w-3.5 h-3.5 fill-current text-amber-400" />
+              <Zap className="w-3.5 h-3.5 fill-current text-emerald-300" />
               <span>1-Click Admin Access (Haron Kipkemoi)</span>
             </button>
           </div>
@@ -1158,7 +1175,7 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
                 <button
                   type="button"
                   onClick={() => { setAdminIdentifier('kipkemoiharon57@gmail.com'); setAdminPassword('Slate#1206'); }}
-                  className="text-[11px] text-sky-600 hover:underline cursor-pointer font-medium"
+                  className="text-[11px] text-[#0b4c5e] hover:underline cursor-pointer font-semibold"
                 >
                   Fill Email
                 </button>
@@ -1171,7 +1188,7 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
                   value={adminIdentifier}
                   onChange={(e) => setAdminIdentifier(e.target.value)}
                   placeholder="e.g. kipkemoiharon57@gmail.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:outline-hidden"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:border-transparent focus:outline-hidden"
                 />
               </div>
             </div>
@@ -1188,7 +1205,7 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:outline-hidden font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:border-transparent focus:outline-hidden font-mono"
                 />
               </div>
             </div>
@@ -1196,7 +1213,7 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+              className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-[#023545]/20"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Admin Portal</span>}
             </button>
@@ -1380,13 +1397,13 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
       <div className="w-full max-w-lg bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/80 overflow-hidden space-y-0">
         
         {/* Header Banner */}
-        <div className="bg-gradient-to-r from-teal-800 to-teal-600 p-6 text-white text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 text-white mx-auto flex items-center justify-center shadow-md">
-            <HeartPulse className="w-7 h-7" />
+        <div className="bg-[#023545] p-6 text-white text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
+            <Activity className="w-6 h-6 text-white stroke-[2.5]" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">TERRALINKHEALTH Patient Portal</h2>
-          <p className="text-xs text-teal-100 max-w-sm mx-auto">
-            Direct access to your medical records, e-prescriptions, lab tests, doctor bookings, and NHIF/SHA benefits.
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">TERRALINK Health</h2>
+          <p className="text-xs text-[#82b8c7] max-w-sm mx-auto">
+            Patient Portal · Direct access to your medical records, e-prescriptions, lab tests, doctor bookings, and SHIF/SHA benefits.
           </p>
         </div>
 
@@ -1395,9 +1412,9 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
           <button
             type="button"
             onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
-            className={`py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+            className={`py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
               activeTab === 'register'
-                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                ? 'bg-[#023545] text-white shadow-md shadow-[#023545]/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
@@ -1408,9 +1425,9 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
           <button
             type="button"
             onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
-            className={`py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+            className={`py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
               activeTab === 'login'
-                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+                ? 'bg-[#023545] text-white shadow-md shadow-[#023545]/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
@@ -1528,7 +1545,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+                className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -1543,7 +1560,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
                 <button
                   type="button"
                   onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
-                  className="text-teal-700 font-bold hover:underline cursor-pointer"
+                  className="text-[#023545] font-bold hover:underline cursor-pointer"
                 >
                   Sign In here
                 </button>
@@ -1562,7 +1579,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
                   <button
                     type="button"
                     onClick={() => { setLoginIdentifier('wanjiku@example.com'); setLoginPassword('123456'); }}
-                    className="text-[10px] text-teal-600 hover:underline cursor-pointer"
+                    className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
                   >
                     Demo Patient
                   </button>
@@ -1575,7 +1592,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
                     placeholder="e.g. 0712345678 or 29481022 or name@email.com"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
                   />
                 </div>
               </div>
@@ -1592,7 +1609,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
                   />
                 </div>
               </div>
@@ -1600,9 +1617,9 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold shadow-lg shadow-teal-500/25 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+                className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                   <>
                     <span>Sign In to Patient Portal</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1615,7 +1632,7 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
                 <button
                   type="button"
                   onClick={() => { setActiveTab('register'); setErrorMsg(''); }}
-                  className="text-teal-700 font-bold hover:underline cursor-pointer"
+                  className="text-[#023545] font-bold hover:underline cursor-pointer"
                 >
                   Register New Patient →
                 </button>
@@ -1702,15 +1719,15 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-6">
         
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-[#0284c7] mx-auto flex items-center justify-center shadow-xs">
-            <Stethoscope className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
+            <Activity className="w-6 h-6 text-white stroke-[2.5]" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Staff Portal</h2>
-          <div className="inline-block px-3 py-0.5 bg-sky-50 text-[#0284c7] rounded-full text-[10px] font-semibold border border-sky-100">
-            AUTHORIZED MEDICAL WORKSPACE
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">TERRALINK Health</h2>
+          <div className="inline-block px-3 py-1 bg-[#023545]/10 text-[#023545] rounded-full text-[10px] font-bold tracking-wider uppercase">
+            Healthcare Provider & Staff Portal
           </div>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Authorized clinical workspace for Doctors, Nurses, Laboratory Technologists, Radiologists, and Pharmacists.
+            Authorized clinical workspace for Marko Bare, attending doctors, nursing officers, laboratory technologists, and pharmacists.
           </p>
         </div>
 
@@ -1730,15 +1747,22 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
               <div className="flex space-x-2">
                 <button
                   type="button"
+                  onClick={() => { setUsername('markobare@gmail.com'); setPassword('Pay@1206'); }}
+                  className="text-[10px] text-[#023545] font-bold hover:underline cursor-pointer"
+                >
+                  Marko Bare
+                </button>
+                <button
+                  type="button"
                   onClick={() => { setUsername('dr_grace'); setPassword('Hospital#2026'); }}
-                  className="text-[10px] text-[#0284c7] font-semibold hover:underline cursor-pointer"
+                  className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
                 >
                   Doctor Demo
                 </button>
                 <button
                   type="button"
                   onClick={() => { setUsername('dr_omondi'); setPassword('Omondi#2026'); }}
-                  className="text-[10px] text-[#0284c7] font-semibold hover:underline cursor-pointer"
+                  className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
                 >
                   Surgeon Demo
                 </button>
@@ -1751,8 +1775,8 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. dr_grace or staff ID"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0284c7] focus:outline-hidden text-sm"
+                placeholder="e.g. markobare@gmail.com or dr_grace"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
               />
             </div>
           </div>
@@ -1769,7 +1793,7 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0284c7] focus:outline-hidden text-sm"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
               />
             </div>
           </div>
@@ -1777,12 +1801,12 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-2xl font-bold shadow-md shadow-[#0284c7]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+            className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
                 <Stethoscope className="w-4 h-4" />
-                <span>Sign In to Clinical Staff Portal</span>
+                <span>Sign In to Healthcare Portal</span>
               </>
             )}
           </button>

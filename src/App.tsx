@@ -413,8 +413,8 @@ export function App() {
         <div className="absolute bottom-10 left-1/4 w-96 h-96 bg-blue-100/60 rounded-full blur-3xl" />
       </div>
 
-      {/* Top Emergency & Hospital Indicator Strip with Glass Effect - Only on Provider / Admin portals */}
-      {activePortal !== 'home' && activePortal !== 'patient' && (
+      {/* Top Emergency & Hospital Indicator Strip with Glass Effect - Only on Admin portal */}
+      {activePortal !== 'home' && activePortal !== 'patient' && activePortal !== 'provider' && (
         <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <span className="flex items-center space-x-1.5 text-teal-400 font-semibold">
@@ -436,8 +436,8 @@ export function App() {
         </div>
       )}
 
-      {/* Main Hospital Navigation Header - Only on Provider / Admin portals */}
-      {activePortal !== 'home' && activePortal !== 'patient' && (
+      {/* Main Hospital Navigation Header - Only on Admin portal */}
+      {activePortal !== 'home' && activePortal !== 'patient' && activePortal !== 'provider' && (
         <header className="relative z-40 bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm shadow-slate-200/50 sticky top-0">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
             
@@ -585,7 +585,7 @@ export function App() {
       )}
 
       {/* Main Active Portal Container */}
-      <main className={`relative z-10 flex-1 w-full ${activePortal === 'home' || activePortal === 'patient' ? 'p-0 max-w-none' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
+      <main className={`relative z-10 flex-1 w-full ${activePortal === 'home' || activePortal === 'patient' || activePortal === 'provider' ? 'p-0 max-w-none' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         
         {activePortal === 'home' && (
           <HospitalHomepage
@@ -703,6 +703,7 @@ export function App() {
                   console.warn(e);
                 }
               }}
+              onNavigatePortal={(portal) => setActivePortal(portal)}
               onLogout={() => {
                 handleSetUserSession(null, null, null);
                 setActivePortal('home');
@@ -801,8 +802,8 @@ export function App() {
         }}
       />
 
-      {/* Footer with Frosted Glass Theme & Hospital Social Channels - Only on Provider / Admin portals */}
-      {activePortal !== 'home' && activePortal !== 'patient' && (
+      {/* Footer with Frosted Glass Theme & Hospital Social Channels - Only on Admin portal */}
+      {activePortal !== 'home' && activePortal !== 'patient' && activePortal !== 'provider' && (
         <footer className="relative z-10 bg-white/40 backdrop-blur-xl border-t border-white/60 text-slate-600 text-xs py-8 mt-12 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
