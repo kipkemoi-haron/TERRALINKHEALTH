@@ -14,16 +14,16 @@ import {
   X,
   Search,
   CheckCircle2,
-  Building2,
-  HeartPulse,
-  Share2,
-  Globe,
-  Smartphone,
-  PhoneCall
+  Phone,
+  Mail,
+  MapPin,
+  FileText,
+  LogOut
 } from 'lucide-react';
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
-import { mockDepartments, mockDoctors, INITIAL_INSURANCE_PROVIDERS, INITIAL_REVIEWS } from '../mockData';
+import { INITIAL_REVIEWS } from '../mockData';
 import founderPhotoImg from '../assets/images/founder_photo_1788042380844.jpg';
+import doctorHeroImg from '../assets/images/doctor_hero_1789942016435.jpg';
 
 interface HospitalHomepageProps {
   departments?: Department[];
@@ -60,6 +60,9 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     }
   };
 
+  // Doctor Hero Image with fallback
+  const doctorPhoto = doctorHeroImg || '/images/doctor_hero.jpg';
+
   // Founder Profile Modal State
   const [isFounderModalOpen, setIsFounderModalOpen] = useState<boolean>(false);
   const [founderPhoto] = useState<string>(() => {
@@ -74,21 +77,19 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   const [isReviewsModalOpen, setIsReviewsModalOpen] = useState<boolean>(false);
   const [liveReviews, setLiveReviews] = useState<PatientReview[]>(INITIAL_REVIEWS);
   const [reviewSearchQuery, setReviewSearchQuery] = useState<string>('');
-  const [activeStoryFilter, setActiveStoryFilter] = useState<string>('all');
   const [isReviewFormOpen, setIsReviewFormOpen] = useState<boolean>(false);
   const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
   const [reviewNotification, setReviewNotification] = useState<string>('');
+
+  // Info Modals (Contact, Privacy, Terms)
+  const [activeInfoModal, setActiveInfoModal] = useState<'contact' | 'privacy' | 'terms' | null>(null);
 
   // Review Form State
   const [reviewForm, setReviewForm] = useState({
     name: currentPatient?.name || currentUser?.name || '',
     location: currentPatient?.county ? `${currentPatient.county}, Kenya` : 'Nairobi, Kenya',
-    age: 32,
     rating: 5,
     department: 'Cardiology Clinic',
-    insurance: 'SHA Kenya / Private Insurance',
-    condition: 'Routine Medical Consultation',
-    doctorName: 'Dr. David Ochieng',
     headline: '',
     quote: '',
     outcome: 'Successful Recovery & Compassionate Care'
@@ -121,14 +122,14 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       id: `rev-${Date.now()}`,
       name: reviewForm.name || 'Verified Patient',
       location: reviewForm.location || 'Nairobi, Kenya',
-      age: reviewForm.age || 30,
+      age: 30,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
       category: 'general',
       categoryLabel: reviewForm.department,
-      condition: reviewForm.condition,
-      doctorName: reviewForm.doctorName,
+      condition: 'Medical Care',
+      doctorName: 'Dr. David Ochieng',
       department: reviewForm.department,
-      insurance: reviewForm.insurance,
+      insurance: 'SHA / Private Insurance',
       rating: reviewForm.rating,
       date: 'September 2026',
       headline: reviewForm.headline,
@@ -158,265 +159,360 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   const filteredReviews = liveReviews.filter(rev => {
     const matchesSearch = 
       rev.name.toLowerCase().includes(reviewSearchQuery.toLowerCase()) ||
-      rev.condition.toLowerCase().includes(reviewSearchQuery.toLowerCase()) ||
       rev.headline.toLowerCase().includes(reviewSearchQuery.toLowerCase()) ||
       rev.department.toLowerCase().includes(reviewSearchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-    if (activeStoryFilter === 'all') return true;
-    return rev.category === activeStoryFilter;
+    return matchesSearch;
   });
 
   return (
-    <div className="min-h-[80vh] flex flex-col justify-between py-2 sm:py-4 max-w-4xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen w-full bg-gradient-to-b from-[#e8f4fc] via-[#f1f8fc] to-[#f8fbfe] text-slate-900 flex flex-col justify-between selection:bg-sky-100 selection:text-sky-900">
       
-      {/* Top Header Bar Matching Image 3 */}
-      <div className="flex items-center justify-between py-3 border-b border-slate-100">
-        <div 
-          onClick={() => onNavigateToPortal('patient')}
-          className="flex items-center space-x-2.5 cursor-pointer select-none"
-        >
-          <div className="w-8 h-8 rounded-lg bg-[#0284c7] text-white flex items-center justify-center shadow-xs">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="text-sm font-bold text-slate-900 leading-tight block">TERRALINK Health</span>
-            <span className="text-[10px] text-slate-500 font-medium leading-tight block">Digital Hospital Platform</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => {
-            if (currentUser) {
-              if (currentUser.role === 'patient') onNavigateToPortal('patient');
-              else onNavigateToPortal('provider');
-            } else {
-              handleOpenAuth('patient_login');
-            }
-          }}
-          className="text-xs font-semibold text-slate-700 hover:text-[#0284c7] transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-slate-50"
-        >
-          {currentUser ? 'My Account' : 'Sign In'}
-        </button>
-      </div>
-
-      {/* Centered Hero Section Matching Image 3 */}
-      <section className="text-center py-10 sm:py-14 space-y-3 max-w-2xl mx-auto">
-        <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#f0f9ff] text-[#0284c7] border border-[#e0f2fe] text-xs font-medium mb-1">
-          <Sparkles className="w-3 h-3 text-[#0284c7]" />
-          <span>Transforming Healthcare in Kenya</span>
-        </div>
-
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          TERRALINK Health
-        </h1>
-
-        <p className="text-sm sm:text-base font-medium text-slate-700">
-          Enhancing Hospital Operations &amp; Patient Experience
-        </p>
-
-        <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed pt-1">
-          An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics — built for Kenyan hospitals.
-        </p>
-      </section>
-
-      {/* 4-Feature Section Matching Image 3 */}
-      <section className="py-4 max-w-2xl mx-auto w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+      {/* ================= 1. HEADER BAR ================= */}
+      <header className="w-full bg-white/80 backdrop-blur-md border-b border-slate-100/90 sticky top-0 z-40 transition-all">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
           
-          {/* Feature 1: Reduced Wait Times */}
-          <div className="flex items-start space-x-3.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0 mt-0.5">
-              <Clock className="w-4 h-4" />
+          {/* Logo & Brand matching Reference Screenshot */}
+          <div 
+            onClick={() => onNavigateToPortal('patient')}
+            className="flex items-center space-x-3 cursor-pointer select-none group"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3]" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Reduced Wait Times</h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-normal">
-                Real-time queue tracking &amp; online appointment booking
-              </p>
+              <span className="text-[15px] sm:text-[17px] font-bold text-slate-900 leading-tight block tracking-tight">
+                TERRALINK Health
+              </span>
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-tight block">
+                Digital Hospital Platform
+              </span>
             </div>
           </div>
 
-          {/* Feature 2: Secure Records */}
-          <div className="flex items-start space-x-3.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0 mt-0.5">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Secure Records</h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-normal">
-                Encrypted patient data with role-based access control
-              </p>
-            </div>
-          </div>
-
-          {/* Feature 3: Telemedicine */}
-          <div className="flex items-start space-x-3.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0 mt-0.5">
-              <Video className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Telemedicine</h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-normal">
-                Virtual consultations from anywhere in Kenya
-              </p>
-            </div>
-          </div>
-
-          {/* Feature 4: Real-Time Analytics */}
-          <div className="flex items-start space-x-3.5">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0 mt-0.5">
-              <Activity className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900">Real-Time Analytics</h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-normal">
-                Live dashboards for hospital performance monitoring
-              </p>
-            </div>
+          {/* Right Header Navigation */}
+          <div className="flex items-center space-x-3">
+            {currentUser ? (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    if (currentUser.role === 'patient') onNavigateToPortal('patient');
+                    else onNavigateToPortal('provider');
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-[#0284c7] font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+                >
+                  My Workspace ({currentUser.name?.split(' ')[0]})
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleOpenAuth('patient_login')}
+                className="text-sm font-semibold text-slate-700 hover:text-[#0284c7] transition-colors cursor-pointer py-1.5 px-3 rounded-lg hover:bg-slate-50"
+              >
+                Sign In
+              </button>
+            )}
           </div>
 
         </div>
-      </section>
+      </header>
 
-      {/* "Access Your Portal" Section Matching Image 3 */}
-      <section className="py-10 max-w-2xl mx-auto w-full space-y-6">
-        <div className="text-center space-y-1">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Access Your Portal</h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Choose how you'd like to access TERRALINK Health
+      {/* ================= 2. HERO SECTION ================= */}
+      <section className="relative w-full overflow-hidden pt-8 sm:pt-14 pb-14 sm:pb-20 px-4 sm:px-6 lg:px-8">
+        
+        {/* Clearly Visible Healthcare Professional on Far Right (Soft Blended Left Edge matching Reference) */}
+        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[50%] md:w-[48%] lg:w-[46%] xl:w-[43%] pointer-events-none select-none z-0 overflow-hidden flex justify-end">
+          <div className="relative w-full h-full [mask-image:linear-gradient(to_right,transparent_0%,black_20%,black_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_20%,black_100%)]">
+            <img
+              src={doctorPhoto}
+              alt="Doctor at TERRALINK Health"
+              className="w-full h-full object-cover object-[center_top] opacity-90 sm:opacity-95 lg:opacity-100 filter brightness-[1.02] contrast-[1.02]"
+              referrerPolicy="no-referrer"
+            />
+            {/* Subtle feathering on left edge to melt seamlessly into hero background canvas */}
+            <div className="absolute inset-y-0 left-0 w-24 sm:w-36 bg-gradient-to-r from-[#e8f4fc] via-[#e8f4fc]/50 to-transparent" />
+            {/* Subtle bottom fade into the section transition */}
+            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/90 via-white/40 to-transparent" />
+          </div>
+        </div>
+
+        {/* Hero Content - Clean, High-Contrast Text on Left */}
+        <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-start text-left">
+          
+          {/* Transforming Healthcare Eyebrow */}
+          <div className="inline-flex items-center space-x-1.5 text-[#0284c7] font-semibold text-xs sm:text-sm tracking-wide mb-3 sm:mb-4">
+            <Sparkles className="w-4 h-4 text-[#0284c7]" />
+            <span>Transforming Healthcare in Kenya</span>
+          </div>
+
+          {/* Main Bold Title */}
+          <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold text-slate-900 tracking-tight leading-[1.08]">
+            TERRALINK Health
+          </h1>
+
+          {/* Subheading - Single Line on Desktop */}
+          <h2 className="text-xl sm:text-2xl lg:text-[25px] xl:text-[28px] font-bold text-slate-800 tracking-tight mt-3 sm:mt-4 whitespace-normal lg:whitespace-nowrap leading-tight">
+            Enhancing Hospital Operations &amp; Patient Experience
+          </h2>
+
+          {/* Paragraph Description */}
+          <p className="text-slate-600 text-sm sm:text-base lg:text-[17px] leading-relaxed mt-4 sm:mt-5 max-w-xl">
+            An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics — built for Kenyan hospitals.
           </p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          
-          {/* Card 1: Patient Portal */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-[#0284c7] text-white flex items-center justify-center shadow-sm">
-              <User className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-slate-900">Patient Portal</h3>
-              <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
-                Book appointments, view medical records, pay bills, and access telemedicine services.
+      {/* ================= 3. KEY BENEFITS SECTION ================= */}
+      <section className="w-full py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-200/50 bg-white/40">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8">
+            
+            {/* 1. Reduced Wait Times */}
+            <div className="flex flex-col items-start text-left">
+              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
+                <Clock className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                Reduced Wait Times
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                Real-time queue tracking &amp; online appointment booking.
               </p>
             </div>
 
-            <div className="w-full space-y-2 pt-2">
-              <button
-                onClick={() => {
-                  if (currentUser && currentUser.role === 'patient') {
-                    onNavigateToPortal('patient');
-                  } else {
-                    handleOpenAuth('patient_register');
-                  }
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-medium text-xs shadow-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Get Started</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (currentUser && currentUser.role === 'patient') {
-                    onNavigateToPortal('patient');
-                  } else {
-                    handleOpenAuth('patient_login');
-                  }
-                }}
-                className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                <span>Patient Sign In</span>
-              </button>
+            {/* 2. Secure Records */}
+            <div className="flex flex-col items-start text-left">
+              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
+                <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                Secure Records
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                Encrypted patient data with role-based access control.
+              </p>
             </div>
+
+            {/* 3. Telemedicine */}
+            <div className="flex flex-col items-start text-left">
+              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
+                <Video className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                Telemedicine
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                Virtual consultations from anywhere in Kenya.
+              </p>
+            </div>
+
+            {/* 4. Real-Time Analytics */}
+            <div className="flex flex-col items-start text-left">
+              <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center mb-4 shrink-0 shadow-2xs">
+                <Activity className="w-5 h-5 stroke-[2.2]" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 leading-snug">
+                Real-Time Analytics
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                Live dashboards for hospital performance monitoring.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ================= 4. ACCESS YOUR PORTAL SECTION ================= */}
+      <section className="w-full py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Section Header */}
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Access Your Portal
+            </h2>
+            <p className="text-sm sm:text-base text-slate-500">
+              Choose how you'd like to access TERRALINK Health
+            </p>
           </div>
 
-          {/* Card 2: Staff Portal */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-2xl bg-[#0284c7] text-white flex items-center justify-center shadow-sm">
-              <Stethoscope className="w-6 h-6" />
+          {/* Two Portal Cards: Side-by-Side on Desktop, Stacked on Mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 max-w-4xl mx-auto mt-10 sm:mt-12">
+            
+            {/* Card 1: Patient Portal */}
+            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
+              
+              <div className="flex flex-col items-center">
+                {/* Blue Rounded Square Icon Badge */}
+                <div className="w-16 h-16 rounded-2xl bg-[#0284c7] text-white flex items-center justify-center mb-6 shadow-xs">
+                  <User className="w-8 h-8 stroke-[2.2]" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Patient Portal
+                </h3>
+
+                {/* Description */}
+                <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
+                  Book appointments, view medical records, pay bills, and access telemedicine services.
+                </p>
+              </div>
+
+              {/* Action Buttons Matching Reference Design */}
+              <div className="w-full space-y-3.5 pt-8">
+                
+                {/* Primary: Get Started */}
+                <button
+                  onClick={() => {
+                    if (currentUser && currentUser.role === 'patient') {
+                      onNavigateToPortal('patient');
+                    } else {
+                      handleOpenAuth('patient_register');
+                    }
+                  }}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
+                >
+                  <User className="w-4 h-4 stroke-[2.2]" />
+                  <span>Get Started</span>
+                </button>
+
+                {/* Secondary: Patient Sign In */}
+                <button
+                  onClick={() => {
+                    if (currentUser && currentUser.role === 'patient') {
+                      onNavigateToPortal('patient');
+                    } else {
+                      handleOpenAuth('patient_login');
+                    }
+                  }}
+                  className="w-full py-3.5 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
+                >
+                  <ArrowRight className="w-4 h-4 text-slate-500" />
+                  <span>Patient Sign In</span>
+                </button>
+
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-slate-900">Staff Portal</h3>
-              <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
-                Clinical workspace for doctors, nurses, pharmacists, lab technologists, and hospital administration.
-              </p>
+            {/* Card 2: Staff Portal */}
+            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col justify-between items-center text-center">
+              
+              <div className="flex flex-col items-center">
+                {/* Teal Rounded Square Icon Badge */}
+                <div className="w-16 h-16 rounded-2xl bg-[#0891b2] text-white flex items-center justify-center mb-6 shadow-xs">
+                  <Stethoscope className="w-8 h-8 stroke-[2.2]" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  Staff Portal
+                </h3>
+
+                {/* Description */}
+                <p className="text-sm text-slate-500 mt-3 leading-relaxed max-w-xs">
+                  Clinical workspace for doctors, nurses, pharmacists, lab technologists, and hospital administration.
+                </p>
+              </div>
+
+              {/* Action Buttons Matching Reference Design */}
+              <div className="w-full space-y-3.5 pt-8">
+                
+                {/* Primary: Staff Sign In */}
+                <button
+                  onClick={() => {
+                    if (currentUser && currentUser.role !== 'patient') {
+                      onNavigateToPortal('provider');
+                    } else {
+                      handleOpenAuth('staff_login');
+                    }
+                  }}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-sm shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.99]"
+                >
+                  <Stethoscope className="w-4 h-4 stroke-[2.2]" />
+                  <span>Staff Sign In</span>
+                </button>
+
+                {/* Secondary: Admin Access / Demo */}
+                <button
+                  onClick={() => {
+                    onNavigateToPortal('admin');
+                  }}
+                  className="w-full py-3.5 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer shadow-2xs active:scale-[0.99]"
+                >
+                  <Lock className="w-4 h-4 text-slate-500" />
+                  <span>Admin Access / Demo</span>
+                </button>
+
+              </div>
             </div>
 
-            <div className="w-full space-y-2 pt-2">
-              <button
-                onClick={() => {
-                  onNavigateToPortal('provider');
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-medium text-xs shadow-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <Stethoscope className="w-3.5 h-3.5" />
-                <span>Staff Sign In</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (onOpenStaffLogin) {
-                    onOpenStaffLogin();
-                  } else {
-                    onNavigateToPortal('provider');
-                  }
-                }}
-                className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
-                <span>Quick Access / Demo</span>
-              </button>
-            </div>
           </div>
 
         </div>
       </section>
 
-      {/* Simple Footer with Founder & Reviews Buttons Matching Request */}
-      <footer className="py-8 border-t border-slate-100 text-center space-y-4 text-xs text-slate-500 mt-4">
-        
-        {/* Buttons for Founder Perspective & Patient Reviews */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          <button
-            onClick={() => setIsFounderModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#0284c7]" />
-            <span>Founder &amp; Executive Perspective</span>
-          </button>
-
-          <button
-            onClick={() => setIsReviewsModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-          >
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            <span>Patient Reviews &amp; Stories ({liveReviews.length})</span>
-          </button>
-        </div>
-
-        <div className="space-y-1">
+      {/* ================= 5. FOOTER ================= */}
+      <footer className="w-full py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-200/60 bg-white/50 text-center space-y-4 text-xs text-slate-500">
+        <div className="max-w-4xl mx-auto space-y-3">
+          
+          {/* Institutional Copyright */}
           <p className="text-slate-600 font-medium">
             &copy; 2026 TERRALINK Health &mdash; Digital Hospital Management Platform
           </p>
-          <p className="text-[11px] text-slate-400">
+          
+          {/* Location details */}
+          <p className="text-slate-400">
             Enhancing Hospital Operations &amp; Patient Experience in Nairobi County, Kenya
           </p>
-          <div className="pt-1">
+
+          {/* Links Row */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-slate-500 pt-1 font-medium">
             <button
-              onClick={() => onNavigateToPortal('admin')}
-              className="text-[10px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              onClick={() => setActiveInfoModal('contact')}
+              className="hover:text-[#0284c7] transition-colors cursor-pointer"
             >
-              Admin Portal
+              Contact
+            </button>
+            <span>|</span>
+            <button
+              onClick={() => setActiveInfoModal('privacy')}
+              className="hover:text-[#0284c7] transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <span>|</span>
+            <button
+              onClick={() => setActiveInfoModal('terms')}
+              className="hover:text-[#0284c7] transition-colors cursor-pointer"
+            >
+              Terms of Service
             </button>
           </div>
+
+          {/* Secondary Badges for Founder Leadership & Patient Stories */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+            <button
+              onClick={() => setIsFounderModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 font-medium text-[11px] transition-colors flex items-center space-x-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#0284c7]" />
+              <span>Founder &amp; Executive Perspective</span>
+            </button>
+
+            <button
+              onClick={() => setIsReviewsModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 font-medium text-[11px] transition-colors flex items-center space-x-1.5 cursor-pointer"
+            >
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>Patient Reviews &amp; Stories ({liveReviews.length})</span>
+            </button>
+          </div>
+
         </div>
       </footer>
 
-      {/* ================= FOUNDER & EXECUTIVE PERSPECTIVE MODAL ================= */}
+      {/* ================= MODAL: FOUNDER & EXECUTIVE PERSPECTIVE ================= */}
       {isFounderModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto space-y-6">
@@ -487,7 +583,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       )}
 
-      {/* ================= REVIEWS & RECOVERY STORIES MODAL ================= */}
+      {/* ================= MODAL: REVIEWS & RECOVERY STORIES ================= */}
       {isReviewsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 relative max-h-[90vh] overflow-y-auto space-y-5">
@@ -525,13 +621,13 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                       placeholder="Search reviews..."
                       value={reviewSearchQuery}
                       onChange={(e) => setReviewSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
                     />
                   </div>
 
                   <button
                     onClick={() => setIsReviewFormOpen(true)}
-                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs"
                   >
                     <span>Write a Patient Review</span>
                   </button>
@@ -543,7 +639,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                     <div key={rev.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 text-left">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2.5">
-                          <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-800 font-bold text-xs flex items-center justify-center">
                             {rev.name.charAt(0)}
                           </div>
                           <div>
@@ -551,7 +647,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                               <span className="text-xs font-bold text-slate-900">{rev.name}</span>
                               <span className="text-[10px] text-slate-400">&bull; {rev.location}</span>
                             </div>
-                            <span className="text-[10px] text-teal-700 font-medium">{rev.department}</span>
+                            <span className="text-[10px] text-[#0284c7] font-medium">{rev.department}</span>
                           </div>
                         </div>
 
@@ -662,7 +758,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   <button
                     type="submit"
                     disabled={reviewSubmitting}
-                    className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold cursor-pointer shadow-xs disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     {reviewSubmitting ? 'Publishing...' : 'Publish Review'}
                   </button>
@@ -670,6 +766,161 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               </form>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: CONTACT DETAILS ================= */}
+      {activeInfoModal === 'contact' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative space-y-5">
+            <button
+              onClick={() => setActiveInfoModal(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-100 text-[#0284c7] flex items-center justify-center">
+                <Phone className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Contact Us</h3>
+                <p className="text-xs text-slate-500">TERRALINK Health Hospital Kenya</p>
+              </div>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-slate-600 leading-relaxed pt-2">
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <MapPin className="w-4 h-4 text-[#0284c7] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-slate-900 block">Physical Hospital Location</span>
+                  <span>Hospital Hill Road, Parklands / Upper Hill Medical Complex, Nairobi County, Kenya</span>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <Phone className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-slate-900 block">Emergency &amp; Ambulance Hotline (24/7)</span>
+                  <a href="tel:0713544101" className="text-emerald-700 font-bold hover:underline">0713 544 101 / +254 713 544 101</a>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <Mail className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-slate-900 block">General Inquiries &amp; Patient Records</span>
+                  <a href="mailto:info@terralinkhealth.co.ke" className="text-sky-700 font-semibold hover:underline">info@terralinkhealth.co.ke</a>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setActiveInfoModal(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: PRIVACY POLICY ================= */}
+      {activeInfoModal === 'privacy' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative space-y-4 max-h-[85vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveInfoModal(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Privacy &amp; Data Protection</h3>
+                <p className="text-xs text-slate-500">KDPA 2019 &amp; KMPDC Health Standards</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed pt-2">
+              <p>
+                <strong>TERRALINK Health</strong> complies with the <strong>Kenya Data Protection Act (KDPA 2019)</strong> and the medical confidentiality guidelines mandated by the <strong>Kenya Medical Practitioners and Dentists Council (KMPDC)</strong>.
+              </p>
+              <p>
+                1. <strong>Patient Medical Records:</strong> All diagnoses, prescriptions, and laboratory reports are encrypted at rest and in transit. Access is strictly role-based and audited.
+              </p>
+              <p>
+                2. <strong>Insurance &amp; Billing:</strong> SHA/SHIF and private insurance information is processed exclusively for patient benefit verification and claims processing.
+              </p>
+              <p>
+                3. <strong>Data Ownership:</strong> Patients retain full ownership of their longitudinal electronic medical records and may export or request transmission to authorized specialists at any time.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setActiveInfoModal(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: TERMS OF SERVICE ================= */}
+      {activeInfoModal === 'terms' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative space-y-4 max-h-[85vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveInfoModal(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-100 text-[#0284c7] flex items-center justify-center">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Terms of Service</h3>
+                <p className="text-xs text-slate-500">TERRALINK Health Clinical Platform</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed pt-2">
+              <p>
+                By using the <strong>TERRALINK Health Digital Platform</strong>, you agree to the following terms governing digital appointments, telemedicine, and record management:
+              </p>
+              <p>
+                1. <strong>Clinical Telemedicine:</strong> Telemedicine consultations are conducted by licensed Kenya Medical Practitioners. For acute emergency medical crises, dial the hospital emergency hotline 0713544101 immediately.
+              </p>
+              <p>
+                2. <strong>Account Credentials:</strong> Patients and healthcare staff are responsible for maintaining the confidentiality of their digital credentials and two-factor verifications.
+              </p>
+              <p>
+                3. <strong>Payment Settlement:</strong> M-PESA and insurance claims are settled under standard Kenyan healthcare tariff schedules with automated receipt generation.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setActiveInfoModal(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+              >
+                Close Terms
+              </button>
+            </div>
           </div>
         </div>
       )}

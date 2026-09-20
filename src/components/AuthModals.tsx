@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Lock, 
@@ -86,6 +86,15 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      setErrorMsg('');
+      setFpStep('request');
+      setRegisterStep('form');
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -515,42 +524,33 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
             : 'Enter your phone number, email, or National ID and password'}
         </p>
 
-        {/* Tab switcher */}
-        <div className="flex rounded-xl bg-slate-100 p-1 mb-6 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
-            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
-              mode === 'patient_login' || mode === 'forgot_password'
-                ? 'bg-white text-slate-900 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Patient Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
-              mode === 'patient_register'
-                ? 'bg-white text-slate-900 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            New Patient
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('staff_login'); setErrorMsg(''); }}
-            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
-              mode === 'staff_login'
-                ? 'bg-white text-slate-900 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Staff Portal
-          </button>
-        </div>
+        {/* Tab switcher - Patient Portal only contains Patient Sign In and New Patient */}
+        {mode !== 'staff_login' && (
+          <div className="flex rounded-xl bg-slate-100 p-1 mb-6 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
+              className={`flex-1 py-2.5 text-center rounded-lg transition-all cursor-pointer ${
+                mode === 'patient_login' || mode === 'forgot_password'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Patient Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
+              className={`flex-1 py-2.5 text-center rounded-lg transition-all cursor-pointer ${
+                mode === 'patient_register'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              New Patient
+            </button>
+          </div>
+        )}
 
         {errorMsg && (
           <div className="mb-4 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 flex items-center space-x-2">
