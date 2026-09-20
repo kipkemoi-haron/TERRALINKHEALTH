@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Zap,
   Sparkles,
-  Activity
+  Activity,
+  UserPlus
 } from 'lucide-react';
 import { User, PatientProfile } from '../types';
 import { 
@@ -469,137 +470,155 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-2xl border border-slate-100 relative my-6 text-slate-900">
         
-        {/* Header matching exact brand styling from screenshot */}
-        <div className="bg-[#023545] px-6 py-4 text-white flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#13b886] flex items-center justify-center text-white shrink-0 shadow-xs">
-              <Activity className="w-5 h-5 text-white stroke-[2.5]" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base leading-tight tracking-tight text-white">TERRALINK Health</h3>
-              <p className="text-xs text-[#82b8c7] font-normal leading-tight mt-0.5">Secure Healthcare Portal</p>
-            </div>
-          </div>
-          <button 
-            onClick={onClose} 
-            className="w-6 h-6 rounded-full border-2 border-[#6fa3b2] hover:border-white transition-colors flex items-center justify-center text-white cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-3.5 h-3.5 text-[#82b8c7] hover:text-white" />
-          </button>
+        {/* Close Button matching design reference */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center text-slate-500 hover:text-slate-800 cursor-pointer z-10"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Top Icon Squircle Badge */}
+        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
+          {mode === 'staff_login' ? (
+            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
+          ) : mode === 'patient_register' ? (
+            <UserPlus className="w-7 h-7 text-white stroke-[2.2]" />
+          ) : (
+            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
+          )}
         </div>
 
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+          {mode === 'staff_login'
+            ? 'Staff Portal Login'
+            : mode === 'patient_register'
+            ? 'Patient Registration'
+            : mode === 'forgot_password'
+            ? 'Reset Password'
+            : 'Patient Portal Login'}
+        </h2>
+
+        {/* Subtitle */}
+        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-5">
+          {mode === 'staff_login'
+            ? 'Enter the username and password provided by your administrator'
+            : mode === 'patient_register'
+            ? 'Enter your personal details to register your patient account'
+            : mode === 'forgot_password'
+            ? 'Enter your details to recover your account credentials'
+            : 'Enter your phone number, email, or National ID and password'}
+        </p>
+
         {/* Tab switcher */}
-        <div className="grid grid-cols-3 border-b border-slate-200 text-xs font-semibold bg-slate-50">
+        <div className="flex rounded-xl bg-slate-100 p-1 mb-6 text-xs font-semibold">
           <button
+            type="button"
             onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
-            className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'patient_login' || mode === 'forgot_password' 
-                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
-                : 'text-slate-500 hover:text-slate-800'
+            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
+              mode === 'patient_login' || mode === 'forgot_password'
+                ? 'bg-white text-slate-900 shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Patient Sign In
           </button>
           <button
+            type="button"
             onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-            className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'patient_register' 
-                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
-                : 'text-slate-500 hover:text-slate-800'
+            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
+              mode === 'patient_register'
+                ? 'bg-white text-slate-900 shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             New Patient
           </button>
           <button
+            type="button"
             onClick={() => { setMode('staff_login'); setErrorMsg(''); }}
-            className={`py-3 text-center transition-colors cursor-pointer ${
-              mode === 'staff_login' 
-                ? 'bg-white text-[#023545] border-b-2 border-[#023545] font-bold' 
-                : 'text-slate-500 hover:text-slate-800'
+            className={`flex-1 py-2 text-center rounded-lg transition-all cursor-pointer ${
+              mode === 'staff_login'
+                ? 'bg-white text-slate-900 shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Clinical Staff
+            Staff Portal
           </button>
         </div>
 
-        {/* Form Body */}
-        <div className="p-6">
-          
-          {errorMsg && (
-            <div className="mb-4 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-              <span>{errorMsg}</span>
+        {errorMsg && (
+          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* 1. Patient Login */}
+        {mode === 'patient_login' && (
+          <form onSubmit={handlePatientLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Phone Number, Email, or National ID
+              </label>
+              <input
+                type="text"
+                required
+                value={pLoginIdentifier}
+                onChange={(e) => setPLoginIdentifier(e.target.value)}
+                placeholder="Enter your phone or email"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
             </div>
-          )}
 
-          {/* 1. Patient Login */}
-          {mode === 'patient_login' && (
-            <form onSubmit={handlePatientLogin} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Phone Number, Email, or Kenyan National ID *
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-slate-900">
+                  Password
                 </label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    required
-                    value={pLoginIdentifier}
-                    onChange={(e) => setPLoginIdentifier(e.target.value)}
-                    placeholder="e.g. 0712345678 or 29481022"
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-semibold text-slate-700">Password *</label>
-                  <button
-                    type="button"
-                    onClick={() => { setMode('forgot_password'); setErrorMsg(''); setFpStep('request'); }}
-                    className="text-[11px] text-emerald-700 font-bold hover:underline cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="password"
-                    required
-                    value={pLoginPassword}
-                    onChange={(e) => setPLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Patient Portal</span>}
-              </button>
-
-              <div className="pt-2 text-center text-[11px] text-slate-500 border-t border-slate-100 flex items-center justify-between">
-                <span>First time visiting?</span>
                 <button
                   type="button"
-                  onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-                  className="text-[#023545] font-bold hover:underline cursor-pointer"
+                  onClick={() => { setMode('forgot_password'); setErrorMsg(''); setFpStep('request'); }}
+                  className="text-xs text-[#00658a] font-medium hover:underline cursor-pointer"
                 >
-                  Register New Patient →
+                  Forgot Password?
                 </button>
               </div>
-            </form>
-          )}
+              <input
+                type="password"
+                required
+                value={pLoginPassword}
+                onChange={(e) => setPLoginPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Patient Portal'}
+            </button>
+
+            <div className="pt-3 text-center text-xs text-slate-500 border-t border-slate-100 flex items-center justify-between">
+              <span>First time visiting?</span>
+              <button
+                type="button"
+                onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
+                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
+              >
+                Register New Patient →
+              </button>
+            </div>
+          </form>
+        )}
 
           {/* 1.5 Forgot Password Mode */}
           {mode === 'forgot_password' && (
@@ -876,9 +895,9 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+                    className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-4"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Register & Memorize in System Storage →</span>}
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Register Patient Account</span>}
                   </button>
 
                   <div className="text-center pt-1">
@@ -958,102 +977,71 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
           {/* 3. Clinical Staff Login */}
           {mode === 'staff_login' && (
-            <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
-              <div className="bg-[#023545]/5 border border-[#023545]/15 rounded-xl p-3 text-[11px] text-slate-700">
-                <p className="font-semibold text-[#023545] flex items-center space-x-1.5">
-                  <Stethoscope className="w-3.5 h-3.5 text-[#0b4c5e]" />
-                  <span>Authorized Healthcare Provider & Clinical Staff Access</span>
-                </p>
-                <p className="mt-1 text-slate-500">
-                  Secure access for registered medical practitioners, administrators, nursing staff, laboratory technologists, and pharmacists.
-                </p>
-              </div>
-
-              {/* 1-Click Fast Staff Access */}
-              <div className="space-y-2">
-                {/* Marko Bare (Healthcare Provider / Admin) */}
-                <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-1.5 text-left">
-                  <div className="flex items-center justify-between text-[11px] text-[#023545] font-bold">
-                    <span>Marko Bare (Administrator · Healthcare Provider)</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSUsername('markobare@gmail.com');
-                        setSPassword('Pay@1206');
-                      }}
-                      className="text-[#0b4c5e] hover:underline cursor-pointer text-[10px] font-semibold"
-                    >
-                      Fill Info
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSUsername('markobare@gmail.com');
-                      setSPassword('Pay@1206');
-                      setTimeout(() => {
-                        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                        handleStaffLogin(fakeEvent);
-                      }, 50);
-                    }}
-                    className="w-full py-2 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-emerald-300 fill-current" />
-                    <span>⚡ Quick Sign In as Marko Bare</span>
-                  </button>
-                </div>
-
-                {/* Dr. Maxx Roy */}
-                <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-[11px]">
-                  <span className="text-slate-700 font-medium">Dr. Maxx Roy (Clinician)</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSUsername('maxxroy961@gmail.com');
-                      setSPassword('Pay@1206');
-                    }}
-                    className="text-[#0b4c5e] hover:underline cursor-pointer text-[11px] font-semibold"
-                  >
-                    Use Maxx Roy →
-                  </button>
-                </div>
-              </div>
-
+            <form onSubmit={handleStaffLogin} className="space-y-4">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Staff Username or Email *</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Username or Email
+                </label>
                 <input
                   type="text"
                   required
                   value={sUsername}
                   onChange={(e) => setSUsername(e.target.value)}
-                  placeholder="e.g. markobare@gmail.com or username"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden"
+                  placeholder="Enter your username"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Password *</label>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Password
+                </label>
                 <input
                   type="password"
                   required
                   value={sPassword}
                   onChange={(e) => setSPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium text-slate-800 focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden"
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+                className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Clinical Workspace</span>}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Staff Portal'}
               </button>
+
+              {/* Quick Staff Credential Autofill */}
+              <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100">
+                <span>Quick fill:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSUsername('markobare@gmail.com');
+                    setSPassword('Pay@1206');
+                  }}
+                  className="text-[#00658a] font-medium hover:underline cursor-pointer"
+                >
+                  Marko Bare (Admin)
+                </button>
+                <span>·</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSUsername('maxxroy961@gmail.com');
+                    setSPassword('Pay@1206');
+                  }}
+                  className="text-[#00658a] font-medium hover:underline cursor-pointer"
+                >
+                  Dr. Maxx
+                </button>
+              </div>
             </form>
           )}
 
-        </div>
       </div>
     </div>
   );
@@ -1126,112 +1114,93 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center p-4 bg-[#f8fafc]">
-      <div className="w-full max-w-md bg-white text-slate-900 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 sm:p-8 space-y-6">
-          
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
-              <Activity className="w-6 h-6 text-white stroke-[2.5]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-[#023545]">TERRALINK Health</h2>
-              <p className="text-xs font-semibold text-[#0b4c5e] mt-0.5">Admin & Executive Portal</p>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-              Enter your administrator email and password to access hospital operations, billing, and insurance approvals.
-            </p>
-          </div>
-
-          {/* Quick Admin Credential Autofill Helper */}
-          <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl space-y-2 text-center">
-            <div className="flex items-center justify-center space-x-1.5 text-xs text-[#023545] font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Authorized Admin (Haron Kipkemoi)</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleAdminSubmit(undefined, HARON_ADMIN_USER)}
-              className="w-full py-2 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-lg font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current text-emerald-300" />
-              <span>1-Click Admin Access (Haron Kipkemoi)</span>
-            </button>
-          </div>
-
-          {errorMsg && (
-            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleAdminSubmit} className="space-y-4 text-xs">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block font-medium text-slate-700">
-                  Administrator Email *
-                </label>
-                <button
-                  type="button"
-                  onClick={() => { setAdminIdentifier('kipkemoiharon57@gmail.com'); setAdminPassword('Slate#1206'); }}
-                  className="text-[11px] text-[#0b4c5e] hover:underline cursor-pointer font-semibold"
-                >
-                  Fill Email
-                </button>
-              </div>
-              <div className="relative">
-                <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <input
-                  type="text"
-                  required
-                  value={adminIdentifier}
-                  onChange={(e) => setAdminIdentifier(e.target.value)}
-                  placeholder="e.g. kipkemoiharon57@gmail.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:border-transparent focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-medium text-slate-700 mb-1.5">
-                Password *
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                <input
-                  type="password"
-                  required
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:border-transparent focus:outline-hidden font-mono"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50 shadow-md shadow-[#023545]/20"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In to Admin Portal</span>}
-            </button>
-          </form>
-
-          {onCancel && (
-            <div className="pt-2 text-center border-t border-slate-100">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-              >
-                ← Return to Homepage
-              </button>
-            </div>
-          )}
-
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
+        
+        {/* Top Icon Squircle Badge */}
+        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
+          <ShieldCheck className="w-7 h-7 text-white stroke-[2.2]" />
         </div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+          Admin Portal Login
+        </h2>
+
+        {/* Subtitle */}
+        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
+          Enter the administrator credentials provided for hospital operations
+        </p>
+
+        {errorMsg && (
+          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Login Form matching design reference */}
+        <form onSubmit={handleAdminSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-900 mb-2">
+              Administrator Email
+            </label>
+            <input
+              type="email"
+              required
+              value={adminIdentifier}
+              onChange={(e) => setAdminIdentifier(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-900 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Admin Portal'}
+          </button>
+        </form>
+
+        {/* Back to Home Link */}
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
+          >
+            ← Back to Home
+          </button>
+        </div>
+
+        {/* 1-Click Authorized Admin Helper */}
+        <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
+          <span>Quick fill:</span>
+          <button
+            type="button"
+            onClick={() => handleAdminSubmit(undefined, HARON_ADMIN_USER)}
+            className="text-[#00658a] font-medium hover:underline cursor-pointer"
+          >
+            Haron Kipkemoi (Admin)
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -1393,266 +1362,200 @@ export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center p-3 sm:p-6">
-      <div className="w-full max-w-lg bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/80 overflow-hidden space-y-0">
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
         
-        {/* Header Banner */}
-        <div className="bg-[#023545] p-6 text-white text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
-            <Activity className="w-6 h-6 text-white stroke-[2.5]" />
+        {/* Top Icon Squircle Badge */}
+        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
+          {activeTab === 'login' ? (
+            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
+          ) : (
+            <UserPlus className="w-7 h-7 text-white stroke-[2.2]" />
+          )}
+        </div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+          {activeTab === 'login' ? 'Patient Portal Login' : 'Patient Registration'}
+        </h2>
+
+        {/* Subtitle */}
+        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
+          {activeTab === 'login'
+            ? 'Enter your username, phone, or ID and password'
+            : 'Enter your personal details to register your patient account'}
+        </p>
+
+        {errorMsg && (
+          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">TERRALINK Health</h2>
-          <p className="text-xs text-[#82b8c7] max-w-sm mx-auto">
-            Patient Portal · Direct access to your medical records, e-prescriptions, lab tests, doctor bookings, and SHIF/SHA benefits.
-          </p>
-        </div>
+        )}
 
-        {/* Tab Selection */}
-        <div className="grid grid-cols-2 bg-slate-100/80 p-1.5 border-b border-slate-200">
-          <button
-            type="button"
-            onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
-            className={`py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
-              activeTab === 'register'
-                ? 'bg-[#023545] text-white shadow-md shadow-[#023545]/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <UserIcon className="w-4 h-4" />
-            <span>Register New Patient</span>
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
-            className={`py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center space-x-2 ${
-              activeTab === 'login'
-                ? 'bg-[#023545] text-white shadow-md shadow-[#023545]/20'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-            <span>Sign In to Account</span>
-          </button>
-        </div>
+        {successMsg && (
+          <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
 
-        {/* Form Body */}
-        <div className="p-6 sm:p-8 space-y-5">
-          
-          {errorMsg && (
-            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-700 flex items-start space-x-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+        {/* REGISTER FORM */}
+        {activeTab === 'register' && (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="Enter your full name"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
             </div>
-          )}
 
-          {successMsg && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs text-emerald-800 flex items-start space-x-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>{successMsg}</span>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                National ID or Passport Number
+              </label>
+              <input
+                type="text"
+                required
+                value={regNationalId}
+                onChange={(e) => setRegNationalId(e.target.value)}
+                placeholder="Enter your ID number"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
             </div>
-          )}
 
-          {/* REGISTER TAB */}
-          {activeTab === 'register' && (
-            <form onSubmit={handleRegister} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-800 mb-1.5">
-                  Full Names (As on National ID / Birth Certificate) *
-                </label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    required
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    placeholder="e.g. Wanjiku Muthoni Kimani"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                required
+                value={regPhone}
+                onChange={(e) => setRegPhone(e.target.value)}
+                placeholder="Enter your phone number"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
+            </div>
 
-              <div>
-                <label className="block font-bold text-slate-800 mb-1.5">
-                  Kenyan National ID Number / Passport Number *
-                </label>
-                <div className="relative">
-                  <CreditCard className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    required
-                    value={regNationalId}
-                    onChange={(e) => setRegNationalId(e.target.value)}
-                    placeholder="e.g. 29481022"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm font-mono"
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1.5">
-                    Phone Number (M-PESA / SMS) *
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                    <input
-                      type="tel"
-                      required
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="0712 345 678"
-                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
-                    />
-                  </div>
-                </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Register Patient Account'}
+            </button>
 
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1.5">
-                    Email Address (Optional)
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                    <input
-                      type="email"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-800 mb-1.5">
-                  Create Confidential Password *
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="password"
-                    required
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Create a password (min 6 characters)"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-sm"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                  <>
-                    <span>Register & Open Patient Portal</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              <p className="text-center text-[11px] text-slate-500 pt-1">
-                Already registered?{' '}
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
-                  className="text-[#023545] font-bold hover:underline cursor-pointer"
-                >
-                  Sign In here
-                </button>
-              </p>
-            </form>
-          )}
-
-          {/* SIGN IN TAB */}
-          {activeTab === 'login' && (
-            <form onSubmit={handleLogin} className="space-y-4 text-xs">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-bold text-slate-800">
-                    National ID, Phone Number, or Email Address *
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setLoginIdentifier('wanjiku@example.com'); setLoginPassword('123456'); }}
-                    className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
-                  >
-                    Demo Patient
-                  </button>
-                </div>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    required
-                    value={loginIdentifier}
-                    onChange={(e) => setLoginIdentifier(e.target.value)}
-                    placeholder="e.g. 0712345678 or 29481022 or name@email.com"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-800 mb-1.5">
-                  Confidential Password *
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    type="password"
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                  <>
-                    <span>Sign In to Patient Portal</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              <div className="pt-2 text-center text-[11px] text-slate-500 border-t border-slate-100 flex items-center justify-between">
-                <span>First time visiting us?</span>
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab('register'); setErrorMsg(''); }}
-                  className="text-[#023545] font-bold hover:underline cursor-pointer"
-                >
-                  Register New Patient →
-                </button>
-              </div>
-            </form>
-          )}
-
-          {onCancel && (
-            <div className="pt-2 text-center border-t border-slate-100">
+            <div className="text-center pt-3 text-xs text-slate-500">
+              <span>Already registered? </span>
               <button
                 type="button"
-                onClick={onCancel}
-                className="text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
+                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
               >
-                ← Return to Hospital Home
+                Sign In here
               </button>
             </div>
-          )}
+          </form>
+        )}
 
+        {/* LOGIN FORM */}
+        {activeTab === 'login' && (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                required
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
+                placeholder="Enter your username"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Patient Portal'}
+            </button>
+
+            <div className="text-center pt-3 text-xs text-slate-500">
+              <span>Don't have an account? </span>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
+                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
+              >
+                Register here
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Back to Home Link */}
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
+          >
+            ← Back to Home
+          </button>
         </div>
+
+        {/* Discreet Demo Autofill Helper */}
+        {activeTab === 'login' && (
+          <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
+            <span>Demo patient:</span>
+            <button
+              type="button"
+              onClick={() => { setLoginIdentifier('wanjiku@example.com'); setLoginPassword('123456'); }}
+              className="text-[#00658a] font-medium hover:underline cursor-pointer"
+            >
+              Wanjiku Muthoni
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
@@ -1715,114 +1618,100 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center p-3 sm:p-6">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-6">
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
         
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#13b886] text-white mx-auto flex items-center justify-center shadow-md">
-            <Activity className="w-6 h-6 text-white stroke-[2.5]" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">TERRALINK Health</h2>
-          <div className="inline-block px-3 py-1 bg-[#023545]/10 text-[#023545] rounded-full text-[10px] font-bold tracking-wider uppercase">
-            Healthcare Provider & Staff Portal
-          </div>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Authorized clinical workspace for Marko Bare, attending doctors, nursing officers, laboratory technologists, and pharmacists.
-          </p>
+        {/* Top Icon Squircle Badge matching design reference */}
+        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
+          <Lock className="w-7 h-7 text-white stroke-[2.2]" />
         </div>
 
+        {/* Title matching design reference */}
+        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+          Staff Portal Login
+        </h2>
+
+        {/* Subtitle matching design reference */}
+        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
+          Enter the username and password provided by your administrator
+        </p>
+
         {errorMsg && (
-          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-700 flex items-center space-x-2">
+          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        {/* Login Form matching design reference */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block font-bold text-slate-800">
-                Staff Username or Employee ID *
-              </label>
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={() => { setUsername('markobare@gmail.com'); setPassword('Pay@1206'); }}
-                  className="text-[10px] text-[#023545] font-bold hover:underline cursor-pointer"
-                >
-                  Marko Bare
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUsername('dr_grace'); setPassword('Hospital#2026'); }}
-                  className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
-                >
-                  Doctor Demo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUsername('dr_omondi'); setPassword('Omondi#2026'); }}
-                  className="text-[10px] text-[#0b4c5e] font-semibold hover:underline cursor-pointer"
-                >
-                  Surgeon Demo
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. markobare@gmail.com or dr_grace"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
-              />
-            </div>
+            <label className="block text-sm font-semibold text-slate-900 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+            />
           </div>
 
           <div>
-            <label className="block font-bold text-slate-800 mb-1.5">
-              Password / Security Access Key *
+            <label className="block text-sm font-semibold text-slate-900 mb-2">
+              Password
             </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:ring-2 focus:ring-[#0b4c5e] focus:outline-hidden text-sm"
-              />
-            </div>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+            />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#023545] hover:bg-[#0b4c5e] text-white rounded-xl font-bold shadow-md shadow-[#023545]/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm mt-2"
+            className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-              <>
-                <Stethoscope className="w-4 h-4" />
-                <span>Sign In to Healthcare Portal</span>
-              </>
-            )}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Staff Portal'}
           </button>
         </form>
 
-        {onCancel && (
-          <div className="pt-2 text-center border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="text-xs text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
-            >
-              ← Return to Hospital Home
-            </button>
-          </div>
-        )}
+        {/* Back to Home Link matching design reference */}
+        <div className="text-center mt-5">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
+          >
+            ← Back to Home
+          </button>
+        </div>
+
+        {/* Discreet Demo Autofill Helper */}
+        <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
+          <span>Quick fill:</span>
+          <button
+            type="button"
+            onClick={() => { setUsername('markobare@gmail.com'); setPassword('Pay@1206'); }}
+            className="text-[#00658a] font-medium hover:underline cursor-pointer"
+          >
+            Marko Bare
+          </button>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => { setUsername('dr_grace'); setPassword('Hospital#2026'); }}
+            className="text-[#00658a] font-medium hover:underline cursor-pointer"
+          >
+            Dr. Grace
+          </button>
+        </div>
 
       </div>
     </div>
