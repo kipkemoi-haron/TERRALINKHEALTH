@@ -176,12 +176,12 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             onClick={() => onNavigateToPortal('patient')}
             className="flex items-center space-x-3 cursor-pointer select-none group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               <Activity className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3]" />
             </div>
             <div>
-              <span className="text-[15px] sm:text-[17px] font-bold text-slate-900 leading-tight block tracking-tight">
-                TERRALINK Health
+              <span className="text-base sm:text-lg md:text-xl font-black text-slate-900 leading-tight block tracking-wider uppercase">
+                TERRALINK HEALTH
               </span>
               <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-tight block">
                 Digital Hospital Platform
@@ -224,7 +224,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
           <div className="relative w-full h-full [mask-image:linear-gradient(to_right,transparent_0%,black_35%,black_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_35%,black_100%)]">
             <img
               src={doctorPhoto}
-              alt="Doctor at TERRALINK Health"
+              alt="Doctor at TERRALINK HEALTH"
               className="w-full h-full object-cover object-[center_top] opacity-40 sm:opacity-75 md:opacity-90 lg:opacity-100 filter brightness-[1.02] contrast-[1.02]"
               referrerPolicy="no-referrer"
             />
@@ -238,24 +238,13 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         {/* Hero Content - Clean Light/White Background on Left, No Overlap with Image */}
         <div className="relative z-10 max-w-6xl mx-auto flex flex-col items-start text-left w-full pr-[38%] sm:pr-[38%] md:pr-0">
           
-          {/* Transforming Healthcare Eyebrow */}
-          <div className="inline-flex items-center space-x-1.5 text-[#0284c7] font-semibold text-[11px] sm:text-xs md:text-sm tracking-wide mb-2 sm:mb-3">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0284c7]" />
-            <span>Transforming Healthcare in Kenya</span>
-          </div>
-
-          {/* Main Bold Title */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold text-slate-900 tracking-tight leading-[1.1]">
-            TERRALINK Health
+          {/* Subheading: Reduced size and weight so TERRALINK HEALTH brand name is the main visual focus */}
+          <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-slate-700 tracking-tight leading-snug max-w-xl">
+            Enhancing Hospital Operations &amp; Patient Experience
           </h1>
 
-          {/* Subheading: Fits neatly on one or two balanced lines without overlapping image */}
-          <h2 className="text-base sm:text-xl md:text-2xl lg:text-[25px] xl:text-[27px] font-bold text-slate-800 tracking-tight mt-2 sm:mt-3 leading-snug lg:whitespace-nowrap">
-            Enhancing Hospital Operations &amp; Patient Experience
-          </h2>
-
           {/* Paragraph Description */}
-          <p className="text-slate-600 text-xs sm:text-sm md:text-base lg:text-[17px] leading-relaxed mt-2.5 sm:mt-4 max-w-xl">
+          <p className="text-slate-500 text-xs sm:text-sm md:text-base leading-relaxed mt-2 sm:mt-2.5 max-w-xl">
             An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics — built for Kenyan hospitals.
           </p>
         </div>
@@ -460,7 +449,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
           
           {/* Institutional Copyright */}
           <p className="text-slate-600 font-medium">
-            &copy; 2026 TERRALINK Health &mdash; Digital Hospital Management Platform
+            &copy; 2026 TERRALINK HEALTH &mdash; Digital Hospital Management Platform
           </p>
           
           {/* Location details */}
@@ -789,7 +778,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Contact Us</h3>
-                <p className="text-xs text-slate-500">TERRALINK Health Hospital Kenya</p>
+                <p className="text-xs text-slate-500">TERRALINK HEALTH Hospital Kenya</p>
               </div>
             </div>
 
@@ -854,7 +843,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
             <div className="space-y-3 text-xs text-slate-600 leading-relaxed pt-2">
               <p>
-                <strong>TERRALINK Health</strong> complies with the <strong>Kenya Data Protection Act (KDPA 2019)</strong> and the medical confidentiality guidelines mandated by the <strong>Kenya Medical Practitioners and Dentists Council (KMPDC)</strong>.
+                <strong>TERRALINK HEALTH</strong> complies with the <strong>Kenya Data Protection Act (KDPA 2019)</strong> and the medical confidentiality guidelines mandated by the <strong>Kenya Medical Practitioners and Dentists Council (KMPDC)</strong>.
               </p>
               <p>
                 1. <strong>Patient Medical Records:</strong> All diagnoses, prescriptions, and laboratory reports are encrypted at rest and in transit. Access is strictly role-based and audited.
@@ -896,13 +885,13 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900">Terms of Service</h3>
-                <p className="text-xs text-slate-500">TERRALINK Health Clinical Platform</p>
+                <p className="text-xs text-slate-500">TERRALINK HEALTH Clinical Platform</p>
               </div>
             </div>
 
             <div className="space-y-3 text-xs text-slate-600 leading-relaxed pt-2">
               <p>
-                By using the <strong>TERRALINK Health Digital Platform</strong>, you agree to the following terms governing digital appointments, telemedicine, and record management:
+                By using the <strong>TERRALINK HEALTH Digital Platform</strong>, you agree to the following terms governing digital appointments, telemedicine, and record management:
               </p>
               <p>
                 1. <strong>Clinical Telemedicine:</strong> Telemedicine consultations are conducted by licensed Kenya Medical Practitioners. For acute emergency medical crises, dial the hospital emergency hotline 0713544101 immediately.
