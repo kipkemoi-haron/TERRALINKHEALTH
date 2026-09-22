@@ -17,14 +17,15 @@ import {
   Building2
 } from 'lucide-react';
 import { HospitalServiceItem } from '../types';
+import { INITIAL_HOSPITAL_SERVICES } from '../mockData';
 
 interface AdminServicesTabProps {
   onDataChanged?: () => void;
 }
 
 export const AdminServicesTab: React.FC<AdminServicesTabProps> = ({ onDataChanged }) => {
-  const [services, setServices] = useState<HospitalServiceItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState<HospitalServiceItem[]>(INITIAL_HOSPITAL_SERVICES);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successToast, setSuccessToast] = useState('');
 
@@ -48,14 +49,19 @@ export const AdminServicesTab: React.FC<AdminServicesTabProps> = ({ onDataChange
 
   const fetchServices = async () => {
     setLoading(true);
+    setErrorMsg('');
     try {
       const res = await fetch('/api/services');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setServices(data);
       }
     } catch (err: any) {
-      setErrorMsg('Failed to load services catalogue');
+      console.warn('API services fetch error, utilizing initialized catalogue:', err);
+      if (!services || services.length === 0) {
+        setServices(INITIAL_HOSPITAL_SERVICES);
+      }
     } finally {
       setLoading(false);
     }
@@ -203,9 +209,19 @@ export const AdminServicesTab: React.FC<AdminServicesTabProps> = ({ onDataChange
       )}
 
       {errorMsg && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl flex items-center space-x-2 text-xs">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl flex items-center justify-between space-x-2 text-xs">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => fetchServices()} 
+            className="px-2.5 py-1 bg-white hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl font-bold flex items-center space-x-1 cursor-pointer"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Retry</span>
+          </button>
         </div>
       )}
 

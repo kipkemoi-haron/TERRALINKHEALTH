@@ -38,7 +38,24 @@ import {
   Bed,
   Stethoscope,
   Cpu,
-  Megaphone
+  Megaphone,
+  Menu,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  ArrowLeft,
+  LogOut,
+  Zap,
+  BarChart2,
+  Home,
+  Bell,
+  User as UserIcon,
+  UserPlus,
+  IdCard,
+  Coins,
+  Tag,
+  PhoneCall,
+  ListTree
 } from 'lucide-react';
 import { AdminBedsTab } from './AdminBedsTab';
 import { AdminServicesTab } from './AdminServicesTab';
@@ -73,12 +90,15 @@ interface AdminPortalProps {
   staffUsers: User[];
   invoices: Invoice[];
   auditLogs: AuditLog[];
+  appointments?: any[];
   onAddStaff: (staffData: any) => Promise<void>;
   onResetStaffPassword: (userId: string) => Promise<void>;
   onToggleStaffStatus: (userId: string, active: boolean) => Promise<void>;
   onUpdateDepartmentFee: (deptId: string, newFeeKES: number) => Promise<void>;
   onAddDepartment: (deptData: any) => Promise<void>;
   onRefreshData?: () => void;
+  onLogout?: () => void;
+  onNavigatePortal?: (portal: 'home' | 'patient' | 'provider' | 'admin') => void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -90,14 +110,51 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   staffUsers,
   invoices: initialInvoices,
   auditLogs,
+  appointments = [],
   onAddStaff,
   onResetStaffPassword,
   onToggleStaffStatus,
   onUpdateDepartmentFee,
   onAddDepartment,
-  onRefreshData
+  onRefreshData,
+  onLogout,
+  onNavigatePortal
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'billings' | 'insurance' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'>('billings');
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'analytics' | 'billings' | 'insurance' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'
+  >('dashboard');
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    staff: true,
+    patients: true,
+    billings: true,
+    pricing: true
+  });
+
+  const toggleSubmenu = (menu: string) => {
+    setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
+  const getTabTitle = (tab: string) => {
+    switch (tab) {
+      case 'billings': return 'Patient Billings & Invoices';
+      case 'insurance': return 'Insurance & IRA Approvals';
+      case 'departments': return 'Departments & Clinics';
+      case 'equipment': return 'Medical Equipment & Assets';
+      case 'announcements': return 'Patient Alerts & Broadcasts';
+      case 'slots': return 'Clinic Appointment Shifts & Slots';
+      case 'beds': return 'Hospital Beds & Wards Capacity';
+      case 'services': return 'Clinical Services & Tariffs Catalogue';
+      case 'pricing': return 'Hospital Pricing & Tariff (KES)';
+      case 'socials': return 'Hospital Contacts & Social Channels';
+      case 'analytics': return 'Executive Analytics & KPIs';
+      case 'staff': return 'Staff & Role Access';
+      case 'patients': return 'Patient Master Index & Registry';
+      case 'audit_logs': return 'Security & Audit Logs';
+      default: return 'Hospital Administration';
+    }
+  };
 
   // Insurance State
   const [adminInsurancePolicies, setAdminInsurancePolicies] = useState<PatientInsurancePolicy[]>(INITIAL_INSURANCE_POLICIES);
@@ -583,130 +640,799 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalInvoicedKES = invoices.reduce((acc, curr) => acc + (curr.totalAmountKES || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-slate-50/70 font-sans text-slate-800 flex flex-col pb-24 selection:bg-teal-500 selection:text-white">
       
-      {/* Toast notifications */}
-      {paymentSuccessToast && (
-        <div className="bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
-          <div className="flex items-center space-x-2.5 text-xs font-semibold">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            <span>{paymentSuccessToast}</span>
-          </div>
-          <button onClick={() => setPaymentSuccessToast('')} className="p-1 hover:bg-white/20 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      {/* ================= SLIDE-OUT HAMBURGER DRAWER ================= */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop Overlay */}
+          <div 
+            onClick={() => setIsDrawerOpen(false)}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300"
+          />
 
-      {pricingToast && (
-        <div className="bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
-          <div className="flex items-center space-x-2.5 text-xs font-semibold">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            <span>{pricingToast}</span>
-          </div>
-          <button onClick={() => setPricingToast('')} className="p-1 hover:bg-white/20 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {socialToast && (
-        <div className="bg-teal-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
-          <div className="flex items-center space-x-2.5 text-xs font-semibold">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            <span>{socialToast}</span>
-          </div>
-          <button onClick={() => setSocialToast('')} className="p-1 hover:bg-white/20 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {insuranceToast && (
-        <div className="bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
-          <div className="flex items-center space-x-2.5 text-xs font-semibold">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            <span>{insuranceToast}</span>
-          </div>
-          <button onClick={() => setInsuranceToast('')} className="p-1 hover:bg-white/20 rounded-lg">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Admin Top Banner - Frosted Glass */}
-      <div className="bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-indigo-950/90 backdrop-blur-2xl rounded-3xl p-6 text-white shadow-xl border border-white/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center font-bold text-xl backdrop-blur-md shadow-inner">
-            <Building2 className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-xl font-bold tracking-tight">Hospital Administration & Executive Operations</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider backdrop-blur-md">
-                Admin Authorized: Kipkemoi Haron
-              </span>
+          {/* Drawer Panel */}
+          <div className="relative w-80 max-w-[85vw] bg-[#071d2b] text-white h-full flex flex-col shadow-2xl z-10 overflow-hidden animate-in slide-in-from-left duration-300">
+            {/* Drawer Header */}
+            <div className="px-5 py-4 border-b border-cyan-950/60 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full bg-[#008ba3] text-white flex items-center justify-center font-bold shadow-xs">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black tracking-tight leading-tight">TERRALINKHEALTH</h2>
+                  <p className="text-[11px] text-cyan-400 font-medium">Hospital Admin Portal</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(false)}
+                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Close Menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Authorized Administrators: <span className="font-mono text-indigo-300">kipkemoiharon57@gmail.com</span> & <span className="font-mono text-indigo-300">kipkemoiharon4@gmail.com</span> • ISO 27001 & Data Protection Act 2019
-            </p>
+
+            {/* Drawer Menu Items */}
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 text-xs select-none">
+              {/* Dashboard */}
+              <button
+                onClick={() => { setActiveTab('dashboard'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'dashboard'
+                    ? 'bg-[#008ba3] text-white font-bold shadow-sm'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Activity className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-white' : 'text-cyan-400'}`} />
+                  <span className="text-xs">Dashboard</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Manage Staff (Accordion) */}
+              <div>
+                <button
+                  onClick={() => toggleSubmenu('staff')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Users className="w-4 h-4 text-cyan-400" />
+                    <span>Manage Staff</span>
+                  </div>
+                  {expandedMenus.staff ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                </button>
+                {expandedMenus.staff && (
+                  <div className="pl-9 pr-2 py-1 space-y-1">
+                    <button
+                      onClick={() => { setShowAddStaffModal(true); setIsDrawerOpen(false); }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 cursor-pointer text-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Provision Staff</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('staff'); setIsDrawerOpen(false); }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
+                        activeTab === 'staff' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Staff & Role Access</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Patient Register (Accordion) */}
+              <div>
+                <button
+                  onClick={() => toggleSubmenu('patients')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <IdCard className="w-4 h-4 text-cyan-400" />
+                    <span>Patient Register</span>
+                  </div>
+                  {expandedMenus.patients ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                </button>
+                {expandedMenus.patients && (
+                  <div className="pl-9 pr-2 py-1 space-y-1">
+                    <button
+                      onClick={() => { setActiveTab('patients'); setIsDrawerOpen(false); }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
+                        activeTab === 'patients' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Users className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>List of Registered Patients</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('patients'); setIsDrawerOpen(false); }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 cursor-pointer text-xs"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Patient Master Index</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Billings & Invoices (Accordion) */}
+              <div>
+                <button
+                  onClick={() => toggleSubmenu('billings')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Receipt className="w-4 h-4 text-cyan-400" />
+                    <span>Billings & Invoices</span>
+                  </div>
+                  {expandedMenus.billings ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                </button>
+                {expandedMenus.billings && (
+                  <div className="pl-9 pr-2 py-1 space-y-1">
+                    <button
+                      onClick={() => { handleOpenCreateInvoice(); setIsDrawerOpen(false); }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 cursor-pointer text-xs"
+                    >
+                      <Receipt className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Create Billing Invoice</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('billings'); setIsDrawerOpen(false); }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
+                        activeTab === 'billings' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>All Invoices & Settlements</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Insurance & IRA Approvals */}
+              <button
+                onClick={() => { setActiveTab('insurance'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'insurance'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>Insurance & IRA Approvals</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Departments & Clinics */}
+              <button
+                onClick={() => { setActiveTab('departments'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'departments'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Building2 className="w-4 h-4 text-cyan-400" />
+                  <span>Departments & Clinics</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Medical Equipment & Assets */}
+              <button
+                onClick={() => { setActiveTab('equipment'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'equipment'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Cpu className="w-4 h-4 text-cyan-400" />
+                  <span>Medical Equipment & Assets</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Patient Alerts & Broadcasts */}
+              <button
+                onClick={() => { setActiveTab('announcements'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'announcements'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Megaphone className="w-4 h-4 text-cyan-400" />
+                  <span>Patient Alerts & Broadcasts</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Clinic Appointment Shifts & Slots */}
+              <button
+                onClick={() => { setActiveTab('slots'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'slots'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-4 h-4 text-cyan-400" />
+                  <span>Clinic Appointment Shifts & Slots</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Hospital Beds & Wards Capacity */}
+              <button
+                onClick={() => { setActiveTab('beds'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'beds'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Bed className="w-4 h-4 text-cyan-400" />
+                  <span>Hospital Beds & Wards Capacity</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Clinical Pricing (Accordion) */}
+              <div>
+                <button
+                  onClick={() => toggleSubmenu('pricing')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Tag className="w-4 h-4 text-cyan-400" />
+                    <span>Clinical Pricing</span>
+                  </div>
+                  {expandedMenus.pricing ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                </button>
+                {expandedMenus.pricing && (
+                  <div className="pl-9 pr-2 py-1 space-y-1">
+                    <button
+                      onClick={() => { setActiveTab('services'); setIsDrawerOpen(false); }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
+                        activeTab === 'services' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <ListTree className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Clinical Services & Tariffs Catalogue</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('pricing'); setIsDrawerOpen(false); }}
+                      className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
+                        activeTab === 'pricing' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Coins className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Hospital Pricing & Tariff</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Hospital Contacts */}
+              <button
+                onClick={() => { setActiveTab('socials'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'socials'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <PhoneCall className="w-4 h-4 text-cyan-400" />
+                  <span>Hospital Contacts</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Executive Analytics & KPIs */}
+              <button
+                onClick={() => { setActiveTab('analytics'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'analytics'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <BarChart3 className="w-4 h-4 text-cyan-400" />
+                  <span>Executive Analytics & KPIs</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Security & Audit Logs */}
+              <button
+                onClick={() => { setActiveTab('audit_logs'); setIsDrawerOpen(false); }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'audit_logs'
+                    ? 'bg-[#008ba3] text-white font-bold'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>Security & Audit Logs</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  onLogout?.();
+                }}
+                className="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-rose-300 hover:text-rose-100 hover:bg-rose-500/10 transition-all cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-rose-400" />
+                <span>Logout</span>
+              </button>
+            </div>
+
+            {/* Drawer Bottom Admin Profile */}
+            <div className="p-3.5 bg-[#051622] border-t border-cyan-950/80 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-full bg-slate-900 border border-cyan-500/30 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                  {currentUser?.name?.charAt(0) || 'H'}
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-xs leading-tight">{currentUser?.name || 'John Kamau'}</h4>
+                  <p className="text-[10px] text-cyan-300/70 font-medium">Hospital Administrator</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setActiveTab('staff'); setIsDrawerOpen(false); }}
+                className="p-1.5 text-cyan-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODERN REDESIGNED HEADER ================= */}
+      <header className="bg-white border-b border-slate-100 sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs">
+        {/* Left: Hamburger & Brand */}
+        <div className="flex items-center space-x-2.5">
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="w-9 h-9 rounded-full bg-[#008ba3] hover:bg-[#007b91] text-white flex items-center justify-center transition-transform active:scale-95 shadow-xs cursor-pointer"
+            title="Open Hospital Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-white" />
+          </button>
+          
+          <div className="flex items-center space-x-2">
+            <span 
+              onClick={() => setActiveTab('dashboard')} 
+              className="text-base sm:text-lg font-black text-slate-950 tracking-tight cursor-pointer select-none"
+            >
+              TERRALINKHEALTH
+            </span>
+            <span className="hidden sm:inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse" />
+              <span>Admin Portal</span>
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleOpenCreateInvoice}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl text-xs flex items-center space-x-1.5 shadow-lg shadow-indigo-600/25 border border-indigo-400/40 backdrop-blur-md transition-all cursor-pointer"
+        {/* Right: Profile Avatar & Logout */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div 
+            onClick={() => setActiveTab('staff')}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0f172a] text-white font-bold flex items-center justify-center text-xs sm:text-sm shadow-xs cursor-pointer select-none"
+            title={`Logged in as ${currentUser?.name || 'Administrator'}`}
           >
-            <Receipt className="w-4 h-4" />
-            <span>+ Create Billing Invoice</span>
-          </button>
+            {currentUser?.name?.charAt(0) || 'H'}
+          </div>
+
           <button
-            onClick={() => setShowAddStaffModal(true)}
-            className="px-4 py-2.5 bg-emerald-600/90 hover:bg-emerald-500 text-white font-bold rounded-2xl text-xs flex items-center space-x-1.5 shadow-lg shadow-emerald-600/25 border border-emerald-400/40 backdrop-blur-md transition-all cursor-pointer"
+            onClick={() => onLogout?.()}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+            title="Logout of Admin Portal"
           >
-            <Plus className="w-4 h-4" />
-            <span>Provision Staff</span>
+            <LogOut className="w-4 h-4 stroke-[2.2]" />
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Admin Navigation Tabs - Frosted Glass Pills */}
-      <div className="flex overflow-x-auto pb-1 gap-2 border-b border-sky-200/50 text-xs font-semibold">
-        {[
-          { id: 'billings', label: `Patient Billings & Invoices (${invoices.length})`, icon: Receipt },
-          { id: 'insurance', label: `Insurance & IRA Approvals (${adminInsurancePolicies.filter(p => p.status === 'PENDING').length > 0 ? `${adminInsurancePolicies.filter(p => p.status === 'PENDING').length} Pending` : 'IRA Active'})`, icon: ShieldCheck },
-          { id: 'departments', label: `Departments & Clinics (${departments.length})`, icon: Building2 },
-          { id: 'equipment', label: 'Medical Equipment & Assets', icon: Cpu },
-          { id: 'announcements', label: 'Patient Alerts & Broadcasts', icon: Megaphone },
-          { id: 'slots', label: 'Clinic Appointment Shifts & Slots', icon: Clock },
-          { id: 'beds', label: 'Hospital Beds & Wards Capacity', icon: Bed },
-          { id: 'services', label: 'Clinical Services & Tariffs Catalogue', icon: Stethoscope },
-          { id: 'pricing', label: 'Hospital Pricing & Tariff (KES)', icon: DollarSign },
-          { id: 'socials', label: 'Hospital Socials & Contact Channels', icon: Share2 },
-          { id: 'analytics', label: 'Executive Analytics & KPIs', icon: BarChart3 },
-          { id: 'staff', label: `Staff & Role Access (${staffUsers.length})`, icon: Users },
-          { id: 'patients', label: `Patient Master Index (${patients.length})`, icon: UserCheck },
-          { id: 'audit_logs', label: `Security & Audit Logs (${auditLogs.length})`, icon: ShieldCheck }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
+      {/* Sub-header Bar (when on any management page) */}
+      {activeTab !== 'dashboard' && (
+        <div className="bg-white/80 backdrop-blur-md border-b border-slate-200/70 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`py-2.5 px-4 rounded-2xl flex items-center space-x-2 whitespace-nowrap transition-all cursor-pointer ${
-                isActive 
-                  ? 'bg-slate-900/90 text-white font-bold shadow-md backdrop-blur-md border border-white/20' 
-                  : 'bg-white/50 hover:bg-white/80 text-slate-700 border border-white/60 backdrop-blur-md shadow-xs'
-              }`}
+              onClick={() => setActiveTab('dashboard')}
+              className="flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-cyan-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs transition-colors cursor-pointer"
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
             </button>
-          );
-        })}
-      </div>
+            <span className="text-slate-400 text-xs">/</span>
+            <span className="text-xs font-bold text-slate-900">{getTabTitle(activeTab)}</span>
+          </div>
+
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="text-xs font-semibold text-cyan-700 hover:text-cyan-800 flex items-center space-x-1 cursor-pointer"
+          >
+            <Menu className="w-3.5 h-3.5" />
+            <span>All Sections</span>
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-5">
+        
+        {/* Toast notifications */}
+        {paymentSuccessToast && (
+          <div className="bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+            <div className="flex items-center space-x-2.5 text-xs font-semibold">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{paymentSuccessToast}</span>
+            </div>
+            <button onClick={() => setPaymentSuccessToast('')} className="p-1 hover:bg-white/20 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {pricingToast && (
+          <div className="bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+            <div className="flex items-center space-x-2.5 text-xs font-semibold">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{pricingToast}</span>
+            </div>
+            <button onClick={() => setPricingToast('')} className="p-1 hover:bg-white/20 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {socialToast && (
+          <div className="bg-teal-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+            <div className="flex items-center space-x-2.5 text-xs font-semibold">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{socialToast}</span>
+            </div>
+            <button onClick={() => setSocialToast('')} className="p-1 hover:bg-white/20 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {insuranceToast && (
+          <div className="bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+            <div className="flex items-center space-x-2.5 text-xs font-semibold">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{insuranceToast}</span>
+            </div>
+            <button onClick={() => setInsuranceToast('')} className="p-1 hover:bg-white/20 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ================= TAB 0: DASHBOARD (MAIN OVERVIEW) ================= */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
+            
+            {/* Greeting Area with Soft Light Blue Gradient & Subtle ECG Watermark */}
+            <div className="relative rounded-3xl bg-gradient-to-b from-[#e3f4fd]/80 via-[#f0f9fe]/50 to-transparent p-4 sm:p-6 overflow-hidden border border-sky-100/60 shadow-2xs">
+              {/* Subtle SVG Pulse Watermark in background */}
+              <svg 
+                className="absolute right-0 top-0 w-64 h-32 text-cyan-300/30 pointer-events-none -mr-8 -mt-4"
+                viewBox="0 0 200 80" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path 
+                  d="M0 40 H60 L70 20 L80 60 L90 30 L100 45 L110 40 H200" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                />
+              </svg>
+
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-slate-500">Good Morning,</p>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                  {currentUser?.name || 'John Kamau'}
+                </h2>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                  Hospital Administrator
+                </p>
+              </div>
+
+              {/* Compact Hospital Status Card */}
+              <div 
+                onClick={() => setActiveTab('departments')}
+                className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-xs p-3.5 flex items-center justify-between hover:shadow-sm transition-all cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#008ba3] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">
+                      Terralink Health Hospital
+                    </h3>
+                    <div className="flex items-center space-x-1.5 mt-0.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <span className="text-xs text-slate-600 font-medium">Online</span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+              </div>
+            </div>
+
+            {/* Section: Key Overview */}
+            <div className="px-1 sm:px-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <BarChart2 className="w-4 h-4 text-cyan-600" />
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">Key Overview</h3>
+                </div>
+                <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Live</span>
+                </div>
+              </div>
+
+              {/* 4 Overview KPI Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                {/* Card 1: Total Patients */}
+                <div 
+                  onClick={() => setActiveTab('patients')}
+                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2.5">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Total Patients</p>
+                  <div className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                    {(analytics?.totalPatients || patients.length || 12482).toLocaleString()}
+                  </div>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +12%</span>
+                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                  </div>
+                </div>
+
+                {/* Card 2: Occupied Beds */}
+                <div 
+                  onClick={() => setActiveTab('beds')}
+                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
+                    <Bed className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Occupied Beds</p>
+                  <div className="flex items-baseline space-x-1 mt-0.5">
+                    <span className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">86</span>
+                    <span className="text-xs text-slate-500 font-medium">(72 %)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div className="bg-sky-500 h-full rounded-full w-[72%]" />
+                  </div>
+                </div>
+
+                {/* Card 3: Total Billings */}
+                <div 
+                  onClick={() => setActiveTab('billings')}
+                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2.5">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Total Billings</p>
+                  <div className="text-sm sm:text-lg font-extrabold text-slate-900 tracking-tight mt-0.5 truncate">
+                    KES {totalInvoicedKES > 0 ? totalInvoicedKES.toLocaleString() : '2,840,560'}
+                  </div>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +18%</span>
+                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                  </div>
+                </div>
+
+                {/* Card 4: Insurance Approvals */}
+                <div 
+                  onClick={() => setActiveTab('insurance')}
+                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Insurance Approvals</p>
+                  <div className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                    342
+                  </div>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +25%</span>
+                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Quick Actions */}
+            <div className="px-1 sm:px-2 space-y-3">
+              <div className="flex items-center space-x-1.5">
+                <Zap className="w-4 h-4 text-cyan-600" />
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base">Quick Actions</h3>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                {/* Action 1: Create Billing Invoice */}
+                <button
+                  onClick={handleOpenCreateInvoice}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">Create Billing Invoice</span>
+                </button>
+
+                {/* Action 2: Provision Staff */}
+                <button
+                  onClick={() => setShowAddStaffModal(true)}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">Provision Staff</span>
+                </button>
+
+                {/* Action 3: Register Patient */}
+                <button
+                  onClick={() => setActiveTab('patients')}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">Register Patient</span>
+                </button>
+
+                {/* Action 4: View Appointments */}
+                <button
+                  onClick={() => setActiveTab('slots')}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">View Appointments</span>
+                </button>
+
+                {/* Action 5: Manage Beds & Wards */}
+                <button
+                  onClick={() => setActiveTab('beds')}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <Bed className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">Manage Beds & Wards</span>
+                </button>
+
+                {/* Action 6: Clinical Pricing */}
+                <button
+                  onClick={() => setActiveTab('pricing')}
+                  className="bg-white rounded-2xl border border-slate-100 shadow-2xs p-3.5 sm:p-4 flex flex-col items-start hover:shadow-xs transition-all text-left group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                    <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">Clinical Pricing</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section: Recent Activity */}
+            <div className="px-1 sm:px-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <Clock className="w-4 h-4 text-cyan-600" />
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">Recent Activity</h3>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('audit_logs')}
+                  className="text-sky-600 hover:text-sky-700 text-xs font-semibold cursor-pointer"
+                >
+                  View All
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-xs divide-y divide-slate-100 overflow-hidden">
+                <div className="p-3.5 flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">New patient registered</p>
+                    <p className="text-[11px] text-slate-500">Patient ID: PT-2026-4587</p>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">10:42 AM</span>
+                </div>
+
+                <div className="p-3.5 flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Receipt className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">Invoice created</p>
+                    <p className="text-[11px] text-slate-500">KES 12,500 - OPD Services</p>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">09:17 AM</span>
+                </div>
+
+                <div className="p-3.5 flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                    <Stethoscope className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">Staff provisioned</p>
+                    <p className="text-[11px] text-slate-500">Dr. Amina Njoroge - Doctor</p>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">08:55 AM</span>
+                </div>
+
+                <div className="p-3.5 flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <Bed className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate">Bed occupancy updated</p>
+                    <p className="text-[11px] text-slate-500">Ward B - Bed 12</p>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-medium">08:20 AM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Banner: Better Care. Smarter Management. */}
+            <div className="rounded-2xl bg-gradient-to-r from-teal-50 to-sky-50 border border-teal-100/90 p-3.5 flex items-center justify-between text-teal-900 relative overflow-hidden shadow-2xs">
+              <div className="flex items-center space-x-3 z-10">
+                <div className="w-7 h-7 rounded-full bg-[#008ba3] text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-teal-950">Better Care. Smarter Management.</span>
+              </div>
+              {/* Subtle ECG pulse wave */}
+              <svg 
+                className="absolute right-0 top-0 h-full w-40 text-teal-200/50 pointer-events-none" 
+                viewBox="0 0 100 40" 
+                fill="none" 
+              >
+                <path d="M0 20 H30 L35 10 L40 30 L45 15 L50 25 L55 20 H100" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+        )}
 
       {/* ================= TAB 1: BILLING & INVOICE MANAGEMENT ================= */}
       {activeTab === 'billings' && (
@@ -2580,6 +3306,60 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </div>
       )}
+
+      </div> {/* End of main content area */}
+
+      {/* ================= FIXED MOBILE BOTTOM NAVIGATION ================= */}
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 z-40 px-6 py-2 flex items-center justify-around shadow-lg">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex flex-col items-center space-y-1 transition-colors cursor-pointer ${
+            activeTab === 'dashboard' ? 'text-[#008ba3] font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Activity className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Dashboard</span>
+          {activeTab === 'dashboard' && <span className="w-4 h-0.5 bg-[#008ba3] rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('announcements')}
+          className={`flex flex-col items-center space-y-1 relative transition-colors cursor-pointer ${
+            activeTab === 'announcements' ? 'text-[#008ba3] font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <div className="relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+              3
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight">Alerts</span>
+          {activeTab === 'announcements' && <span className="w-4 h-0.5 bg-[#008ba3] rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`flex flex-col items-center space-y-1 transition-colors cursor-pointer ${
+            activeTab === 'analytics' ? 'text-[#008ba3] font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <BarChart2 className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Reports</span>
+          {activeTab === 'analytics' && <span className="w-4 h-0.5 bg-[#008ba3] rounded-full" />}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('staff')}
+          className={`flex flex-col items-center space-y-1 transition-colors cursor-pointer ${
+            activeTab === 'staff' ? 'text-[#008ba3] font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <UserIcon className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Profile</span>
+          {activeTab === 'staff' && <span className="w-4 h-0.5 bg-[#008ba3] rounded-full" />}
+        </button>
+      </nav>
 
     </div>
   );
