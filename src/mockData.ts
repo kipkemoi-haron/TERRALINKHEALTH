@@ -486,7 +486,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'usr-admin-1',
-    name: 'Kipkemoi Haron',
+    name: 'Haron Bett',
     email: 'kipkemoiharon57@gmail.com',
     phone: '+254712345678',
     role: 'admin',
@@ -497,7 +497,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'usr-admin-2',
-    name: 'Kipkemoi Haron',
+    name: 'Haron Bett',
     email: 'kipkemoiharon4@gmail.com',
     phone: '+254722998877',
     role: 'admin',

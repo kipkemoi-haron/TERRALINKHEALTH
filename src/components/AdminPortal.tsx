@@ -993,7 +993,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   {currentUser?.name?.charAt(0) || 'H'}
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-xs leading-tight">{currentUser?.name || 'John Kamau'}</h4>
+                  <h4 className="font-bold text-white text-xs leading-tight">{currentUser?.name || 'Haron Bett'}</h4>
                   <p className="text-[10px] text-cyan-300/70 font-medium">Hospital Administrator</p>
                 </div>
               </div>
@@ -1033,25 +1033,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <span>Admin Portal</span>
             </span>
           </div>
-        </div>
-
-        {/* Right: Profile Avatar & Logout */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <div 
-            onClick={() => setActiveTab('staff')}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0f172a] text-white font-bold flex items-center justify-center text-xs sm:text-sm shadow-xs cursor-pointer select-none"
-            title={`Logged in as ${currentUser?.name || 'Administrator'}`}
-          >
-            {currentUser?.name?.charAt(0) || 'H'}
-          </div>
-
-          <button
-            onClick={() => onLogout?.()}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
-            title="Logout of Admin Portal"
-          >
-            <LogOut className="w-4 h-4 stroke-[2.2]" />
-          </button>
         </div>
       </header>
 
@@ -1155,35 +1136,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </svg>
 
               <div>
-                <p className="text-xs sm:text-sm font-medium text-slate-500">Good Morning,</p>
+                <p className="text-xs sm:text-sm font-medium text-slate-500">Welcome back,</p>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
-                  {currentUser?.name || 'John Kamau'}
+                  Haron Bett
                 </h2>
                 <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
                   Hospital Administrator
                 </p>
-              </div>
-
-              {/* Compact Hospital Status Card */}
-              <div 
-                onClick={() => setActiveTab('departments')}
-                className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-xs p-3.5 flex items-center justify-between hover:shadow-sm transition-all cursor-pointer"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#008ba3] text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-tight">
-                      Terralink Health Hospital
-                    </h3>
-                    <div className="flex items-center space-x-1.5 mt-0.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-slate-600 font-medium">Online</span>
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-400" />
               </div>
             </div>
 
@@ -1412,24 +1371,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <span className="text-[11px] text-slate-400 font-medium">08:20 AM</span>
                 </div>
               </div>
-            </div>
-
-            {/* Bottom Banner: Better Care. Smarter Management. */}
-            <div className="rounded-2xl bg-gradient-to-r from-teal-50 to-sky-50 border border-teal-100/90 p-3.5 flex items-center justify-between text-teal-900 relative overflow-hidden shadow-2xs">
-              <div className="flex items-center space-x-3 z-10">
-                <div className="w-7 h-7 rounded-full bg-[#008ba3] text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Plus className="w-4 h-4 stroke-[3]" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-teal-950">Better Care. Smarter Management.</span>
-              </div>
-              {/* Subtle ECG pulse wave */}
-              <svg 
-                className="absolute right-0 top-0 h-full w-40 text-teal-200/50 pointer-events-none" 
-                viewBox="0 0 100 40" 
-                fill="none" 
-              >
-                <path d="M0 20 H30 L35 10 L40 30 L45 15 L50 25 L55 20 H100" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
             </div>
           </div>
         )}
