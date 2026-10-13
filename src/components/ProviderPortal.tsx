@@ -196,14 +196,14 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans">
-      {/* Top Bar matching screenshots */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-200/80 px-4 h-14 flex items-center justify-between shadow-xs">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#221815] flex flex-col font-sans">
+      {/* Top Bar matching uniform theme */}
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EAE5DC] px-4 h-14 flex items-center justify-between shadow-2xs">
         {/* Hamburger Menu Trigger */}
         <button
           type="button"
           onClick={() => setIsDrawerOpen(true)}
-          className="p-2 -ml-2 text-[#023545] hover:text-[#0b4c5e] rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+          className="p-2 -ml-2 text-[#0A4D8C] hover:text-[#C8232C] rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
           aria-label="Open Navigation Menu"
           id="btn-open-staff-menu"
         >
@@ -211,7 +211,7 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
         </button>
 
         {/* Center Title */}
-        <span className="text-sm sm:text-base font-semibold text-slate-900">
+        <span className="text-sm sm:text-base font-bold text-[#221815]">
           Healthcare Provider
         </span>
 
@@ -219,7 +219,7 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
         <button
           type="button"
           onClick={() => setIsAvatarModalOpen(true)}
-          className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center border border-slate-200 hover:ring-2 hover:ring-[#023545]/30 transition-all cursor-pointer overflow-hidden shrink-0"
+          className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#0A4D8C] font-bold text-xs flex items-center justify-center border border-[#EAE5DC] hover:ring-2 hover:ring-[#C8232C]/30 transition-all cursor-pointer overflow-hidden shrink-0"
           title="Profile & Settings"
         >
           {localAvatar || currentUser.avatar ? (

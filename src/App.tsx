@@ -408,21 +408,21 @@ export function App() {
       
       {/* Soft Frosted Ambient Light Blobs in Background */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-sky-200/50 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-20 w-80 h-80 bg-teal-200/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-1/4 w-96 h-96 bg-blue-100/60 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-rose-100/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-20 w-80 h-80 bg-stone-200/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 w-96 h-96 bg-rose-50/50 rounded-full blur-3xl" />
       </div>
 
       {/* Top Emergency & Hospital Indicator Strip with Glass Effect */}
       {activePortal !== 'home' && activePortal !== 'patient' && activePortal !== 'provider' && activePortal !== 'admin' && (
-        <div className="relative z-10 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
+        <div className="relative z-10 bg-[#221815] backdrop-blur-md text-stone-300 text-[10px] sm:text-xs px-3 sm:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 border-b border-white/10 shadow-xs">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <span className="flex items-center space-x-1.5 text-teal-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-sm shadow-teal-400" />
+            <span className="flex items-center space-x-1.5 text-rose-300 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#C8232C] animate-pulse shadow-sm shadow-[#C8232C]" />
               <span>Nairobi County Digital Hospital Network</span>
             </span>
-            <span className="hidden md:inline text-slate-600">|</span>
-            <span className="hidden md:inline text-slate-400">
+            <span className="hidden md:inline text-stone-600">|</span>
+            <span className="hidden md:inline text-stone-400">
               Kenya Data Protection Act (KDPA 2019) • KMPDC Certified
             </span>
           </div>
@@ -438,7 +438,7 @@ export function App() {
 
       {/* Main Hospital Navigation Header */}
       {activePortal !== 'home' && activePortal !== 'patient' && activePortal !== 'provider' && activePortal !== 'admin' && (
-        <header className="relative z-40 bg-white/40 backdrop-blur-xl border-b border-white/60 shadow-sm shadow-slate-200/50 sticky top-0">
+        <header className="relative z-40 bg-white border-b border-[#EAE5DC] shadow-xs sticky top-0">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2">
             
             {/* Logo & Platform Name */}
@@ -448,23 +448,21 @@ export function App() {
                 window.history.pushState(null, '', '/');
               }
             }}>
-              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-lg shadow-teal-500/30 border border-teal-400/40 group-hover:scale-105 transition-all">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white rounded-full flex items-center justify-center">
-                  <div className="w-1 h-3 sm:h-3.5 bg-white rounded-full"></div>
-                </div>
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#C8232C] text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shadow-rose-900/20 group-hover:scale-105 transition-all">
+                <Activity className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.4]" />
               </div>
               <div>
                 <div className="flex items-center space-x-1.5 sm:space-x-2">
-                  <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900">TERRA<span className="text-teal-600">LINK</span>HEALTH</span>
-                  <span className="px-1.5 py-0.5 bg-teal-50 text-teal-700 text-[9px] sm:text-[10px] font-bold rounded-full border border-teal-200">KENYA</span>
+                  <span className="text-base sm:text-xl font-bold tracking-tight text-[#221815]">TERRA<span className="text-[#C8232C]">LINK</span>HEALTH</span>
+                  <span className="px-1.5 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[9px] sm:text-[10px] font-bold rounded-full border border-rose-200">KENYA</span>
                 </div>
-                <p className="hidden xs:block sm:block text-[10px] sm:text-[11px] text-slate-500 font-medium truncate max-w-[150px] sm:max-w-none">TERRALINKHEALTH Hospital Nairobi</p>
+                <p className="hidden xs:block sm:block text-[10px] sm:text-[11px] text-stone-500 font-medium truncate max-w-[150px] sm:max-w-none">TERRALINKHEALTH Hospital Nairobi</p>
               </div>
             </div>
 
             {/* Portals Switcher / Navigation */}
             {currentUser && (
-              <nav className="hidden md:flex items-center bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/80 shadow-xs gap-1">
+              <nav className="hidden md:flex items-center bg-[#FAF8F5] p-1.5 rounded-2xl border border-[#EAE5DC] shadow-xs gap-1">
                 <button
                   onClick={() => {
                     setActivePortal('home');
@@ -474,8 +472,8 @@ export function App() {
                   }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                     activePortal === 'home' 
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      ? 'bg-[#C8232C] text-white shadow-md shadow-rose-900/20' 
+                      : 'text-stone-700 hover:text-[#221815] hover:bg-white'
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5" />
@@ -492,11 +490,11 @@ export function App() {
                     }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                       activePortal === 'patient' 
-                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        ? 'bg-[#C8232C] text-white shadow-md shadow-rose-900/20' 
+                        : 'text-stone-700 hover:text-[#221815] hover:bg-white'
                     }`}
                   >
-                    <Heart className="w-3.5 h-3.5 text-rose-400" />
+                    <Heart className="w-3.5 h-3.5 text-rose-300" />
                     <span>My Patient Portal</span>
                   </button>
                 )}
@@ -511,8 +509,8 @@ export function App() {
                     }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                       activePortal === 'provider' 
-                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/25' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        ? 'bg-[#0A4D8C] text-white shadow-md shadow-blue-900/20' 
+                        : 'text-stone-700 hover:text-[#221815] hover:bg-white'
                     }`}
                   >
                     <Stethoscope className="w-3.5 h-3.5" />
@@ -527,11 +525,11 @@ export function App() {
                     }}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
                       activePortal === 'admin' 
-                        ? 'bg-slate-900 text-emerald-400 shadow-md' 
-                        : 'text-emerald-700 hover:bg-emerald-50'
+                        ? 'bg-[#221815] text-white shadow-md' 
+                        : 'text-stone-700 hover:text-[#221815] hover:bg-white'
                     }`}
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Admin</span>
                   </button>
                 )}

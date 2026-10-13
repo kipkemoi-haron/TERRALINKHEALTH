@@ -14,7 +14,8 @@ import {
   Home, 
   UserCircle,
   ChevronDown,
-  Camera
+  Camera,
+  X
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -86,42 +87,41 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
         aria-hidden="true"
       />
 
-      {/* Drawer Container - Deep Oceanic Teal matching screenshot exactly */}
+      {/* Drawer Container - Uniform Warm Theme */}
       <aside 
-        className="relative w-[72%] sm:w-[285px] max-w-[305px] h-full bg-[#023545] text-white flex flex-col shadow-2xl z-10 select-none animate-in slide-in-from-left duration-200 ease-out"
+        className="relative w-[75%] sm:w-[285px] max-w-[305px] h-full bg-[#FAF8F5] text-[#221815] border-r border-[#EAE5DC] flex flex-col shadow-2xl z-10 select-none animate-in slide-in-from-left duration-200 ease-out"
         id="staff-portal-drawer"
       >
-        {/* Drawer Header - Matching reference with green icon, title & hollow ring toggle */}
-        <div className="pt-5 px-4 pb-2 flex items-center justify-between">
+        {/* Drawer Header - Matching uniform branding */}
+        <div className="pt-4 px-4 pb-3 flex items-center justify-between border-b border-[#EAE5DC] bg-[#FAF8F5]">
           <div className="flex items-center space-x-3 min-w-0">
-            {/* Green rounded badge with heart pulse */}
-            <div className="w-10 h-10 rounded-xl bg-[#13b886] flex items-center justify-center text-white shrink-0 shadow-xs">
-              <Activity className="w-5 h-5 text-white stroke-[2.5]" />
+            {/* Crimson Red rounded badge with Activity pulse */}
+            <div className="w-10 h-10 rounded-xl bg-[#C8232C] flex items-center justify-center text-white shrink-0 shadow-xs">
+              <Activity className="w-5 h-5 text-white stroke-[2.4]" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-white text-[15px] sm:text-[16px] leading-tight tracking-tight truncate">
+              <h2 className="font-extrabold text-[#221815] text-[15px] sm:text-[16px] leading-tight tracking-tight truncate">
                 TERRALINK Health
               </h2>
-              <p className="text-[#82b8c7] text-xs font-normal leading-tight mt-0.5 truncate">
+              <p className="text-[#0A4D8C] text-xs font-bold leading-tight mt-0.5 truncate">
                 Healthcare Provider
               </p>
             </div>
           </div>
 
-          {/* Hollow circular ring toggle from reference screenshot */}
           <button
             type="button"
             onClick={onClose}
-            className="w-6 h-6 rounded-full border-[2px] border-[#6fa3b2] hover:border-white transition-colors cursor-pointer flex items-center justify-center shrink-0 ml-1.5 focus:outline-hidden"
+            className="w-7 h-7 rounded-full bg-stone-200/70 hover:bg-stone-300 text-stone-600 hover:text-stone-900 transition-colors cursor-pointer flex items-center justify-center shrink-0 ml-1.5 focus:outline-hidden"
             aria-label="Close navigation"
             title="Close menu"
           >
-            <span className="sr-only">Close navigation</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Navigation List - Seamless background with exact font and spacing */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-none">
+        {/* Navigation List */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1 scrollbar-none">
           {primaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -133,27 +133,27 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                   onSelectTab(item.id);
                   onClose();
                 }}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-[15px] font-medium transition-all cursor-pointer text-left ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer text-left ${
                   isActive
-                    ? 'bg-[#0b4c5e] text-white shadow-xs font-semibold'
-                    : 'text-white/95 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] shadow-xs font-bold border border-[#EAE5DC]'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
-                <div className="flex items-center space-x-3.5 min-w-0">
-                  <Icon className="w-5 h-5 text-white shrink-0" />
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#C8232C]' : 'text-stone-600'}`} />
                   <span className="truncate">{item.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-4 h-4 text-[#82b8c7] shrink-0 ml-1" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C] shrink-0 ml-1" />}
               </button>
             );
           })}
 
-          {/* Collapsible Secondary Tools to keep visual focus on reference primary items */}
+          {/* Collapsible Secondary Tools */}
           <div className="pt-2">
             <button
               type="button"
               onClick={() => setShowMoreTools(!showMoreTools)}
-              className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium text-[#82b8c7] hover:text-white transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold text-stone-500 hover:text-[#221815] transition-colors cursor-pointer"
             >
               <span>More Hospital Tools</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMoreTools ? 'rotate-180' : ''}`} />
@@ -174,21 +174,21 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
                         isActive
-                          ? 'bg-[#0b4c5e] text-white font-semibold'
-                          : 'text-white/80 hover:bg-white/5 hover:text-white'
+                          ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC]'
+                          : 'text-[#221815] hover:bg-stone-200/50'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <Icon className="w-4 h-4 text-[#82b8c7] shrink-0" />
+                      <div className="flex items-center space-x-2.5">
+                        <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#C8232C]' : 'text-stone-600'}`} />
                         <span>{item.label}</span>
                       </div>
-                      {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#82b8c7]" />}
+                      {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C]" />}
                     </button>
                   );
                 })}
 
                 <div className="pt-2 pb-1">
-                  <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#82b8c7]/60">
+                  <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-stone-400">
                     Portals
                   </div>
                   <button
@@ -197,9 +197,9 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                       onNavigatePortal?.('home');
                       onClose();
                     }}
-                    className="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-xs text-[#82b8c7] hover:text-white hover:bg-white/5 cursor-pointer"
+                    className="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-xs text-stone-600 hover:text-[#221815] hover:bg-stone-200/50 cursor-pointer"
                   >
-                    <Home className="w-3.5 h-3.5" />
+                    <Home className="w-3.5 h-3.5 text-stone-500" />
                     <span>Public Hospital Home</span>
                   </button>
                   <button
@@ -208,9 +208,9 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                       onNavigatePortal?.('patient');
                       onClose();
                     }}
-                    className="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-xs text-[#82b8c7] hover:text-white hover:bg-white/5 cursor-pointer"
+                    className="w-full flex items-center space-x-2.5 px-3 py-1.5 rounded-lg text-xs text-stone-600 hover:text-[#221815] hover:bg-stone-200/50 cursor-pointer"
                   >
-                    <UserCircle className="w-3.5 h-3.5" />
+                    <UserCircle className="w-3.5 h-3.5 text-stone-500" />
                     <span>Patient Portal</span>
                   </button>
                 </div>
@@ -219,20 +219,20 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
           </div>
         </nav>
 
-        {/* Drawer Footer User Profile - Matching bottom left of screenshot */}
-        <div className="p-3.5 bg-[#023545] border-t border-[#0b4c5e]/40 relative">
+        {/* Drawer Footer User Profile */}
+        <div className="p-3.5 bg-[#F5F1E8] border-t border-[#EAE5DC] relative">
           {/* Popup profile options */}
           {showProfileMenu && (
-            <div className="absolute bottom-16 left-3 right-3 bg-[#032835] border border-[#0b4c5e] rounded-xl p-2 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150 z-20">
+            <div className="absolute bottom-16 left-3 right-3 bg-white border border-[#EAE5DC] rounded-2xl p-2 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150 z-20">
               <button
                 type="button"
                 onClick={() => {
                   setShowProfileMenu(false);
                   onOpenAvatarModal?.();
                 }}
-                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-white hover:bg-[#0b4c5e] transition-colors cursor-pointer"
+                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#221815] hover:bg-stone-100 transition-colors cursor-pointer"
               >
-                <Camera className="w-3.5 h-3.5 text-[#82b8c7]" />
+                <Camera className="w-3.5 h-3.5 text-stone-500" />
                 <span>Change Profile Photo</span>
               </button>
               <button
@@ -241,9 +241,9 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                   setShowProfileMenu(false);
                   onNavigatePortal?.('home');
                 }}
-                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-white hover:bg-[#0b4c5e] transition-colors cursor-pointer"
+                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#221815] hover:bg-stone-100 transition-colors cursor-pointer"
               >
-                <Home className="w-3.5 h-3.5 text-[#82b8c7]" />
+                <Home className="w-3.5 h-3.5 text-stone-500" />
                 <span>Hospital Homepage</span>
               </button>
               <button
@@ -253,7 +253,7 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
                   onLogout?.();
                   onClose();
                 }}
-                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-rose-300 hover:bg-rose-950/40 transition-colors cursor-pointer"
+                className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-[#C8232C] hover:bg-rose-50 transition-colors cursor-pointer font-bold"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
@@ -263,35 +263,33 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
 
           <div 
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center space-x-3 cursor-pointer p-1 rounded-xl hover:bg-white/5 transition-colors"
+            className="flex items-center space-x-3 cursor-pointer p-1 rounded-xl hover:bg-black/5 transition-colors"
             title="Profile & actions"
           >
-            {/* Avatar circle matching screenshot MB initials */}
             {currentUser.avatar ? (
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
-                className="w-9 h-9 rounded-full object-cover border border-[#0b4c5e] shrink-0"
+                className="w-9 h-9 rounded-full object-cover border border-[#EAE5DC] shrink-0"
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-[#084050] text-white flex items-center justify-center font-bold text-xs shrink-0 border border-[#0b4c5e]">
+              <div className="w-9 h-9 rounded-full bg-[#C8232C] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                 {initials}
               </div>
             )}
             
-            {/* Name and role matching exact text in screenshot */}
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-white truncate leading-tight">
+              <p className="text-[13px] font-bold text-[#221815] truncate leading-tight">
                 {currentUser.name || 'Marko Bare'}
               </p>
-              <p className="text-[12px] text-[#79abb8] truncate leading-tight mt-0.5">
+              <p className="text-[11px] text-[#0A4D8C] font-semibold truncate leading-tight mt-0.5">
                 {currentUser.role === 'admin' 
-                  ? 'Administrator · Adm...' 
+                  ? 'Administrator' 
                   : `${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} · Staff`}
               </p>
             </div>
 
-            <ChevronDown className={`w-4 h-4 text-[#79abb8] transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
           </div>
         </div>
       </aside>

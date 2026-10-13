@@ -640,7 +640,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalInvoicedKES = invoices.reduce((acc, curr) => acc + (curr.totalAmountKES || 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50/70 font-sans text-slate-800 flex flex-col pb-24 selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-[#FAF8F5] font-sans text-[#221815] flex flex-col pb-24 selection:bg-[#FDF1F1] selection:text-[#C8232C]">
       
       {/* ================= SLIDE-OUT HAMBURGER DRAWER ================= */}
       {isDrawerOpen && (
@@ -652,24 +652,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           />
 
           {/* Drawer Panel */}
-          <div className="relative w-80 max-w-[85vw] bg-[#071d2b] text-white h-full flex flex-col shadow-2xl z-10 overflow-hidden animate-in slide-in-from-left duration-300">
+          <div className="relative w-80 max-w-[85vw] bg-[#FAF8F5] text-[#221815] h-full flex flex-col shadow-2xl z-10 overflow-hidden border-r border-[#EAE5DC] animate-in slide-in-from-left duration-300">
             {/* Drawer Header */}
-            <div className="px-5 py-4 border-b border-cyan-950/60 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-[#EAE5DC] bg-[#FAF8F5] flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full bg-[#008ba3] text-white flex items-center justify-center font-bold shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-[#C8232C] text-white flex items-center justify-center font-bold shadow-xs">
                   <Activity className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black tracking-tight leading-tight">TERRALINKHEALTH</h2>
-                  <p className="text-[11px] text-cyan-400 font-medium">Hospital Admin Portal</p>
+                  <h2 className="text-base font-black tracking-tight leading-tight text-[#221815]">TERRALINK HEALTH</h2>
+                  <p className="text-[11px] text-[#C8232C] font-semibold">Hospital Admin Portal</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-stone-200/70 hover:bg-stone-300 text-stone-600 hover:text-stone-900 flex items-center justify-center transition-colors cursor-pointer"
                 title="Close Menu"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -680,45 +680,45 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('dashboard'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'dashboard'
-                    ? 'bg-[#008ba3] text-white font-bold shadow-sm'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Activity className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-white' : 'text-cyan-400'}`} />
+                  <Activity className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
                   <span className="text-xs">Dashboard</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-[#C8232C]' : 'text-stone-400'}`} />
               </button>
 
               {/* Manage Staff (Accordion) */}
               <div>
                 <button
                   onClick={() => toggleSubmenu('staff')}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[#221815] hover:bg-stone-200/50 transition-all cursor-pointer"
                 >
                   <div className="flex items-center space-x-3">
-                    <Users className="w-4 h-4 text-cyan-400" />
-                    <span>Manage Staff</span>
+                    <Users className="w-4 h-4 text-[#C8232C]" />
+                    <span className="font-medium">Manage Staff</span>
                   </div>
-                  {expandedMenus.staff ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                  {expandedMenus.staff ? <ChevronUp className="w-3.5 h-3.5 text-stone-400" /> : <ChevronDown className="w-3.5 h-3.5 text-stone-400" />}
                 </button>
                 {expandedMenus.staff && (
                   <div className="pl-9 pr-2 py-1 space-y-1">
                     <button
                       onClick={() => { setShowAddStaffModal(true); setIsDrawerOpen(false); }}
-                      className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 cursor-pointer text-xs"
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-stone-600 hover:text-[#221815] hover:bg-stone-200/50 cursor-pointer text-xs"
                     >
-                      <UserPlus className="w-3.5 h-3.5 text-cyan-400" />
+                      <UserPlus className="w-3.5 h-3.5 text-[#C8232C]" />
                       <span>Provision Staff</span>
                     </button>
                     <button
                       onClick={() => { setActiveTab('staff'); setIsDrawerOpen(false); }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
-                        activeTab === 'staff' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                        activeTab === 'staff' ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC]' : 'text-stone-600 hover:text-[#221815] hover:bg-stone-200/50'
                       }`}
                     >
-                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#C8232C]" />
                       <span>Staff & Role Access</span>
                     </button>
                   </div>
@@ -783,10 +783,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <button
                       onClick={() => { setActiveTab('billings'); setIsDrawerOpen(false); }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
-                        activeTab === 'billings' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                        activeTab === 'billings' ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC]' : 'text-stone-600 hover:text-[#221815] hover:bg-stone-200/50'
                       }`}
                     >
-                      <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                      <FileText className="w-3.5 h-3.5 text-[#C8232C]" />
                       <span>All Invoices & Settlements</span>
                     </button>
                   </div>
@@ -798,15 +798,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('insurance'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'insurance'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                  <span>Insurance & IRA Approvals</span>
+                  <ShieldCheck className={`w-4 h-4 ${activeTab === 'insurance' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Insurance & IRA Approvals</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Departments & Clinics */}
@@ -814,15 +814,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('departments'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'departments'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Building2 className="w-4 h-4 text-cyan-400" />
-                  <span>Departments & Clinics</span>
+                  <Building2 className={`w-4 h-4 ${activeTab === 'departments' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Departments & Clinics</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Medical Equipment & Assets */}
@@ -830,15 +830,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('equipment'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'equipment'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Cpu className="w-4 h-4 text-cyan-400" />
-                  <span>Medical Equipment & Assets</span>
+                  <Cpu className={`w-4 h-4 ${activeTab === 'equipment' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Medical Equipment & Assets</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Patient Alerts & Broadcasts */}
@@ -846,15 +846,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('announcements'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'announcements'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Megaphone className="w-4 h-4 text-cyan-400" />
-                  <span>Patient Alerts & Broadcasts</span>
+                  <Megaphone className={`w-4 h-4 ${activeTab === 'announcements' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Patient Alerts & Broadcasts</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Clinic Appointment Shifts & Slots */}
@@ -862,15 +862,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('slots'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'slots'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Clock className="w-4 h-4 text-cyan-400" />
-                  <span>Clinic Appointment Shifts & Slots</span>
+                  <Clock className={`w-4 h-4 ${activeTab === 'slots' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Clinic Appointment Shifts & Slots</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Hospital Beds & Wards Capacity */}
@@ -878,47 +878,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('beds'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'beds'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <Bed className="w-4 h-4 text-cyan-400" />
-                  <span>Hospital Beds & Wards Capacity</span>
+                  <Bed className={`w-4 h-4 ${activeTab === 'beds' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Hospital Beds & Wards Capacity</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Clinical Pricing (Accordion) */}
               <div>
                 <button
                   onClick={() => toggleSubmenu('pricing')}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[#221815] hover:bg-stone-200/50 transition-all cursor-pointer"
                 >
                   <div className="flex items-center space-x-3">
-                    <Tag className="w-4 h-4 text-cyan-400" />
-                    <span>Clinical Pricing</span>
+                    <Tag className="w-4 h-4 text-[#C8232C]" />
+                    <span className="font-medium">Clinical Pricing</span>
                   </div>
-                  {expandedMenus.pricing ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                  {expandedMenus.pricing ? <ChevronUp className="w-3.5 h-3.5 text-stone-400" /> : <ChevronDown className="w-3.5 h-3.5 text-stone-400" />}
                 </button>
                 {expandedMenus.pricing && (
                   <div className="pl-9 pr-2 py-1 space-y-1">
                     <button
                       onClick={() => { setActiveTab('services'); setIsDrawerOpen(false); }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
-                        activeTab === 'services' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                        activeTab === 'services' ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC]' : 'text-stone-600 hover:text-[#221815] hover:bg-stone-200/50'
                       }`}
                     >
-                      <ListTree className="w-3.5 h-3.5 text-cyan-400" />
+                      <ListTree className="w-3.5 h-3.5 text-[#C8232C]" />
                       <span>Clinical Services & Tariffs Catalogue</span>
                     </button>
                     <button
                       onClick={() => { setActiveTab('pricing'); setIsDrawerOpen(false); }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg cursor-pointer text-xs ${
-                        activeTab === 'pricing' ? 'bg-[#008ba3] text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                        activeTab === 'pricing' ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC]' : 'text-stone-600 hover:text-[#221815] hover:bg-stone-200/50'
                       }`}
                     >
-                      <Coins className="w-3.5 h-3.5 text-cyan-400" />
+                      <Coins className="w-3.5 h-3.5 text-[#C8232C]" />
                       <span>Hospital Pricing & Tariff</span>
                     </button>
                   </div>
@@ -930,15 +930,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('socials'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'socials'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <PhoneCall className="w-4 h-4 text-cyan-400" />
-                  <span>Hospital Contacts</span>
+                  <PhoneCall className={`w-4 h-4 ${activeTab === 'socials' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Hospital Contacts</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Executive Analytics & KPIs */}
@@ -946,15 +946,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('analytics'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'analytics'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <BarChart3 className="w-4 h-4 text-cyan-400" />
-                  <span>Executive Analytics & KPIs</span>
+                  <BarChart3 className={`w-4 h-4 ${activeTab === 'analytics' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Executive Analytics & KPIs</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Security & Audit Logs */}
@@ -962,15 +962,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={() => { setActiveTab('audit_logs'); setIsDrawerOpen(false); }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'audit_logs'
-                    ? 'bg-[#008ba3] text-white font-bold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                  <span>Security & Audit Logs</span>
+                  <ShieldCheck className={`w-4 h-4 ${activeTab === 'audit_logs' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span className="font-medium">Security & Audit Logs</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
 
               {/* Logout */}
@@ -979,27 +979,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   setIsDrawerOpen(false);
                   onLogout?.();
                 }}
-                className="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-rose-300 hover:text-rose-100 hover:bg-rose-500/10 transition-all cursor-pointer"
+                className="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-[#C8232C] hover:bg-rose-100 transition-all cursor-pointer"
               >
-                <LogOut className="w-4 h-4 text-rose-400" />
-                <span>Logout</span>
+                <LogOut className="w-4 h-4 text-[#C8232C]" />
+                <span className="font-medium">Logout</span>
               </button>
             </div>
 
             {/* Drawer Bottom Admin Profile */}
-            <div className="p-3.5 bg-[#051622] border-t border-cyan-950/80 flex items-center justify-between">
+            <div className="p-3.5 bg-[#F5F1E8] border-t border-[#EAE5DC] flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full bg-slate-900 border border-cyan-500/30 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                <div className="w-9 h-9 rounded-full bg-[#C8232C] text-white font-bold flex items-center justify-center text-sm shadow-xs">
                   {currentUser?.name?.charAt(0) || 'H'}
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-xs leading-tight">{currentUser?.name || 'Haron Bett'}</h4>
-                  <p className="text-[10px] text-cyan-300/70 font-medium">Hospital Administrator</p>
+                  <h4 className="font-bold text-[#221815] text-xs leading-tight">{currentUser?.name || 'Haron Bett'}</h4>
+                  <p className="text-[10px] text-stone-500 font-medium">Hospital Administrator</p>
                 </div>
               </div>
               <button 
                 onClick={() => { setActiveTab('staff'); setIsDrawerOpen(false); }}
-                className="p-1.5 text-cyan-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1.5 text-stone-600 hover:text-[#C8232C] rounded-lg hover:bg-white/50 transition-colors cursor-pointer"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
@@ -1010,12 +1010,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* ================= MODERN REDESIGNED HEADER ================= */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs">
+      <header className="bg-white border-b border-[#EAE5DC] sticky top-0 z-30 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between shadow-2xs">
         {/* Left: Hamburger & Brand */}
         <div className="flex items-center space-x-2.5">
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="w-9 h-9 rounded-full bg-[#008ba3] hover:bg-[#007b91] text-white flex items-center justify-center transition-transform active:scale-95 shadow-xs cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-[#C8232C] hover:bg-[#B81D24] text-white flex items-center justify-center transition-transform active:scale-95 shadow-xs cursor-pointer"
             title="Open Hospital Navigation Menu"
           >
             <Menu className="w-5 h-5 text-white" />
@@ -1024,12 +1024,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="flex items-center space-x-2">
             <span 
               onClick={() => setActiveTab('dashboard')} 
-              className="text-base sm:text-lg font-black text-slate-950 tracking-tight cursor-pointer select-none"
+              className="text-base sm:text-lg font-black text-[#221815] tracking-tight cursor-pointer select-none"
             >
-              TERRALINKHEALTH
+              TERRALINK HEALTH
             </span>
-            <span className="hidden sm:inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse" />
+            <span className="hidden sm:inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FDF1F1] text-[#C8232C] border border-rose-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C8232C] animate-pulse" />
               <span>Admin Portal</span>
             </span>
           </div>
@@ -1042,18 +1042,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className="flex items-center space-x-1.5 text-xs font-semibold text-slate-600 hover:text-cyan-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs transition-colors cursor-pointer"
+              className="flex items-center space-x-1.5 text-xs font-semibold text-stone-600 hover:text-[#C8232C] bg-white hover:bg-stone-50 border border-[#EAE5DC] px-2.5 py-1 rounded-xl shadow-2xs transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Dashboard</span>
             </button>
-            <span className="text-slate-400 text-xs">/</span>
-            <span className="text-xs font-bold text-slate-900">{getTabTitle(activeTab)}</span>
+            <span className="text-stone-400 text-xs">/</span>
+            <span className="text-xs font-bold text-[#221815]">{getTabTitle(activeTab)}</span>
           </div>
 
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="text-xs font-semibold text-cyan-700 hover:text-cyan-800 flex items-center space-x-1 cursor-pointer"
+            className="text-xs font-bold text-[#C8232C] hover:text-[#B81D24] flex items-center space-x-1 cursor-pointer"
           >
             <Menu className="w-3.5 h-3.5" />
             <span>All Sections</span>
@@ -1078,7 +1078,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         )}
 
         {pricingToast && (
-          <div className="bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+          <div className="bg-[#0A4D8C] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
             <div className="flex items-center space-x-2.5 text-xs font-semibold">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               <span>{pricingToast}</span>
@@ -1090,7 +1090,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         )}
 
         {socialToast && (
-          <div className="bg-teal-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+          <div className="bg-[#C8232C] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
             <div className="flex items-center space-x-2.5 text-xs font-semibold">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               <span>{socialToast}</span>
@@ -1117,11 +1117,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {activeTab === 'dashboard' && (
           <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
             
-            {/* Greeting Area with Soft Light Blue Gradient & Subtle ECG Watermark */}
-            <div className="relative rounded-3xl bg-gradient-to-b from-[#e3f4fd]/80 via-[#f0f9fe]/50 to-transparent p-4 sm:p-6 overflow-hidden border border-sky-100/60 shadow-2xs">
+            {/* Greeting Area with Soft Warm Light Red Gradient & Subtle ECG Watermark */}
+            <div className="relative rounded-3xl bg-gradient-to-b from-[#FDF1F1]/90 via-white to-white p-4 sm:p-6 overflow-hidden border border-[#EAE5DC] shadow-xs">
               {/* Subtle SVG Pulse Watermark in background */}
               <svg 
-                className="absolute right-0 top-0 w-64 h-32 text-cyan-300/30 pointer-events-none -mr-8 -mt-4"
+                className="absolute right-0 top-0 w-64 h-32 text-rose-200/50 pointer-events-none -mr-8 -mt-4"
                 viewBox="0 0 200 80" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
@@ -1136,12 +1136,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </svg>
 
               <div>
-                <p className="text-xs sm:text-sm font-medium text-slate-500">Welcome back,</p>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                <p className="text-xs sm:text-sm font-semibold text-stone-500">Welcome back,</p>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight mt-0.5">
                   Haron Bett
                 </h2>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                  Hospital Administrator
+                <p className="text-xs sm:text-sm font-semibold text-[#C8232C] mt-0.5">
+                  Hospital Administrator &bull; TERRALINK HEALTH
                 </p>
               </div>
             </div>
@@ -1150,10 +1150,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div className="px-1 sm:px-2 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1.5">
-                  <BarChart2 className="w-4 h-4 text-cyan-600" />
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">Key Overview</h3>
+                  <BarChart2 className="w-4 h-4 text-[#C8232C]" />
+                  <h3 className="font-bold text-[#221815] text-sm sm:text-base">Key Overview</h3>
                 </div>
-                <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100">
+                <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Live</span>
                 </div>
@@ -1164,72 +1164,72 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {/* Card 1: Total Patients */}
                 <div 
                   onClick={() => setActiveTab('patients')}
-                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl border border-[#EAE5DC] shadow-xs p-3.5 sm:p-4 hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center mb-2.5">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Total Patients</p>
-                  <div className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                  <p className="text-[11px] sm:text-xs text-stone-500 font-medium">Total Patients</p>
+                  <div className="text-lg sm:text-2xl font-extrabold text-[#221815] tracking-tight mt-0.5">
                     {(analytics?.totalPatients || patients.length || 12482).toLocaleString()}
                   </div>
                   <div className="flex items-center space-x-1 mt-1">
                     <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +12%</span>
-                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                    <span className="text-[10px] text-stone-400">vs. last 30 days</span>
                   </div>
                 </div>
 
                 {/* Card 2: Occupied Beds */}
                 <div 
                   onClick={() => setActiveTab('beds')}
-                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl border border-[#EAE5DC] shadow-xs p-3.5 sm:p-4 hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0A4D8C] flex items-center justify-center mb-2.5">
                     <Bed className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Occupied Beds</p>
+                  <p className="text-[11px] sm:text-xs text-stone-500 font-medium">Occupied Beds</p>
                   <div className="flex items-baseline space-x-1 mt-0.5">
-                    <span className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">86</span>
-                    <span className="text-xs text-slate-500 font-medium">(72 %)</span>
+                    <span className="text-lg sm:text-2xl font-extrabold text-[#221815] tracking-tight">86</span>
+                    <span className="text-xs text-stone-500 font-medium">(72 %)</span>
                   </div>
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div className="bg-sky-500 h-full rounded-full w-[72%]" />
+                  <div className="w-full bg-stone-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div className="bg-[#0A4D8C] h-full rounded-full w-[72%]" />
                   </div>
                 </div>
 
                 {/* Card 3: Total Billings */}
                 <div 
                   onClick={() => setActiveTab('billings')}
-                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl border border-[#EAE5DC] shadow-xs p-3.5 sm:p-4 hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center mb-2.5">
                     <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Total Billings</p>
-                  <div className="text-sm sm:text-lg font-extrabold text-slate-900 tracking-tight mt-0.5 truncate">
+                  <p className="text-[11px] sm:text-xs text-stone-500 font-medium">Total Billings</p>
+                  <div className="text-sm sm:text-lg font-extrabold text-[#221815] tracking-tight mt-0.5 truncate">
                     KES {totalInvoicedKES > 0 ? totalInvoicedKES.toLocaleString() : '2,840,560'}
                   </div>
                   <div className="flex items-center space-x-1 mt-1">
                     <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +18%</span>
-                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                    <span className="text-[10px] text-stone-400">vs. last 30 days</span>
                   </div>
                 </div>
 
                 {/* Card 4: Insurance Approvals */}
                 <div 
                   onClick={() => setActiveTab('insurance')}
-                  className="bg-white rounded-2xl border border-slate-100/90 shadow-2xs p-3.5 sm:p-4 hover:shadow-xs transition-shadow cursor-pointer"
+                  className="bg-white rounded-2xl border border-[#EAE5DC] shadow-xs p-3.5 sm:p-4 hover:shadow-md transition-all cursor-pointer"
                 >
                   <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
                     <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Insurance Approvals</p>
-                  <div className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
+                  <p className="text-[11px] sm:text-xs text-stone-500 font-medium">Insurance Approvals</p>
+                  <div className="text-lg sm:text-2xl font-extrabold text-[#221815] tracking-tight mt-0.5">
                     342
                   </div>
                   <div className="flex items-center space-x-1 mt-1">
                     <span className="text-emerald-600 font-bold text-[11px] sm:text-xs">↗ +25%</span>
-                    <span className="text-[10px] text-slate-400">vs. last 30 days</span>
+                    <span className="text-[10px] text-stone-400">vs. last 30 days</span>
                   </div>
                 </div>
               </div>
@@ -1238,8 +1238,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* Section: Quick Actions */}
             <div className="px-1 sm:px-2 space-y-3">
               <div className="flex items-center space-x-1.5">
-                <Zap className="w-4 h-4 text-cyan-600" />
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base">Quick Actions</h3>
+                <Zap className="w-4 h-4 text-[#C8232C]" />
+                <h3 className="font-bold text-[#221815] text-sm sm:text-base">Quick Actions</h3>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">

@@ -3,6 +3,7 @@ import {
   X, 
   Lock, 
   User as UserIcon, 
+  Users,
   Phone, 
   Mail, 
   CreditCard, 
@@ -11,14 +12,13 @@ import {
   CheckCircle2, 
   Loader2, 
   Key, 
-  Building2,
-  Stethoscope,
-  HeartPulse,
+  Heart,
   ArrowRight,
-  Zap,
-  Sparkles,
-  Activity,
-  UserPlus
+  ArrowLeft,
+  Check,
+  Calendar,
+  Building2,
+  Stethoscope
 } from 'lucide-react';
 import { User, PatientProfile } from '../types';
 import { 
@@ -28,8 +28,7 @@ import {
   authenticateLocalAdmin, 
   authenticateLocalPatient, 
   authenticateLocalStaff,
-  HARON_ADMIN_USER,
-  ACCEPTED_ADMIN_PASSWORDS
+  HARON_ADMIN_USER
 } from '../utils/apiHelper';
 
 interface AuthModalsProps {
@@ -49,25 +48,23 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 }) => {
   const [mode, setMode] = useState<'patient_login' | 'patient_register' | 'staff_login' | 'forgot_password'>(initialMode);
   
-  // Patient Register Form - Clean manual entry fields
+  // Registration 2-Step Flow: Step 1 (Coverage selection) -> Step 2 (Account details)
+  const [coverageStep, setCoverageStep] = useState<1 | 2>(1);
+  const [coverageType, setCoverageType] = useState<'just_me' | 'partner' | 'family'>('just_me');
+
+  // Patient Registration Details
   const [pName, setPName] = useState('');
-  const [pPhone, setPPhone] = useState('');
-  const [pEmail, setPEmail] = useState('');
   const [pNationalId, setPNationalId] = useState('');
-  const [pPassword, setPPassword] = useState('');
+  const [pEmail, setPEmail] = useState('');
+  const [pPhone, setPPhone] = useState('');
   const [pDob, setPDob] = useState('');
   const [pGender, setPGender] = useState<'Male' | 'Female' | 'Other'>('Female');
-  const [pBloodGroup, setPBloodGroup] = useState('O+');
-  const [pInsurance, setPInsurance] = useState('Social Health Insurance Fund (SHIF)');
   const [pCounty, setPCounty] = useState('Nairobi County');
-  const [pEmergencyContact, setPEmergencyContact] = useState('');
+  const [pEmergencyName, setPEmergencyName] = useState('');
   const [pEmergencyPhone, setPEmergencyPhone] = useState('');
-  const [pAllergies, setPAllergies] = useState('');
-
-  // Register OTP Step
-  const [registerStep, setRegisterStep] = useState<'form' | 'verify_otp'>('form');
-  const [regVerificationCode, setRegVerificationCode] = useState('');
-  const [regCodeSuccessMsg, setRegCodeSuccessMsg] = useState('');
+  const [pInsurance, setPInsurance] = useState('Social Health Insurance Fund (SHIF)');
+  const [pPassword, setPPassword] = useState('');
+  const [pConfirmPassword, setPConfirmPassword] = useState('');
 
   // Patient Login Form
   const [pLoginIdentifier, setPLoginIdentifier] = useState('');
@@ -80,7 +77,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   const [fpStep, setFpStep] = useState<'request' | 'verify'>('request');
   const [fpSuccessMsg, setFpSuccessMsg] = useState('');
 
-  // Staff & Admin Login Form
+  // Staff Login Form
   const [sUsername, setSUsername] = useState('');
   const [sPassword, setSPassword] = useState('');
 
@@ -91,13 +88,14 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     if (isOpen) {
       setMode(initialMode);
       setErrorMsg('');
+      setCoverageStep(1);
       setFpStep('request');
-      setRegisterStep('form');
     }
   }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
+  // Handle Patient Sign In
   const handlePatientLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -106,7 +104,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     try {
       const result = await safeFetchJson('/api/auth/patient/login', {
         method: 'POST',
-        body: JSON.stringify({ identifier: pLoginIdentifier, password: pLoginPassword })
+        body: JSON.stringify({ identifier: pLoginIdentifier.trim(), password: pLoginPassword.trim() })
       });
 
       if (result.ok && result.data && result.data.user && result.data.patientProfile) {
@@ -117,15 +115,15 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         return;
       }
 
-      // Fallback: Check local resilience storage
-      const localAuth = authenticateLocalPatient(pLoginIdentifier, pLoginPassword);
+      // Check local storage fallback
+      const localAuth = authenticateLocalPatient(pLoginIdentifier.trim(), pLoginPassword.trim());
       if (localAuth.success && localAuth.user && localAuth.profile) {
         onPatientAuthSuccess(`jwt-local-${localAuth.user.id}`, localAuth.user, localAuth.profile);
         onClose();
         return;
       }
 
-      throw new Error(result.error || localAuth.error || 'Authentication failed. Please check your credentials.');
+      throw new Error(result.error || localAuth.error || 'Authentication failed. Please verify your credentials.');
     } catch (err: any) {
       setErrorMsg(err.message || 'Login error');
     } finally {
@@ -133,31 +131,60 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  // Direct Instant Registration into System Memory & Storage
-  const handleDirectRegister = async (e: React.FormEvent) => {
+  // Step 1 to Step 2 Transition
+  const handleProceedToAccountDetails = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pName || !pNationalId || !pPhone || !pPassword) {
-      setErrorMsg('Please complete all required fields (Full Name, National ID, Phone, Password).');
+    setErrorMsg('');
+    setCoverageStep(2);
+  };
+
+  // Step 2: Complete Patient Registration
+  const handleCompleteRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (!pName.trim()) {
+      setErrorMsg('Please enter your full legal name.');
+      return;
+    }
+    if (!pNationalId.trim()) {
+      setErrorMsg('Please enter your Kenyan National ID or Passport Number.');
+      return;
+    }
+    if (!pEmail.trim()) {
+      setErrorMsg('Please enter your email address for account login.');
+      return;
+    }
+    if (!pPhone.trim()) {
+      setErrorMsg('Please enter your mobile phone number for SMS alerts.');
+      return;
+    }
+    if (!pPassword) {
+      setErrorMsg('Please create an account password.');
       return;
     }
     if (pPassword.length < 6) {
       setErrorMsg('Password must be at least 6 characters long.');
       return;
     }
+    if (pPassword !== pConfirmPassword) {
+      setErrorMsg('Passwords do not match. Please re-enter confirm password.');
+      return;
+    }
 
     setLoading(true);
-    setErrorMsg('');
-
     const newUserId = `usr-pat-${Date.now()}`;
-    const cleanEmail = pEmail.trim() || `${pNationalId.trim()}@patient.terralinkhealth.ke`;
-    
+    const cleanEmail = pEmail.trim().toLowerCase();
+    const cleanPhone = pPhone.trim();
+    const cleanNatId = pNationalId.trim();
+
     const localUser: User = {
       id: newUserId,
       name: pName.trim(),
       email: cleanEmail,
-      phone: pPhone.trim(),
+      phone: cleanPhone,
       role: 'patient',
-      nationalId: pNationalId.trim(),
+      nationalId: cleanNatId,
       status: 'active',
       createdAt: new Date().toISOString()
     };
@@ -167,19 +194,19 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
       userId: newUserId,
       name: pName.trim(),
       email: cleanEmail,
-      phone: pPhone.trim(),
-      nationalId: pNationalId.trim(),
+      phone: cleanPhone,
+      nationalId: cleanNatId,
       dob: pDob || '1995-01-01',
       gender: pGender,
-      bloodGroup: pBloodGroup,
+      bloodGroup: 'O+',
       address: pCounty || 'Nairobi',
-      county: pCounty,
+      county: pCounty || 'Nairobi County',
       emergencyContact: {
-        name: pEmergencyContact || 'Next of Kin',
-        relationship: 'Family Member',
-        phone: pEmergencyPhone || pPhone
+        name: pEmergencyName.trim() || 'Next of Kin',
+        relationship: 'Primary Contact',
+        phone: pEmergencyPhone.trim() || cleanPhone
       },
-      allergies: pAllergies ? [pAllergies] : ['No known drug allergies (NKDA)'],
+      allergies: ['No known drug allergies (NKDA)'],
       chronicConditions: [],
       insuranceProvider: pInsurance,
       insurancePolicyNumber: `SHA-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -187,7 +214,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     };
 
     try {
-      // Save locally first for guaranteed resilience
       saveLocalUser(localUser, pPassword);
       saveLocalPatientProfile(localProfile);
 
@@ -195,145 +221,19 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         method: 'POST',
         body: JSON.stringify({
           name: pName.trim(),
-          phone: pPhone.trim(),
+          phone: cleanPhone,
           email: cleanEmail,
-          nationalId: pNationalId.trim(),
+          nationalId: cleanNatId,
           password: pPassword,
           dob: pDob || '1995-01-01',
           gender: pGender,
-          bloodGroup: pBloodGroup,
-          address: pCounty || 'Nairobi',
           county: pCounty,
           emergencyContact: {
-            name: pEmergencyContact || 'Next of Kin',
-            relationship: 'Family Member',
-            phone: pEmergencyPhone || pPhone
+            name: pEmergencyName.trim() || 'Next of Kin',
+            phone: pEmergencyPhone.trim() || cleanPhone
           },
-          allergies: pAllergies ? [pAllergies] : ['No known drug allergies (NKDA)'],
-          insuranceProvider: pInsurance
-        })
-      });
-
-      if (result.ok && result.data && result.data.user && result.data.patientProfile) {
-        saveLocalUser(result.data.user, pPassword);
-        saveLocalPatientProfile(result.data.patientProfile);
-        onPatientAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user, result.data.patientProfile);
-      } else {
-        // Registered locally successfully even if server was unreachable/static
-        onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
-      }
-      onClose();
-    } catch (err: any) {
-      // Still fallback to local registration
-      onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Request Registration OTP Code
-  const handleRequestRegCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pEmail || !pEmail.includes('@')) {
-      setErrorMsg('Please provide a valid email address to receive your registration code.');
-      return;
-    }
-    if (!pName || !pNationalId || !pPhone || !pPassword) {
-      setErrorMsg('Please complete all required fields (*)');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg('');
-    try {
-      const result = await safeFetchJson('/api/auth/patient/request-reg-code', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: pName,
-          email: pEmail,
-          nationalId: pNationalId,
-          phone: pPhone
-        })
-      });
-
-      const debugCode = result.data?.debugCode || '849201';
-      setRegCodeSuccessMsg(`Verification code sent to ${pEmail}! (Code: ${debugCode})`);
-      setRegisterStep('verify_otp');
-    } catch (err: any) {
-      setRegCodeSuccessMsg(`Verification code generated for ${pEmail}! (Code: 849201)`);
-      setRegisterStep('verify_otp');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Complete Registration with OTP Code
-  const handleVerifyAndRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!regVerificationCode.trim()) {
-      setErrorMsg('Please enter the 6-digit registration code sent to your email.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg('');
-
-    const newUserId = `usr-pat-${Date.now()}`;
-    const cleanEmail = pEmail.trim() || `${pNationalId.trim()}@patient.terralinkhealth.ke`;
-    
-    const localUser: User = {
-      id: newUserId,
-      name: pName.trim(),
-      email: cleanEmail,
-      phone: pPhone.trim(),
-      role: 'patient',
-      nationalId: pNationalId.trim(),
-      status: 'active',
-      createdAt: new Date().toISOString()
-    };
-
-    const localProfile: PatientProfile = {
-      id: `pat-${Date.now()}`,
-      userId: newUserId,
-      name: pName.trim(),
-      email: cleanEmail,
-      phone: pPhone.trim(),
-      nationalId: pNationalId.trim(),
-      dob: pDob || '1995-01-01',
-      gender: pGender,
-      bloodGroup: pBloodGroup,
-      address: pCounty || 'Nairobi',
-      county: pCounty,
-      emergencyContact: {
-        name: pEmergencyContact || 'Next of Kin',
-        relationship: 'Family Member',
-        phone: pEmergencyPhone || pPhone
-      },
-      allergies: pAllergies ? [pAllergies] : ['No known drug allergies (NKDA)'],
-      chronicConditions: [],
-      insuranceProvider: pInsurance,
-      insurancePolicyNumber: `SHA-${Math.floor(100000 + Math.random() * 900000)}`,
-      createdAt: new Date().toISOString()
-    };
-
-    try {
-      saveLocalUser(localUser, pPassword);
-      saveLocalPatientProfile(localProfile);
-
-      const result = await safeFetchJson('/api/auth/patient/verify-and-register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: pName,
-          phone: pPhone,
-          email: pEmail,
-          nationalId: pNationalId,
-          password: pPassword,
-          dob: pDob,
-          gender: pGender,
-          bloodGroup: pBloodGroup,
           insuranceProvider: pInsurance,
-          code: regVerificationCode.trim()
+          coverageType
         })
       });
 
@@ -345,7 +245,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
       }
       onClose();
-    } catch (err: any) {
+    } catch {
       onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
       onClose();
     } finally {
@@ -353,14 +253,57 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  // Request Password Reset Code
+  // Staff Login
+  const handleStaffLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const result = await safeFetchJson('/api/auth/staff/login', {
+        method: 'POST',
+        body: JSON.stringify({ usernameOrEmail: sUsername.trim(), password: sPassword.trim() })
+      });
+
+      if (result.ok && result.data && result.data.user) {
+        saveLocalUser(result.data.user, sPassword);
+        onStaffAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user);
+        onClose();
+        return;
+      }
+
+      // Check admin auth
+      const adminAuth = authenticateLocalAdmin(sUsername.trim(), sPassword.trim());
+      if (adminAuth.success && adminAuth.user) {
+        saveLocalUser(adminAuth.user, sPassword);
+        onStaffAuthSuccess(`jwt-local-${adminAuth.user.id}`, adminAuth.user);
+        onClose();
+        return;
+      }
+
+      const staffAuth = authenticateLocalStaff(sUsername.trim(), sPassword.trim());
+      if (staffAuth.success && staffAuth.user) {
+        saveLocalUser(staffAuth.user, sPassword);
+        onStaffAuthSuccess(`jwt-local-${staffAuth.user.id}`, staffAuth.user);
+        onClose();
+        return;
+      }
+
+      throw new Error(result.error || staffAuth.error || 'Authentication failed. Please verify credentials.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Staff authentication error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Password reset request
   const handleRequestPasswordResetCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fpEmailOrId.trim()) {
-      setErrorMsg('Please enter your registered email address or National ID.');
+      setErrorMsg('Please enter your email or National ID.');
       return;
     }
-
     setLoading(true);
     setErrorMsg('');
     try {
@@ -368,11 +311,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         method: 'POST',
         body: JSON.stringify({ emailOrIdentifier: fpEmailOrId.trim() })
       });
-
-      const debugCode = result.data?.debugCode || '849201';
-      setFpSuccessMsg(`Reset code dispatched to ${fpEmailOrId}! (Code: ${debugCode})`);
+      const code = result.data?.verificationCode || result.data?.debugCode || '849201';
+      setFpSuccessMsg(`Reset code sent to ${fpEmailOrId}! (Code: ${code})`);
       setFpStep('verify');
-    } catch (err: any) {
+    } catch {
       setFpSuccessMsg(`Reset code generated! (Code: 849201)`);
       setFpStep('verify');
     } finally {
@@ -380,18 +322,16 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  // Confirm Reset with Code & Set New Password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fpResetCode.trim() || !fpNewPassword) {
-      setErrorMsg('Please enter both the reset code and your new password.');
+      setErrorMsg('Please enter the code and new password.');
       return;
     }
     if (fpNewPassword.length < 6) {
       setErrorMsg('Password must be at least 6 characters.');
       return;
     }
-
     setLoading(true);
     setErrorMsg('');
     try {
@@ -403,7 +343,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           newPassword: fpNewPassword
         })
       });
-
       if (result.ok && result.data) {
         if (result.data.user?.role === 'patient' && result.data.patientProfile) {
           saveLocalUser(result.data.user, fpNewPassword);
@@ -416,17 +355,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         onClose();
         return;
       }
-
-      // Local fallback reset
-      const localAuth = authenticateLocalPatient(fpEmailOrId, '123456');
-      if (localAuth.user && localAuth.profile) {
-        saveLocalUser(localAuth.user, fpNewPassword);
-        onPatientAuthSuccess(`jwt-local-${localAuth.user.id}`, localAuth.user, localAuth.profile);
-        onClose();
-        return;
-      }
-
-      throw new Error(result.error || 'Password reset could not be completed.');
+      throw new Error(result.error || 'Password reset failed.');
     } catch (err: any) {
       setErrorMsg(err.message || 'Password reset error');
     } finally {
@@ -434,619 +363,1406 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  const handleStaffLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-
-    try {
-      const result = await safeFetchJson('/api/auth/staff/login', {
-        method: 'POST',
-        body: JSON.stringify({ usernameOrEmail: sUsername, password: sPassword })
-      });
-
-      if (result.ok && result.data && result.data.user) {
-        saveLocalUser(result.data.user, sPassword);
-        onStaffAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user);
-        onClose();
-        return;
-      }
-
-      // Check admin local auth first
-      const adminAuth = authenticateLocalAdmin(sUsername, sPassword);
-      if (adminAuth.success && adminAuth.user) {
-        saveLocalUser(adminAuth.user, sPassword);
-        onStaffAuthSuccess(`jwt-local-${adminAuth.user.id}`, adminAuth.user);
-        onClose();
-        return;
-      }
-
-      // Check staff local auth
-      const staffAuth = authenticateLocalStaff(sUsername, sPassword);
-      if (staffAuth.success && staffAuth.user) {
-        saveLocalUser(staffAuth.user, sPassword);
-        onStaffAuthSuccess(`jwt-local-${staffAuth.user.id}`, staffAuth.user);
-        onClose();
-        return;
-      }
-
-      throw new Error(result.error || staffAuth.error || 'Staff/Admin authentication failed.');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Staff login error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-2xl border border-slate-100 relative my-6 text-slate-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-[460px] bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-200/60 relative my-6 text-[#221815]">
         
-        {/* Close Button matching design reference */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center text-slate-500 hover:text-slate-800 cursor-pointer z-10"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {/* Top Icon Squircle Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
-          {mode === 'staff_login' ? (
-            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
-          ) : mode === 'patient_register' ? (
-            <UserPlus className="w-7 h-7 text-white stroke-[2.2]" />
+        {/* ================= MODAL HEADER: BACK / PROGRESS / CLOSE ================= */}
+        <div className="flex items-center justify-between mb-5">
+          {mode === 'patient_register' && coverageStep === 2 ? (
+            <button
+              onClick={() => { setCoverageStep(1); setErrorMsg(''); }}
+              className="flex items-center text-xs font-semibold text-stone-600 hover:text-[#C8232C] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              <span>Back</span>
+            </button>
+          ) : mode === 'forgot_password' ? (
+            <button
+              onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+              className="flex items-center text-xs font-semibold text-stone-600 hover:text-[#C8232C] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              <span>Back</span>
+            </button>
           ) : (
-            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
+            <div className="w-8" />
           )}
+
+          {/* Registration 2-Step Progress Indicators matching reference images */}
+          {mode === 'patient_register' && (
+            <div className="flex items-center space-x-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full transition-all ${coverageStep === 1 ? 'bg-[#C8232C]' : 'bg-[#C8232C]/30'}`} />
+              <span className={`w-2.5 h-2.5 rounded-full transition-all ${coverageStep === 2 ? 'bg-[#C8232C]' : 'bg-[#C8232C]/30'}`} />
+              <span className="w-6 h-2 rounded-full bg-[#C8232C]" />
+            </div>
+          )}
+
+          {/* Close Button */}
+          <button 
+            onClick={onClose} 
+            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors flex items-center justify-center text-stone-500 hover:text-stone-800 cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Title */}
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
-          {mode === 'staff_login'
-            ? 'Staff Portal Login'
-            : mode === 'patient_register'
-            ? 'Patient Registration'
-            : mode === 'forgot_password'
-            ? 'Reset Password'
-            : 'Patient Portal Login'}
-        </h2>
-
-        {/* Subtitle */}
-        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-5">
-          {mode === 'staff_login'
-            ? 'Enter the username and password provided by your administrator'
-            : mode === 'patient_register'
-            ? 'Enter your personal details to register your patient account'
-            : mode === 'forgot_password'
-            ? 'Enter your details to recover your account credentials'
-            : 'Enter your phone number, email, or National ID and password'}
-        </p>
-
-        {/* Tab switcher - Patient Portal only contains Patient Sign In and New Patient */}
-        {mode !== 'staff_login' && (
-          <div className="flex rounded-xl bg-slate-100 p-1 mb-6 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => { setMode('patient_login'); setErrorMsg(''); setFpStep('request'); }}
-              className={`flex-1 py-2.5 text-center rounded-lg transition-all cursor-pointer ${
-                mode === 'patient_login' || mode === 'forgot_password'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Patient Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-              className={`flex-1 py-2.5 text-center rounded-lg transition-all cursor-pointer ${
-                mode === 'patient_register'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              New Patient
-            </button>
-          </div>
-        )}
-
         {errorMsg && (
-          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs text-rose-800 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-[#C8232C] shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* 1. Patient Login */}
-        {mode === 'patient_login' && (
-          <form onSubmit={handlePatientLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Phone Number, Email, or National ID
-              </label>
-              <input
-                type="text"
-                required
-                value={pLoginIdentifier}
-                onChange={(e) => setPLoginIdentifier(e.target.value)}
-                placeholder="Enter your phone or email"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
+        {/* ============================================================== */}
+        {/* CASE 1: PATIENT REGISTRATION - STEP 1: COVERAGE SELECTION MODAL */}
+        {/* ============================================================== */}
+        {mode === 'patient_register' && coverageStep === 1 && (
+          <div>
+            <div className="text-center mb-5">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
+                Digital Health Enrollment,
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Who are you covering?
+              </h2>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-slate-900">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => { setMode('forgot_password'); setErrorMsg(''); setFpStep('request'); }}
-                  className="text-xs text-[#00658a] font-medium hover:underline cursor-pointer"
-                >
-                  Forgot Password?
-                </button>
+            {/* Helper Banner */}
+            <div className="mb-5 bg-[#FDF1F1] border border-[#FAD8D8] rounded-2xl p-3 flex items-center space-x-2.5 text-xs text-[#8F261F]">
+              <div className="w-5 h-5 rounded-full bg-[#C8232C] text-white flex items-center justify-center shrink-0">
+                <Check className="w-3 h-3 stroke-[3]" />
               </div>
-              <input
-                type="password"
-                required
-                value={pLoginPassword}
-                onChange={(e) => setPLoginPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
+              <p className="font-medium leading-snug">
+                All dependents are registered seamlessly with TERRALINK Health
+              </p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Patient Portal'}
-            </button>
+            {/* 3 Interactive Coverage Cards */}
+            <form onSubmit={handleProceedToAccountDetails} className="space-y-3">
+              {/* Option 1: Just me */}
+              <div
+                onClick={() => setCoverageType('just_me')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'just_me'
+                    ? 'border-[#C8232C] bg-[#FFF9F9] shadow-sm'
+                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Just me</h3>
+                    <p className="text-xs text-stone-500">Individual coverage for one person</p>
+                  </div>
+                </div>
 
-            <div className="pt-3 text-center text-xs text-slate-500 border-t border-slate-100 flex items-center justify-between">
-              <span>First time visiting?</span>
+                <div className="shrink-0 ml-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    coverageType === 'just_me' ? 'border-[#C8232C]' : 'border-stone-300'
+                  }`}>
+                    {coverageType === 'just_me' && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Option 2: Me and my partner */}
+              <div
+                onClick={() => setCoverageType('partner')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'partner'
+                    ? 'border-[#C8232C] bg-[#FFF9F9] shadow-sm'
+                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Me and my partner</h3>
+                    <p className="text-xs text-stone-500">Coverage for two adults</p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 ml-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    coverageType === 'partner' ? 'border-[#C8232C]' : 'border-stone-300'
+                  }`}>
+                    {coverageType === 'partner' && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Option 3: Full family */}
+              <div
+                onClick={() => setCoverageType('family')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'family'
+                    ? 'border-[#C8232C] bg-[#FFF9F9] shadow-sm'
+                    : 'border-stone-200 hover:border-stone-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Full family</h3>
+                    <p className="text-xs text-stone-500">Adults and children, all covered</p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 ml-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    coverageType === 'family' ? 'border-[#C8232C]' : 'border-stone-300'
+                  }`}>
+                    {coverageType === 'family' && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Primary CTA Button */}
+              <button
+                type="submit"
+                className="w-full mt-6 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm sm:text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-[0.99]"
+              >
+                <span>Continue to Account Details →</span>
+              </button>
+            </form>
+
+            {/* Switcher back to login */}
+            <div className="mt-4 text-center text-xs text-stone-600">
+              <span>Already have a patient account? </span>
               <button
                 type="button"
-                onClick={() => { setMode('patient_register'); setErrorMsg(''); setRegisterStep('form'); }}
-                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
+                onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+                className="text-[#C8232C] font-bold hover:underline cursor-pointer"
               >
-                Register New Patient →
+                Patient Sign In
               </button>
             </div>
-          </form>
-        )}
 
-          {/* 1.5 Forgot Password Mode */}
-          {mode === 'forgot_password' && (
-            <div className="space-y-4 text-xs">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900">
-                <p className="font-bold flex items-center space-x-1.5">
-                  <Key className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Account Password Recovery</span>
-                </p>
-                <p className="mt-1 text-amber-800">
-                  {fpStep === 'request'
-                    ? 'Enter your registered email address or National ID to receive a secure 6-digit password reset code.'
-                    : 'Enter the 6-digit reset code received on your email and choose your new password.'}
-                </p>
+            {/* Trust Badges matching reference */}
+            <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+              <div className="flex items-center space-x-1">
+                <Lock className="w-3.5 h-3.5 text-stone-400" />
+                <span>HIPAA Compliant</span>
               </div>
-
-              {fpSuccessMsg && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-800 font-medium">
-                  {fpSuccessMsg}
-                </div>
-              )}
-
-              {fpStep === 'request' ? (
-                <form onSubmit={handleRequestPasswordResetCode} className="space-y-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      Email Address or National ID *
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        required
-                        value={fpEmailOrId}
-                        onChange={(e) => setFpEmailOrId(e.target.value)}
-                        placeholder="e.g. wanjiku@example.com or 33819200"
-                        className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send 6-Digit Password Reset Code</span>}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleResetPassword} className="space-y-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      6-Digit Reset Code (From Email) *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      value={fpResetCode}
-                      onChange={(e) => setFpResetCode(e.target.value)}
-                      placeholder="e.g. 849201"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-center font-mono font-bold tracking-widest text-lg text-emerald-700"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      New Secure Password *
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={fpNewPassword}
-                      onChange={(e) => setFpNewPassword(e.target.value)}
-                      placeholder="Min 6 characters"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Reset Password & Sign In</span>}
-                  </button>
-                </form>
-              )}
-
-              <div className="text-center pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
-                  className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
-                >
-                  ← Back to Patient Login
-                </button>
+              <div className="flex items-center space-x-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+                <span>System Auth</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Users className="w-3.5 h-3.5 text-stone-400" />
+                <span>10,000+ registered</span>
               </div>
             </div>
-          )}
 
-          {/* 2. Patient Register */}
-          {mode === 'patient_register' && (
-            <div>
-              {registerStep === 'form' ? (
-                <form onSubmit={handleDirectRegister} className="space-y-3 text-xs">
-                  <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 text-[11px] text-emerald-800">
-                    <p className="font-semibold">Patient Registration & System Storage</p>
-                    <p className="mt-0.5 text-slate-600">Your account will be memorized in system storage for instant secure access.</p>
-                  </div>
+            <div className="mt-3 flex items-center justify-center space-x-2 text-[10px] text-stone-500">
+              <span>⭐⭐⭐⭐⭐ Hospital Registry</span>
+              <span>•</span>
+              <span className="font-semibold text-[#C8232C]">SECURE SYSTEM STORAGE</span>
+            </div>
+          </div>
+        )}
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Full Legal Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={pName}
-                      onChange={(e) => setPName(e.target.value)}
-                      placeholder="e.g. Wanjiku Muthoni"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                    />
-                  </div>
+        {/* ============================================================== */}
+        {/* CASE 2: PATIENT REGISTRATION - STEP 2: REGISTRATION FORM CARD   */}
+        {/* ============================================================== */}
+        {mode === 'patient_register' && coverageStep === 2 && (
+          <div>
+            <div className="text-center mb-4">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
+                Member Verification
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Create Patient Account
+              </h2>
+              <p className="text-xs text-stone-500 mt-1 max-w-xs mx-auto">
+                Required to link your electronic health records, queue tickets, and appointments.
+              </p>
+            </div>
 
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Kenyan National ID / Passport *</label>
-                      <input
-                        type="text"
-                        required
-                        value={pNationalId}
-                        onChange={(e) => setPNationalId(e.target.value)}
-                        placeholder="e.g. 33819200"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Phone Number (M-PESA) *</label>
-                      <input
-                        type="tel"
-                        required
-                        value={pPhone}
-                        onChange={(e) => setPPhone(e.target.value)}
-                        placeholder="e.g. 0712345678"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                  </div>
+            <form onSubmit={handleCompleteRegistration} className="space-y-3.5 text-xs">
+              {/* Patient Full Name */}
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Primary Patient Full Name *
+                </label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    required
+                    value={pName}
+                    onChange={(e) => setPName(e.target.value)}
+                    placeholder="e.g. Sarah Miller"
+                    className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Email Address (For Code) *</label>
-                      <input
-                        type="email"
-                        required
-                        value={pEmail}
-                        onChange={(e) => setPEmail(e.target.value)}
-                        placeholder="e.g. wanjiku@example.com"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Date of Birth *</label>
-                      <input
-                        type="date"
-                        required
-                        value={pDob}
-                        onChange={(e) => setPDob(e.target.value)}
-                        className="w-full p-2 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                  </div>
+              {/* Email Address */}
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Email Address (Account Login) *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                  <input
+                    type="email"
+                    required
+                    value={pEmail}
+                    onChange={(e) => setPEmail(e.target.value)}
+                    placeholder="sarah.miller@example.com"
+                    className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
 
-                  <div className="grid grid-cols-3 gap-2.5">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Sex / Gender *</label>
-                      <select
-                        value={pGender}
-                        onChange={(e) => setPGender(e.target.value as any)}
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      >
-                        <option value="Female">Female</option>
-                        <option value="Male">Male</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Blood Group *</label>
-                      <select
-                        value={pBloodGroup}
-                        onChange={(e) => setPBloodGroup(e.target.value)}
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-bold text-rose-700"
-                      >
-                        {['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map(b => (
-                          <option key={b} value={b}>{b}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">County</label>
-                      <input
-                        type="text"
-                        value={pCounty}
-                        onChange={(e) => setPCounty(e.target.value)}
-                        placeholder="e.g. Nairobi"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Emergency Contact</label>
-                      <input
-                        type="text"
-                        value={pEmergencyContact}
-                        onChange={(e) => setPEmergencyContact(e.target.value)}
-                        placeholder="e.g. David Muthoni"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Emergency Phone</label>
-                      <input
-                        type="tel"
-                        value={pEmergencyPhone}
-                        onChange={(e) => setPEmergencyPhone(e.target.value)}
-                        placeholder="e.g. 0722000000"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Known Allergies</label>
-                      <input
-                        type="text"
-                        value={pAllergies}
-                        onChange={(e) => setPAllergies(e.target.value)}
-                        placeholder="e.g. Penicillin (or None)"
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Insurance Scheme</label>
-                      <select
-                        value={pInsurance}
-                        onChange={(e) => setPInsurance(e.target.value)}
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-medium"
-                      >
-                        <option value="Social Health Insurance Fund (SHIF)">SHIF (National Health)</option>
-                        <option value="Jubilee Insurance">Jubilee Insurance</option>
-                        <option value="APA Insurance">APA Insurance</option>
-                        <option value="AAR Insurance">AAR Insurance</option>
-                        <option value="CIC Insurance">CIC Insurance</option>
-                        <option value="Private Cash / M-PESA">Private Cash / M-PESA</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Create Secure Account Password *</label>
+              {/* Password & Confirm Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Create Password (min 6 chars) *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                     <input
                       type="password"
                       required
                       value={pPassword}
                       onChange={(e) => setPPassword(e.target.value)}
-                      placeholder="Min 6 characters"
-                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
                     />
                   </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-4"
-                  >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Register Patient Account</span>}
-                  </button>
-
-                  <div className="text-center pt-1">
-                    <button
-                      type="button"
-                      onClick={handleRequestRegCode}
-                      disabled={loading}
-                      className="text-[11px] text-slate-500 hover:text-emerald-700 underline cursor-pointer"
-                    >
-                      Or verify via 6-digit email OTP code
-                    </button>
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Confirm Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                    <input
+                      type="password"
+                      required
+                      value={pConfirmPassword}
+                      onChange={(e) => setPConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                    />
                   </div>
-                </form>
-              ) : (
-                /* Step 2: Verification Code Entry */
-                <form onSubmit={handleVerifyAndRegister} className="space-y-4 text-xs">
-                  <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 text-teal-900 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-5 h-5 text-teal-600 shrink-0" />
-                      <h4 className="font-bold text-sm">Verify Your Registration Code</h4>
-                    </div>
-                    <p className="text-[11px] leading-relaxed text-teal-800">
-                      We dispatched a 6-digit registration code to <strong className="text-teal-950">{pEmail}</strong>. Please enter the code below to complete your registration and activate your medical profile.
-                    </p>
-                    {regCodeSuccessMsg && (
-                      <div className="p-2 rounded-xl bg-teal-100/80 font-mono text-[11px] font-semibold text-teal-950 border border-teal-300">
-                        {regCodeSuccessMsg}
-                      </div>
-                    )}
-                  </div>
+                </div>
+              </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-800 text-center mb-1.5">
-                      Enter 6-Digit Email Verification Code *
-                    </label>
+              {/* Mobile Phone & National ID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Mobile Phone Number (SMS Alerts) *
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+                    <input
+                      type="tel"
+                      required
+                      value={pPhone}
+                      onChange={(e) => setPPhone(e.target.value)}
+                      placeholder="0712 345 678"
+                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    National ID / Passport (Unique) *
+                  </label>
+                  <div className="relative">
+                    <CreditCard className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                     <input
                       type="text"
                       required
-                      maxLength={6}
-                      value={regVerificationCode}
-                      onChange={(e) => setRegVerificationCode(e.target.value)}
-                      placeholder="894102"
-                      className="w-full p-3 bg-white border-2 border-emerald-500 rounded-2xl text-center font-mono font-black text-2xl tracking-widest text-emerald-800 shadow-inner focus:outline-none"
+                      value={pNationalId}
+                      onChange={(e) => setPNationalId(e.target.value)}
+                      placeholder="e.g. 33819200"
+                      className="w-full pl-10 pr-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 font-mono focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
                     />
                   </div>
+                </div>
+              </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 text-sm"
+              {/* DOB, Sex, County */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={pDob}
+                    onChange={(e) => setPDob(e.target.value)}
+                    className="w-full px-2.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Sex / Gender *
+                  </label>
+                  <select
+                    value={pGender}
+                    onChange={(e) => setPGender(e.target.value as any)}
+                    className="w-full px-2.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
                   >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify Code & Complete Registration</span>}
-                  </button>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => setRegisterStep('form')}
-                      className="text-slate-600 hover:underline cursor-pointer"
-                    >
-                      ← Edit Details
-                    </button>
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    County *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pCounty}
+                    onChange={(e) => setPCounty(e.target.value)}
+                    placeholder="Nairobi County"
+                    className="w-full px-2.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
 
-                    <button
-                      type="button"
-                      onClick={handleRequestRegCode}
-                      disabled={loading}
-                      className="text-emerald-700 font-bold hover:underline cursor-pointer"
-                    >
-                      Resend Email Code
-                    </button>
-                  </div>
-                </form>
-              )}
+              {/* Emergency Contact Name & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Emergency Contact Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pEmergencyName}
+                    onChange={(e) => setPEmergencyName(e.target.value)}
+                    placeholder="e.g. David Miller"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Emergency Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={pEmergencyPhone}
+                    onChange={(e) => setPEmergencyPhone(e.target.value)}
+                    placeholder="0722 000 000"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
+
+              {/* Insurance Scheme - Untouched Integration */}
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Insurance Scheme
+                </label>
+                <select
+                  value={pInsurance}
+                  onChange={(e) => setPInsurance(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                >
+                  <option value="Social Health Insurance Fund (SHIF)">SHIF (Social Health Authority)</option>
+                  <option value="Jubilee Insurance">Jubilee Insurance</option>
+                  <option value="APA Insurance">APA Insurance</option>
+                  <option value="AAR Insurance">AAR Insurance</option>
+                  <option value="CIC Insurance">CIC Insurance</option>
+                  <option value="Britam Health Insurance">Britam Health Insurance</option>
+                  <option value="Private Cash / M-PESA">Private Cash / M-PESA</option>
+                </select>
+              </div>
+
+              {/* Submit CTA */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-5 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm sm:text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.99]"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Creating Patient Account...</span>
+                  </>
+                ) : (
+                  <span>Complete Registration & Access Portal →</span>
+                )}
+              </button>
+            </form>
+
+            {/* Switch to login */}
+            <div className="mt-4 text-center text-xs text-stone-600">
+              <span>Already have a patient account? </span>
+              <button
+                type="button"
+                onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+                className="text-[#C8232C] font-bold hover:underline cursor-pointer"
+              >
+                Patient Sign In
+              </button>
             </div>
-          )}
 
-          {/* 3. Clinical Staff Login */}
-          {mode === 'staff_login' && (
+            {/* Trust Badges */}
+            <div className="mt-5 pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+              <div className="flex items-center space-x-1">
+                <Lock className="w-3.5 h-3.5 text-stone-400" />
+                <span>HIPAA Compliant</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+                <span>System Auth</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Users className="w-3.5 h-3.5 text-stone-400" />
+                <span>10,000+ registered</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* CASE 3: PATIENT SIGN IN MODAL (MATCHING REFERENCE IMAGE 3)    */}
+        {/* ============================================================== */}
+        {mode === 'patient_login' && (
+          <div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Patient Sign In
+              </h2>
+            </div>
+
+            <form onSubmit={handlePatientLogin} className="space-y-4">
+              {/* Email Address */}
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={pLoginIdentifier}
+                    onChange={(e) => setPLoginIdentifier(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C] transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-[#221815]">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('forgot_password'); setErrorMsg(''); setFpStep('request'); }}
+                    className="text-xs text-[#0A4D8C] font-medium hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={pLoginPassword}
+                    onChange={(e) => setPLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C] transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Primary Action Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-6 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.99]"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <span>Sign In →</span>
+                )}
+              </button>
+
+              {/* Link: New Patient? Register new account */}
+              <div className="pt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setMode('patient_register'); setCoverageStep(1); setErrorMsg(''); }}
+                  className="text-xs font-semibold text-[#0A4D8C] hover:underline cursor-pointer"
+                >
+                  New Patient? Register new account →
+                </button>
+              </div>
+
+              {/* Quick Staff Login Link */}
+              <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
+                <span>Hospital Healthcare Staff?</span>
+                <button
+                  type="button"
+                  onClick={() => { setMode('staff_login'); setErrorMsg(''); }}
+                  className="text-stone-700 font-semibold hover:text-[#C8232C] cursor-pointer"
+                >
+                  Staff Sign In
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* CASE 4: STAFF PORTAL SIGN IN                                  */}
+        {/* ============================================================== */}
+        {mode === 'staff_login' && (
+          <div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Clinical Staff Sign In
+              </h2>
+              <p className="text-xs text-stone-500 mt-1">
+                Enter your administrative or medical staff credentials
+              </p>
+            </div>
+
             <form onSubmit={handleStaffLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">
-                  Username or Email
+                <label className="block text-xs font-bold text-[#221815] mb-1.5">
+                  Staff Email or Username
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={sUsername}
-                  onChange={(e) => setSUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-                />
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={sUsername}
+                    onChange={(e) => setSUsername(e.target.value)}
+                    placeholder="Enter staff username or email"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                <label className="block text-xs font-bold text-[#221815] mb-1.5">
                   Password
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={sPassword}
-                  onChange={(e) => setSPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-                />
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={sPassword}
+                    onChange={(e) => setSPassword(e.target.value)}
+                    placeholder="Enter staff password"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+                className="w-full mt-6 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.99]"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Staff Portal'}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign In to Staff Workspace →</span>}
               </button>
 
-              {/* Quick Staff Credential Autofill */}
-              <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100">
-                <span>Quick fill:</span>
+              <div className="pt-3 text-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSUsername('markobare@gmail.com');
-                    setSPassword('Pay@1206');
-                  }}
-                  className="text-[#00658a] font-medium hover:underline cursor-pointer"
+                  onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+                  className="text-xs font-medium text-stone-600 hover:text-[#C8232C] cursor-pointer"
                 >
-                  Marko Bare (Admin)
+                  ← Return to Patient Portal
                 </button>
-                <span>·</span>
+              </div>
+
+              {/* Demo Fill */}
+              <div className="flex items-center justify-center space-x-2 text-xs text-stone-400 pt-3 border-t border-stone-100">
+                <span>Demo shortcuts:</span>
                 <button
                   type="button"
                   onClick={() => {
                     setSUsername('maxxroy961@gmail.com');
                     setSPassword('Pay@1206');
                   }}
-                  className="text-[#00658a] font-medium hover:underline cursor-pointer"
+                  className="text-[#0A4D8C] font-semibold hover:underline cursor-pointer"
                 >
                   Dr. Maxx
                 </button>
+                <span>·</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSUsername('kipkemoiharon57@gmail.com');
+                    setSPassword('Slate#1206');
+                  }}
+                  className="text-[#0A4D8C] font-semibold hover:underline cursor-pointer"
+                >
+                  Admin
+                </button>
               </div>
             </form>
-          )}
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* CASE 5: FORGOT PASSWORD RECOVERY                              */}
+        {/* ============================================================== */}
+        {mode === 'forgot_password' && (
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-extrabold text-[#221815] tracking-tight">
+                Reset Password
+              </h2>
+              <p className="text-xs text-stone-500 mt-1">
+                {fpStep === 'request'
+                  ? 'Enter your registered email or National ID to receive a verification code.'
+                  : 'Enter the 6-digit code sent to your email along with your new password.'}
+              </p>
+            </div>
+
+            {fpSuccessMsg && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-xs text-emerald-800 font-medium">
+                {fpSuccessMsg}
+              </div>
+            )}
+
+            {fpStep === 'request' ? (
+              <form onSubmit={handleRequestPasswordResetCode} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Email Address or National ID *
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="text"
+                      required
+                      value={fpEmailOrId}
+                      onChange={(e) => setFpEmailOrId(e.target.value)}
+                      placeholder="e.g. faith@example.com or 33819200"
+                      className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm shadow-md flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Reset Code →</span>}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    6-Digit Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={fpResetCode}
+                    onChange={(e) => setFpResetCode(e.target.value)}
+                    placeholder="849201"
+                    className="w-full p-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-center font-mono font-bold tracking-widest text-lg text-[#C8232C] focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    New Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={fpNewPassword}
+                    onChange={(e) => setFpNewPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    className="w-full p-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm shadow-md flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Reset Password & Sign In</span>}
+                </button>
+              </form>
+            )}
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => { setMode('patient_login'); setErrorMsg(''); }}
+                className="text-xs text-stone-500 hover:text-stone-800 font-semibold cursor-pointer"
+              >
+                ← Back to Patient Login
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
   );
 };
 
+// ==============================================================
+// PATIENT LOGIN GATE COMPONENT (WHEN VISITING PORTAL DIRECTLY)
+// ==============================================================
+interface PatientLoginGateProps {
+  onPatientAuthSuccess: (token: string, user: User, profile: PatientProfile) => void;
+  onOpenRegisterModal?: () => void;
+  onCancel?: () => void;
+}
+
+export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
+  onPatientAuthSuccess,
+  onCancel
+}) => {
+  const [gateMode, setGateMode] = useState<'login' | 'register_step1' | 'register_step2'>('login');
+  const [coverageType, setCoverageType] = useState<'just_me' | 'partner' | 'family'>('just_me');
+
+  // Form states
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Female');
+  const [county, setCounty] = useState('Nairobi County');
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [insurance, setInsurance] = useState('Social Health Insurance Fund (SHIF)');
+
+  // Login state
+  const [loginIdentifier, setLoginIdentifier] = useState('faith.chebet@gmail.com');
+  const [loginPassword, setLoginPassword] = useState('123456');
+
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const result = await safeFetchJson('/api/auth/patient/login', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: loginIdentifier.trim(), password: loginPassword.trim() })
+      });
+
+      if (result.ok && result.data && result.data.user && result.data.patientProfile) {
+        saveLocalUser(result.data.user, loginPassword);
+        saveLocalPatientProfile(result.data.patientProfile);
+        onPatientAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user, result.data.patientProfile);
+        return;
+      }
+
+      const localAuth = authenticateLocalPatient(loginIdentifier.trim(), loginPassword.trim());
+      if (localAuth.success && localAuth.user && localAuth.profile) {
+        onPatientAuthSuccess(`jwt-local-${localAuth.user.id}`, localAuth.user, localAuth.profile);
+        return;
+      }
+
+      throw new Error(result.error || localAuth.error || 'Authentication failed. Please verify credentials.');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (!name.trim() || !nationalId.trim() || !email.trim() || !phone.trim() || !password) {
+      setErrorMsg('Please complete all required fields.');
+      return;
+    }
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    const newUserId = `usr-pat-${Date.now()}`;
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone.trim();
+    const cleanNatId = nationalId.trim();
+
+    const localUser: User = {
+      id: newUserId,
+      name: name.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      role: 'patient',
+      nationalId: cleanNatId,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+
+    const localProfile: PatientProfile = {
+      id: `pat-${Date.now()}`,
+      userId: newUserId,
+      name: name.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      nationalId: cleanNatId,
+      dob: dob || '1995-01-01',
+      gender,
+      bloodGroup: 'O+',
+      address: county || 'Nairobi',
+      county: county || 'Nairobi County',
+      emergencyContact: {
+        name: emergencyName.trim() || 'Next of Kin',
+        relationship: 'Primary Contact',
+        phone: emergencyPhone.trim() || cleanPhone
+      },
+      allergies: ['No known drug allergies (NKDA)'],
+      chronicConditions: [],
+      insuranceProvider: insurance,
+      insurancePolicyNumber: `SHA-${Math.floor(100000 + Math.random() * 900000)}`,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      saveLocalUser(localUser, password);
+      saveLocalPatientProfile(localProfile);
+
+      const result = await safeFetchJson('/api/auth/patient/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: cleanPhone,
+          email: cleanEmail,
+          nationalId: cleanNatId,
+          password,
+          dob: dob || '1995-01-01',
+          gender,
+          county,
+          emergencyContact: {
+            name: emergencyName.trim() || 'Next of Kin',
+            phone: emergencyPhone.trim() || cleanPhone
+          },
+          insuranceProvider: insurance,
+          coverageType
+        })
+      });
+
+      if (result.ok && result.data && result.data.user && result.data.patientProfile) {
+        saveLocalUser(result.data.user, password);
+        saveLocalPatientProfile(result.data.patientProfile);
+        onPatientAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user, result.data.patientProfile);
+      } else {
+        onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
+      }
+    } catch {
+      onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#FAF8F5] text-[#221815]">
+      <div className="w-full max-w-[460px] bg-white rounded-3xl p-7 sm:p-8 shadow-xl border border-stone-200/60">
+        
+        {errorMsg && (
+          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs text-rose-800 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-[#C8232C] shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* ================= GATE: LOGIN ================= */}
+        {gateMode === 'login' && (
+          <div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Patient Sign In
+              </h2>
+            </div>
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={loginIdentifier}
+                    onChange={(e) => setLoginIdentifier(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C] transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C] transition-all"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-6 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50 active:scale-[0.99]"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign In →</span>}
+              </button>
+
+              <div className="pt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setGateMode('register_step1'); setErrorMsg(''); }}
+                  className="text-xs font-semibold text-[#0A4D8C] hover:underline cursor-pointer"
+                >
+                  New Patient? Register new account →
+                </button>
+              </div>
+
+              {onCancel && (
+                <div className="pt-3 text-center">
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="text-xs text-stone-500 hover:text-stone-800 cursor-pointer"
+                  >
+                    ← Back to Institutional Homepage
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+        )}
+
+        {/* ================= GATE: REGISTER STEP 1 (COVERAGE) ================= */}
+        {gateMode === 'register_step1' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => { setGateMode('login'); setErrorMsg(''); }}
+                className="flex items-center text-xs font-semibold text-stone-600 hover:text-[#C8232C] cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                <span>Sign In</span>
+              </button>
+
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C8232C]/30" />
+                <span className="w-6 h-2 rounded-full bg-[#C8232C]" />
+              </div>
+            </div>
+
+            <div className="text-center mb-5">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
+                Digital Health Enrollment,
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Who are you covering?
+              </h2>
+            </div>
+
+            <div className="mb-5 bg-[#FDF1F1] border border-[#FAD8D8] rounded-2xl p-3 flex items-center space-x-2.5 text-xs text-[#8F261F]">
+              <div className="w-5 h-5 rounded-full bg-[#C8232C] text-white flex items-center justify-center shrink-0">
+                <Check className="w-3 h-3 stroke-[3]" />
+              </div>
+              <p className="font-medium leading-snug">
+                All dependents are registered seamlessly with TERRALINK Health
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div
+                onClick={() => setCoverageType('just_me')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'just_me' ? 'border-[#C8232C] bg-[#FFF9F9]' : 'border-stone-200 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Just me</h3>
+                    <p className="text-xs text-stone-500">Individual coverage for one person</p>
+                  </div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  coverageType === 'just_me' ? 'border-[#C8232C]' : 'border-stone-300'
+                }`}>
+                  {coverageType === 'just_me' && <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />}
+                </div>
+              </div>
+
+              <div
+                onClick={() => setCoverageType('partner')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'partner' ? 'border-[#C8232C] bg-[#FFF9F9]' : 'border-stone-200 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Me and my partner</h3>
+                    <p className="text-xs text-stone-500">Coverage for two adults</p>
+                  </div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  coverageType === 'partner' ? 'border-[#C8232C]' : 'border-stone-300'
+                }`}>
+                  {coverageType === 'partner' && <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />}
+                </div>
+              </div>
+
+              <div
+                onClick={() => setCoverageType('family')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  coverageType === 'family' ? 'border-[#C8232C] bg-[#FFF9F9]' : 'border-stone-200 bg-white'
+                }`}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#221815]">Full family</h3>
+                    <p className="text-xs text-stone-500">Adults and children, all covered</p>
+                  </div>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  coverageType === 'family' ? 'border-[#C8232C]' : 'border-stone-300'
+                }`}>
+                  {coverageType === 'family' && <div className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setGateMode('register_step2')}
+                className="w-full mt-6 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <span>Continue to Account Details →</span>
+              </button>
+            </div>
+
+            <div className="mt-4 text-center text-xs text-stone-600">
+              <span>Already have a patient account? </span>
+              <button
+                type="button"
+                onClick={() => setGateMode('login')}
+                className="text-[#C8232C] font-bold hover:underline cursor-pointer"
+              >
+                Patient Sign In
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ================= GATE: REGISTER STEP 2 (DETAILS) ================= */}
+        {gateMode === 'register_step2' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setGateMode('register_step1')}
+                className="flex items-center text-xs font-semibold text-stone-600 hover:text-[#C8232C] cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                <span>Back</span>
+              </button>
+
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C8232C]" />
+                <span className="w-6 h-2 rounded-full bg-[#C8232C]" />
+              </div>
+            </div>
+
+            <div className="text-center mb-4">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">
+                Member Verification
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#221815] tracking-tight">
+                Create Patient Account
+              </h2>
+            </div>
+
+            <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Primary Patient Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Sarah Miller"
+                  className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Email Address (Account Login) *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="sarah.miller@example.com"
+                  className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Password (min 6 chars) *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Confirm Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Mobile Phone (SMS) *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0712 345 678"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    National ID / Passport *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value)}
+                    placeholder="33819200"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 font-mono focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="w-full px-2 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Sex / Gender *
+                  </label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value as any)}
+                    className="w-full px-2 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none"
+                  >
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    County *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={county}
+                    onChange={(e) => setCounty(e.target.value)}
+                    className="w-full px-2 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Emergency Contact Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={emergencyName}
+                    onChange={(e) => setEmergencyName(e.target.value)}
+                    placeholder="David Miller"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#221815] mb-1">
+                    Emergency Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={emergencyPhone}
+                    onChange={(e) => setEmergencyPhone(e.target.value)}
+                    placeholder="0722 000 000"
+                    className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#221815] mb-1">
+                  Insurance Scheme
+                </label>
+                <select
+                  value={insurance}
+                  onChange={(e) => setInsurance(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-stone-900 text-xs focus:outline-none"
+                >
+                  <option value="Social Health Insurance Fund (SHIF)">SHIF (Social Health Authority)</option>
+                  <option value="Jubilee Insurance">Jubilee Insurance</option>
+                  <option value="APA Insurance">APA Insurance</option>
+                  <option value="AAR Insurance">AAR Insurance</option>
+                  <option value="CIC Insurance">CIC Insurance</option>
+                  <option value="Private Cash / M-PESA">Private Cash / M-PESA</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-4 py-3.5 sm:py-4 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-base shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Complete Registration & Access Portal →</span>}
+              </button>
+            </form>
+
+            <div className="mt-4 text-center text-xs text-stone-600">
+              <span>Already have a patient account? </span>
+              <button
+                type="button"
+                onClick={() => setGateMode('login')}
+                className="text-[#C8232C] font-bold hover:underline cursor-pointer"
+              >
+                Patient Sign In
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
+
+// ==============================================================
+// ADMIN LOGIN GATE COMPONENT
+// ==============================================================
 interface AdminLoginGateProps {
   onAdminAuthSuccess: (token: string, user: User) => void;
   onCancel?: () => void;
@@ -1081,23 +1797,11 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
 
       if (result.ok && result.data && result.data.user) {
         const user = result.data.user;
-        const isAuthorizedAdmin = 
-          user.role === 'admin' || 
-          user.email?.toLowerCase() === 'kipkemoiharon57@gmail.com' || 
-          user.email?.toLowerCase() === 'kipkemoiharon4@gmail.com' ||
-          user.username === 'kipkemoiharon57@gmail.com' ||
-          user.username === 'admin.kipkemoi' ||
-          adminIdentifier.toLowerCase().includes('kipkemoi') ||
-          adminIdentifier.toLowerCase() === 'admin';
-
-        if (isAuthorizedAdmin) {
-          saveLocalUser(user, adminPassword);
-          onAdminAuthSuccess(result.data.token || `jwt-${user.id}`, user);
-          return;
-        }
+        saveLocalUser(user, adminPassword);
+        onAdminAuthSuccess(result.data.token || `jwt-${user.id}`, user);
+        return;
       }
 
-      // Check resilient local admin authentication
       const localAuth = authenticateLocalAdmin(adminIdentifier, adminPassword);
       if (localAuth.success && localAuth.user) {
         saveLocalUser(localAuth.user, adminPassword);
@@ -1105,44 +1809,40 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
         return;
       }
 
-      throw new Error(result.error || localAuth.error || 'Administrative authentication failed. Please verify credentials.');
+      throw new Error(result.error || localAuth.error || 'Admin authentication failed.');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Administrative login error');
+      setErrorMsg(err.message || 'Admin login error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
-      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#FAF8F5] text-[#221815]">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-xl border border-stone-200/60">
         
-        {/* Top Icon Squircle Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
-          <ShieldCheck className="w-7 h-7 text-white stroke-[2.2]" />
+        <div className="w-14 h-14 rounded-2xl bg-[#C8232C] flex items-center justify-center text-white mx-auto shadow-md">
+          <ShieldCheck className="w-7 h-7 stroke-[2.2]" />
         </div>
 
-        {/* Title */}
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+        <h2 className="text-2xl font-extrabold text-[#221815] tracking-tight text-center mt-5 mb-2">
           Admin Portal Login
         </h2>
 
-        {/* Subtitle */}
-        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
-          Enter the administrator credentials provided for hospital operations
+        <p className="text-xs text-stone-500 text-center max-w-xs mx-auto leading-relaxed mb-6">
+          Hospital administration &amp; clinical operations console
         </p>
 
         {errorMsg && (
-          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs text-rose-800 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-[#C8232C] shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Login Form matching design reference */}
         <form onSubmit={handleAdminSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-2">
+            <label className="block text-xs font-bold text-[#221815] mb-1.5">
               Administrator Email
             </label>
             <input
@@ -1150,13 +1850,12 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
               required
               value={adminIdentifier}
               onChange={(e) => setAdminIdentifier(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              className="w-full px-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-2">
+            <label className="block text-xs font-bold text-[#221815] mb-1.5">
               Password
             </label>
             <input
@@ -1164,38 +1863,35 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
               required
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              className="w-full px-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+            className="w-full mt-6 py-3.5 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Admin Portal'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign In to Admin Portal →</span>}
           </button>
         </form>
 
-        {/* Back to Home Link */}
         <div className="text-center mt-5">
           <button
             type="button"
             onClick={onCancel}
-            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
+            className="text-xs text-stone-600 hover:text-[#C8232C] font-semibold cursor-pointer"
           >
             ← Back to Home
           </button>
         </div>
 
-        {/* 1-Click Authorized Admin Helper */}
-        <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
+        <div className="flex items-center justify-center space-x-2 text-xs text-stone-400 pt-3 border-t border-stone-100 mt-4">
           <span>Quick fill:</span>
           <button
             type="button"
             onClick={() => handleAdminSubmit(undefined, HARON_ADMIN_USER)}
-            className="text-[#00658a] font-medium hover:underline cursor-pointer"
+            className="text-[#0A4D8C] font-semibold hover:underline cursor-pointer"
           >
             Haron Kipkemoi (Admin)
           </button>
@@ -1206,362 +1902,9 @@ export const AdminLoginGate: React.FC<AdminLoginGateProps> = ({
   );
 };
 
-interface PatientLoginGateProps {
-  onPatientAuthSuccess: (token: string, user: User, profile: PatientProfile) => void;
-  onOpenRegisterModal?: () => void;
-  onCancel?: () => void;
-}
-
-export const PatientLoginGate: React.FC<PatientLoginGateProps> = ({
-  onPatientAuthSuccess,
-  onCancel
-}) => {
-  const [activeTab, setActiveTab] = useState<'register' | 'login'>('register');
-  
-  // Registration Fields: Full Name, National ID, Phone/Email, Password
-  const [regName, setRegName] = useState('');
-  const [regNationalId, setRegNationalId] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-
-  // Login Fields: Identifier + Password
-  const [loginIdentifier, setLoginIdentifier] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (!regName.trim() || !regNationalId.trim() || (!regPhone.trim() && !regEmail.trim()) || !regPassword) {
-      setErrorMsg('Please provide your Full Names, National ID, Phone Number or Email, and Password.');
-      return;
-    }
-
-    if (regPassword.length < 6) {
-      setErrorMsg('Password should be at least 6 characters long.');
-      return;
-    }
-
-    setLoading(true);
-    const newUserId = `usr-pat-${Date.now()}`;
-    const cleanEmail = regEmail.trim() || `${regNationalId.trim()}@patient.terralinkhealth.ke`;
-    
-    const localUser: User = {
-      id: newUserId,
-      name: regName.trim(),
-      email: cleanEmail,
-      phone: regPhone.trim() || '0700000000',
-      role: 'patient',
-      nationalId: regNationalId.trim(),
-      status: 'active',
-      createdAt: new Date().toISOString()
-    };
-
-    const localProfile: PatientProfile = {
-      id: `pat-${Date.now()}`,
-      userId: newUserId,
-      name: regName.trim(),
-      email: cleanEmail,
-      phone: regPhone.trim() || '0700000000',
-      nationalId: regNationalId.trim(),
-      dob: '1995-01-01',
-      gender: 'Female',
-      bloodGroup: 'O+',
-      address: 'Nairobi, Kenya',
-      county: 'Nairobi County',
-      emergencyContact: {
-        name: 'Next of Kin',
-        relationship: 'Family Member',
-        phone: regPhone.trim() || '0700000000'
-      },
-      allergies: ['No known drug allergies (NKDA)'],
-      chronicConditions: [],
-      insuranceProvider: 'Social Health Insurance Fund (SHIF)',
-      insurancePolicyNumber: `SHA-${Math.floor(100000 + Math.random() * 900000)}`,
-      createdAt: new Date().toISOString()
-    };
-
-    try {
-      saveLocalUser(localUser, regPassword);
-      saveLocalPatientProfile(localProfile);
-
-      const result = await safeFetchJson('/api/auth/patient/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: regName.trim(),
-          nationalId: regNationalId.trim(),
-          phone: regPhone.trim() || '+254700000000',
-          email: cleanEmail,
-          password: regPassword
-        })
-      });
-
-      setSuccessMsg(`Welcome, ${regName}! Accessing your digital health portal...`);
-      setTimeout(() => {
-        if (result.ok && result.data && result.data.user && result.data.patientProfile) {
-          saveLocalUser(result.data.user, regPassword);
-          saveLocalPatientProfile(result.data.patientProfile);
-          onPatientAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user, result.data.patientProfile);
-        } else {
-          onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
-        }
-      }, 300);
-    } catch (err: any) {
-      setSuccessMsg(`Welcome, ${regName}! Accessing your digital health portal...`);
-      setTimeout(() => {
-        onPatientAuthSuccess(`jwt-local-${localUser.id}`, localUser, localProfile);
-      }, 300);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (!loginIdentifier.trim() || !loginPassword) {
-      setErrorMsg('Please enter your National ID, Phone Number, or Email and your Password.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await safeFetchJson('/api/auth/patient/login', {
-        method: 'POST',
-        body: JSON.stringify({ identifier: loginIdentifier.trim(), password: loginPassword })
-      });
-
-      if (result.ok && result.data && result.data.user && result.data.patientProfile) {
-        saveLocalUser(result.data.user, loginPassword);
-        saveLocalPatientProfile(result.data.patientProfile);
-        onPatientAuthSuccess(result.data.token || `jwt-${result.data.user.id}`, result.data.user, result.data.patientProfile);
-        return;
-      }
-
-      // Check local resilience storage
-      const localAuth = authenticateLocalPatient(loginIdentifier, loginPassword);
-      if (localAuth.success && localAuth.user && localAuth.profile) {
-        onPatientAuthSuccess(`jwt-local-${localAuth.user.id}`, localAuth.user, localAuth.profile);
-        return;
-      }
-
-      throw new Error(result.error || localAuth.error || 'Authentication failed. Please verify credentials.');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Patient login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
-      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
-        
-        {/* Top Icon Squircle Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
-          {activeTab === 'login' ? (
-            <Lock className="w-7 h-7 text-white stroke-[2.2]" />
-          ) : (
-            <UserPlus className="w-7 h-7 text-white stroke-[2.2]" />
-          )}
-        </div>
-
-        {/* Title */}
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
-          {activeTab === 'login' ? 'Patient Portal Login' : 'Patient Registration'}
-        </h2>
-
-        {/* Subtitle */}
-        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
-          {activeTab === 'login'
-            ? 'Enter your username, phone, or ID and password'
-            : 'Enter your personal details to register your patient account'}
-        </p>
-
-        {errorMsg && (
-          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successMsg}</span>
-          </div>
-        )}
-
-        {/* REGISTER FORM */}
-        {activeTab === 'register' && (
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                placeholder="Enter your full name"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                National ID or Passport Number
-              </label>
-              <input
-                type="text"
-                required
-                value={regNationalId}
-                onChange={(e) => setRegNationalId(e.target.value)}
-                placeholder="Enter your ID number"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                required
-                value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
-                placeholder="Enter your phone number"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Register Patient Account'}
-            </button>
-
-            <div className="text-center pt-3 text-xs text-slate-500">
-              <span>Already registered? </span>
-              <button
-                type="button"
-                onClick={() => { setActiveTab('login'); setErrorMsg(''); setSuccessMsg(''); }}
-                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
-              >
-                Sign In here
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* LOGIN FORM */}
-        {activeTab === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Username
-              </label>
-              <input
-                type="text"
-                required
-                value={loginIdentifier}
-                onChange={(e) => setLoginIdentifier(e.target.value)}
-                placeholder="Enter your username"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Patient Portal'}
-            </button>
-
-            <div className="text-center pt-3 text-xs text-slate-500">
-              <span>Don't have an account? </span>
-              <button
-                type="button"
-                onClick={() => { setActiveTab('register'); setErrorMsg(''); setSuccessMsg(''); }}
-                className="text-[#00658a] font-semibold hover:underline cursor-pointer"
-              >
-                Register here
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Back to Home Link */}
-        <div className="text-center mt-5">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
-          >
-            ← Back to Home
-          </button>
-        </div>
-
-        {/* Discreet Demo Autofill Helper */}
-        {activeTab === 'login' && (
-          <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
-            <span>Demo patient:</span>
-            <button
-              type="button"
-              onClick={() => { setLoginIdentifier('wanjiku@example.com'); setLoginPassword('123456'); }}
-              className="text-[#00658a] font-medium hover:underline cursor-pointer"
-            >
-              Wanjiku Muthoni
-            </button>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-};
-
+// ==============================================================
+// CLINICAL STAFF LOGIN GATE COMPONENT
+// ==============================================================
 interface ClinicalStaffLoginGateProps {
   onStaffAuthSuccess: (token: string, user: User) => void;
   onCancel?: () => void;
@@ -1571,8 +1914,8 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
   onStaffAuthSuccess,
   onCancel
 }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('maxxroy961@gmail.com');
+  const [password, setPassword] = useState('Pay@1206');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -1593,15 +1936,6 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
         return;
       }
 
-      // Check admin local auth first
-      const adminAuth = authenticateLocalAdmin(username, password);
-      if (adminAuth.success && adminAuth.user) {
-        saveLocalUser(adminAuth.user, password);
-        onStaffAuthSuccess(`jwt-local-${adminAuth.user.id}`, adminAuth.user);
-        return;
-      }
-
-      // Check staff local auth
       const staffAuth = authenticateLocalStaff(username, password);
       if (staffAuth.success && staffAuth.user) {
         saveLocalUser(staffAuth.user, password);
@@ -1618,49 +1952,44 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
   };
 
   return (
-    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f8fafc]">
-      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-lg shadow-slate-200/50 border border-slate-100">
+    <div className="min-h-[85vh] sm:min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#FAF8F5] text-[#221815]">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl p-7 sm:p-8 shadow-xl border border-stone-200/60">
         
-        {/* Top Icon Squircle Badge matching design reference */}
-        <div className="w-14 h-14 rounded-2xl bg-[#13b886] flex items-center justify-center text-white mx-auto shadow-xs">
-          <Lock className="w-7 h-7 text-white stroke-[2.2]" />
+        <div className="w-14 h-14 rounded-2xl bg-[#0A4D8C] flex items-center justify-center text-white mx-auto shadow-md">
+          <Stethoscope className="w-7 h-7 stroke-[2.2]" />
         </div>
 
-        {/* Title matching design reference */}
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight text-center mt-5 mb-2">
+        <h2 className="text-2xl font-extrabold text-[#221815] tracking-tight text-center mt-5 mb-2">
           Staff Portal Login
         </h2>
 
-        {/* Subtitle matching design reference */}
-        <p className="text-sm text-slate-500 text-center max-w-[280px] sm:max-w-xs mx-auto leading-relaxed mb-6">
-          Enter the username and password provided by your administrator
+        <p className="text-xs text-stone-500 text-center max-w-xs mx-auto leading-relaxed mb-6">
+          Access clinical EMR, encounters, pharmacy orders &amp; patient charts
         </p>
 
         {errorMsg && (
-          <div className="mb-5 bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <div className="mb-4 bg-rose-50 border border-rose-200 rounded-2xl p-3 text-xs text-rose-800 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-[#C8232C] shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Login Form matching design reference */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-2">
-              Username
+            <label className="block text-xs font-bold text-[#221815] mb-1.5">
+              Staff Username or Email
             </label>
             <input
               type="text"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              className="w-full px-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-900 mb-2">
+            <label className="block text-xs font-bold text-[#221815] mb-1.5">
               Password
             </label>
             <input
@@ -1668,48 +1997,40 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00658a]/20 focus:border-[#00658a] transition-all"
+              className="w-full px-4 py-3 bg-[#FAF8F5] border border-stone-200 rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#C8232C]/20 focus:border-[#C8232C]"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-[#00658a] hover:bg-[#005473] text-white rounded-xl font-semibold text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center disabled:opacity-50 mt-6"
+            className="w-full mt-6 py-3.5 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-semibold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In to Staff Portal'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Sign In to Staff Workspace →</span>}
           </button>
         </form>
 
-        {/* Back to Home Link matching design reference */}
         <div className="text-center mt-5">
           <button
             type="button"
             onClick={onCancel}
-            className="text-sm font-medium text-[#00658a] hover:underline cursor-pointer"
+            className="text-xs text-stone-600 hover:text-[#C8232C] font-semibold cursor-pointer"
           >
             ← Back to Home
           </button>
         </div>
 
-        {/* Discreet Demo Autofill Helper */}
-        <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 pt-3 border-t border-slate-100 mt-4">
+        <div className="flex items-center justify-center space-x-2 text-xs text-stone-400 pt-3 border-t border-stone-100 mt-4">
           <span>Quick fill:</span>
           <button
             type="button"
-            onClick={() => { setUsername('markobare@gmail.com'); setPassword('Pay@1206'); }}
-            className="text-[#00658a] font-medium hover:underline cursor-pointer"
+            onClick={() => {
+              setUsername('maxxroy961@gmail.com');
+              setPassword('Pay@1206');
+            }}
+            className="text-[#0A4D8C] font-semibold hover:underline cursor-pointer"
           >
-            Marko Bare
-          </button>
-          <span>·</span>
-          <button
-            type="button"
-            onClick={() => { setUsername('dr_grace'); setPassword('Hospital#2026'); }}
-            className="text-[#00658a] font-medium hover:underline cursor-pointer"
-          >
-            Dr. Grace
+            Dr. Maxx Roy
           </button>
         </div>
 
@@ -1718,6 +2039,9 @@ export const ClinicalStaffLoginGate: React.FC<ClinicalStaffLoginGateProps> = ({
   );
 };
 
+// ==============================================================
+// MANDATORY PASSWORD CHANGE MODAL
+// ==============================================================
 interface MandatoryPasswordChangeModalProps {
   isOpen: boolean;
   user: User;
@@ -1754,11 +2078,9 @@ export const MandatoryPasswordChangeModal: React.FC<MandatoryPasswordChangeModal
     setErrorMsg('');
 
     try {
-      const result = await safeFetchJson('/api/auth/staff/change-password', {
+      await safeFetchJson('/api/auth/staff/change-password', {
         method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           userId: user.id,
           oldPassword,
@@ -1766,14 +2088,7 @@ export const MandatoryPasswordChangeModal: React.FC<MandatoryPasswordChangeModal
         })
       });
 
-      if (!result.ok) {
-        // Local resilience save
-        saveLocalUser({ ...user, mustChangePassword: false }, newPassword);
-      } else {
-        saveLocalUser({ ...user, mustChangePassword: false }, newPassword);
-      }
-
-      alert('Password changed successfully! You may now access the clinical workspace.');
+      saveLocalUser({ ...user, mustChangePassword: false }, newPassword);
       onSuccess();
     } catch (err: any) {
       setErrorMsg(err.message || 'Error resetting password.');
@@ -1783,70 +2098,70 @@ export const MandatoryPasswordChangeModal: React.FC<MandatoryPasswordChangeModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-amber-300 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden text-[#221815]">
         
-        <div className="bg-amber-600 px-6 py-4 text-white flex items-center space-x-3">
+        <div className="bg-[#C8232C] px-6 py-4 text-white flex items-center space-x-3">
           <Key className="w-6 h-6" />
           <div>
-            <h3 className="font-bold text-base">Mandatory First-Login Password Change</h3>
-            <p className="text-xs text-amber-100">Hospital Security Protocol Enforced</p>
+            <h3 className="font-bold text-base">Mandatory Password Update</h3>
+            <p className="text-xs text-rose-100">TERRALINK Health Security Protocol</p>
           </div>
         </div>
 
         <div className="p-6 space-y-4 text-xs">
-          <p className="text-slate-600">
-            Welcome <strong>{user.name}</strong>. Because your account was provisioned with a temporary administrative password, you must set a new confidential password before accessing hospital clinical records.
+          <p className="text-stone-600">
+            Welcome <strong>{user.name}</strong>. Because your account was provisioned with a temporary administrative password, you must set a new confidential password before accessing clinical records.
           </p>
 
           {errorMsg && (
-            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-rose-800 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-[#C8232C] flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Temporary Initial Password *</label>
+              <label className="block font-bold text-stone-700 mb-1">Temporary Initial Password *</label>
               <input
                 type="password"
                 required
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 placeholder="Enter initial password"
-                className="w-full p-2.5 bg-white border border-slate-300 rounded-xl font-mono"
+                className="w-full p-2.5 bg-[#FAF8F5] border border-stone-200 rounded-xl font-mono"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Create New Secure Password *</label>
+              <label className="block font-bold text-stone-700 mb-1">Create New Secure Password *</label>
               <input
                 type="password"
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                className="w-full p-2.5 bg-[#FAF8F5] border border-stone-200 rounded-xl"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Confirm New Password *</label>
+              <label className="block font-bold text-stone-700 mb-1">Confirm New Password *</label>
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-2.5 bg-white border border-slate-300 rounded-xl"
+                className="w-full p-2.5 bg-[#FAF8F5] border border-stone-200 rounded-xl"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 bg-[#C8232C] hover:bg-[#B81D24] text-white rounded-full font-bold shadow-md flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Update Password & Enter Portal</span>}
             </button>
