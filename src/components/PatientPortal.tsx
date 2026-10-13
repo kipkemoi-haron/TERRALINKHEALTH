@@ -59,11 +59,13 @@ import {
   ChatMessage,
   calculateAge,
   PatientInsurancePolicy,
-  InsuranceProviderPlan
+  InsuranceProviderPlan,
+  HospitalServiceItem
 } from '../types';
 import {
   INITIAL_INSURANCE_PROVIDERS,
-  INITIAL_INSURANCE_POLICIES
+  INITIAL_INSURANCE_POLICIES,
+  INITIAL_HOSPITAL_SERVICES
 } from '../mockData';
 import { MpesaModal } from './MpesaModal';
 import { TelemedicineRoom } from './TelemedicineRoom';
@@ -108,10 +110,14 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   onLogout,
   onNavigateToHome
 }) => {
-  // Active Navigation Tab - ONLY the 9 requested tabs
+  // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile'
+    'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile'
   >('dashboard');
+
+  // Healthcare Services Filter & Search
+  const [servicesSearch, setServicesSearch] = useState<string>('');
+  const [servicesCategory, setServicesCategory] = useState<string>('All');
 
   // Hamburger Menu Drawer State
   const [isHamburgerOpen, setIsHamburgerOpen] = useState<boolean>(false);
@@ -634,6 +640,30 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                 {activeTab === 'dashboard' && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C]" />}
               </button>
 
+              {/* 2. Healthcare Services (Featured) */}
+              <button
+                onClick={() => {
+                  setActiveTab('services');
+                  setIsHamburgerOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl transition-all cursor-pointer ${
+                  activeTab === 'services'
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Heart className={`w-4 h-4 ${activeTab === 'services' ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span>Healthcare Services</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span className="px-1.5 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[9px] font-bold rounded-full">
+                    FEATURED
+                  </span>
+                  {activeTab === 'services' && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C]" />}
+                </div>
+              </button>
+
               {/* 2. AI Assistant */}
               <button
                 onClick={() => {
@@ -819,7 +849,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
       {/* ================= MAIN ACTIVE TAB CONTENT ================= */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-5 space-y-4">
         
-        {/* ================= TAB 1: DASHBOARD (MATCHING REFERENCE IMAGE 5) ================= */}
+        {/* ================= TAB 1: DASHBOARD ================= */}
         {activeTab === 'dashboard' && (
           <div className="space-y-4">
             
@@ -829,79 +859,102 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                 Welcome back, {patient.name || 'Faith Chebet'} 👋
               </h2>
               <p className="text-xs sm:text-sm text-stone-600 mt-1">
-                Your TERRALINK Health account is ready. Book your first appointment below.
+                Your TERRALINK Health account is ready. Track your care and access services below.
               </p>
             </div>
 
-            {/* 2. Hotline Pill Strip */}
-            <div className="inline-flex items-center space-x-2 text-xs font-semibold text-[#8F261F] bg-white px-3.5 py-1.5 rounded-full border border-stone-200/80 shadow-2xs">
-              <Phone className="w-3.5 h-3.5 text-[#C8232C]" />
-              <span>Hospital 24/7: 0713544101</span>
-            </div>
-
-            {/* 3. Questions / Emergencies Dark Terracotta Card */}
-            <div className="bg-[#8F261F] text-white rounded-3xl p-5 shadow-sm space-y-3.5">
-              <div className="flex items-start space-x-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5 text-white" />
+            {/* 2. Overview Cards: Upcoming Appointments, Bills, Medical Records, Next Visit */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              
+              {/* Card 1: Upcoming Appointments */}
+              <div
+                onClick={() => setActiveTab('appointments')}
+                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-[#C8232C]/40 hover:shadow-sm transition-all cursor-pointer space-y-3"
+              >
+                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
+                  <Calendar className="w-4 h-4 stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
-                    Questions, Emergencies, or Appointment Approvals?
-                  </h3>
-                  <p className="text-xs text-rose-100/90 mt-1 leading-relaxed">
-                    Call or SMS our medical coordinators anytime at 0713544101.
-                  </p>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#221815] block leading-none">
+                    {upcomingAppointments.length || 1}
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
+                    Upcoming Appointments
+                  </span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 pt-1">
-                <a
-                  href="tel:0713544101"
-                  className="px-4 py-2 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white font-semibold text-xs flex items-center space-x-1.5 shadow-sm transition-transform active:scale-95"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Call Now</span>
-                </a>
-                <a
-                  href="sms:0713544101"
-                  className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs flex items-center space-x-1.5 border border-white/20 transition-transform active:scale-95"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>SMS Us</span>
-                </a>
+              {/* Card 2: Pending Bills */}
+              <div
+                onClick={() => setActiveTab('billing')}
+                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-[#C8232C]/40 hover:shadow-sm transition-all cursor-pointer space-y-3"
+              >
+                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
+                  <CreditCard className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-lg sm:text-2xl font-extrabold text-[#221815] block leading-none">
+                    KES {pendingBillsTotal > 0 ? pendingBillsTotal.toLocaleString() : '8,500'}
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
+                    Pending Bills
+                  </span>
+                </div>
               </div>
+
+              {/* Card 3: Medical Records */}
+              <div
+                onClick={() => setActiveTab('records')}
+                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-[#0A4D8C]/40 hover:shadow-sm transition-all cursor-pointer space-y-3"
+              >
+                <div className="w-9 h-9 rounded-2xl bg-[#F0F5FA] text-[#0A4D8C] flex items-center justify-center">
+                  <FileText className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#221815] block leading-none">
+                    {totalMedicalRecordsCount > 0 ? totalMedicalRecordsCount : 10}
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
+                    Medical Records
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: Next Visit */}
+              <div
+                onClick={() => setActiveTab('appointments')}
+                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-[#C8232C]/40 hover:shadow-sm transition-all cursor-pointer space-y-3"
+              >
+                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
+                  <Clock className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-xl sm:text-2xl font-extrabold text-[#221815] block leading-none">
+                    {nextVisitDate}
+                  </span>
+                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
+                    Next Clinic Visit
+                  </span>
+                </div>
+              </div>
+
             </div>
 
-            {/* 4. AI Health Assistant Card */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs flex items-center justify-between hover:border-stone-300 transition-all">
-              <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-2xl bg-[#C8232C] text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-bold text-[#221815]">AI Health Assistant</span>
-                    <span className="px-2 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[10px] font-bold rounded-full">
-                      NEW
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-500 mt-0.5 leading-snug line-clamp-1">
-                    Ask about your records, medications, appointments, or get health guidance
-                  </p>
-                </div>
-              </div>
-
+            {/* 3. Button for Book Appointment */}
+            <div>
               <button
-                onClick={() => setActiveTab('ai_assistant')}
-                className="w-9 h-9 rounded-full bg-[#FAF8F5] hover:bg-[#F0ECE1] text-[#221815] border border-stone-200 flex items-center justify-center transition-colors shrink-0 ml-3 cursor-pointer shadow-2xs"
-                title="Open AI Assistant"
+                onClick={() => {
+                  setActiveTab('appointments');
+                  setIsBookingOpen(true);
+                }}
+                className="w-full py-3.5 px-6 rounded-2xl bg-[#C8232C] hover:bg-[#B81D24] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer flex items-center justify-center space-x-2"
               >
-                <ArrowRight className="w-4 h-4" />
+                <Calendar className="w-4 h-4" />
+                <span>Book Appointment</span>
               </button>
             </div>
 
-            {/* 5. LIVE HOSPITAL QUEUE & CLINICAL STATUS SECTION (DIRECTLY ON DASHBOARD) */}
+            {/* 4. Live Queue & Clinical Wait Times */}
             <div className="bg-white rounded-3xl p-5 border border-stone-200/60 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2.5">
@@ -972,203 +1025,290 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
               </div>
             </div>
 
-            {/* 6. Healthcare Services & Home Care Card */}
-            <div className="bg-white rounded-3xl p-5 border border-stone-200/60 shadow-xs space-y-3.5">
+            {/* 5. Questions / Emergencies Card (Call Now & SMS Us - Redundant call strip above removed) */}
+            <div className="bg-[#8F261F] text-white rounded-3xl p-5 shadow-sm space-y-3.5">
               <div className="flex items-start space-x-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-[#C8232C] text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Heart className="w-5 h-5 fill-white stroke-white" />
+                <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
+                  <Phone className="w-5 h-5 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-sm sm:text-base font-bold text-[#221815]">
-                      Healthcare Services &amp; Home Care
-                    </h3>
-                    <span className="px-2 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[10px] font-bold rounded-full">
-                      20 Services
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-500 mt-1 leading-relaxed">
-                    Hire a nurse, book in-home physiotherapy, senior care, specialized therapy, or medical transportation. All requests are routed to hospital clinical dispatch.
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+                    Questions, Emergencies, or Appointment Approvals?
+                  </h3>
+                  <p className="text-xs text-rose-100/90 mt-1 leading-relaxed">
+                    Call or SMS our medical coordinators anytime at 0713544101.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2 pt-1">
+                <a
+                  href="tel:0713544101"
+                  className="px-4 py-2 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white font-semibold text-xs flex items-center space-x-1.5 shadow-sm transition-transform active:scale-95"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call Now</span>
+                </a>
+                <a
+                  href="sms:0713544101"
+                  className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs flex items-center space-x-1.5 border border-white/20 transition-transform active:scale-95"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>SMS Us</span>
+                </a>
+              </div>
+            </div>
+
+            {/* 6. Explore Our Services */}
+            <div className="bg-white rounded-3xl p-5 border border-stone-200/60 shadow-xs space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-[#C8232C] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Heart className="w-5 h-5 fill-white stroke-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-sm sm:text-base font-bold text-[#221815]">
+                        Explore Our Services
+                      </h3>
+                      <span className="px-2 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[10px] font-bold rounded-full">
+                        Featured
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                      Comprehensive clinical care, in-home nursing, specialized therapies, diagnostics, and 24/7 emergency dispatch.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service categories preview chips */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Outpatient OPD</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">KES 1,500 &bull; SHA Covered</span>
+                </div>
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Specialist Clinics</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">Cardiology, Neuro, Ortho</span>
+                </div>
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Home Care &amp; Nursing</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">Clinical Dispatch</span>
+                </div>
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Diagnostic Lab</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">Lipid, Hemogram, etc.</span>
+                </div>
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Digital Radiology</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">X-Ray, CT, Ultrasound</span>
+                </div>
+                <div 
+                  onClick={() => setActiveTab('services')}
+                  className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EAE5DC] hover:border-[#C8232C]/40 transition-all cursor-pointer group"
+                >
+                  <span className="font-bold text-[#221815] text-xs block group-hover:text-[#C8232C] transition-colors">Emergency ALS</span>
+                  <span className="text-[10px] text-stone-500 mt-0.5 block">24/7 Ambulance Dispatch</span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-1">
+                <button
+                  onClick={() => setActiveTab('services')}
+                  className="px-5 py-2.5 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white font-semibold text-xs shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center space-x-1"
+                >
+                  <span>Explore All Services →</span>
+                </button>
                 <button
                   onClick={() => {
                     setActiveTab('appointments');
                     setIsBookingOpen(true);
                   }}
-                  className="px-5 py-2.5 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white font-semibold text-xs shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center space-x-1"
-                >
-                  <span>Explore Services →</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('appointments')}
                   className="px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-stone-200/70 text-[#221815] font-semibold text-xs border border-stone-200 transition-colors cursor-pointer"
                 >
-                  My Requests
+                  Book Appointment
                 </button>
               </div>
-            </div>
-
-            {/* 7. Quick Stat Cards Grid (2x2) */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              
-              {/* Card 1: Upcoming Appointments */}
-              <div
-                onClick={() => setActiveTab('appointments')}
-                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-stone-300 transition-all cursor-pointer space-y-3"
-              >
-                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
-                  <Calendar className="w-4 h-4 stroke-[2.2]" />
-                </div>
-                <div>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-[#221815] block leading-none">
-                    {upcomingAppointments.length || 1}
-                  </span>
-                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
-                    Upcoming Appointments
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 2: Pending Bills */}
-              <div
-                onClick={() => setActiveTab('billing')}
-                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-stone-300 transition-all cursor-pointer space-y-3"
-              >
-                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
-                  <CreditCard className="w-4 h-4 stroke-[2.2]" />
-                </div>
-                <div>
-                  <span className="text-lg sm:text-2xl font-extrabold text-[#221815] block leading-none">
-                    KES {pendingBillsTotal > 0 ? pendingBillsTotal.toLocaleString() : '8,500'}
-                  </span>
-                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
-                    Pending Bills
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Medical Records */}
-              <div
-                onClick={() => setActiveTab('records')}
-                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-stone-300 transition-all cursor-pointer space-y-3"
-              >
-                <div className="w-9 h-9 rounded-2xl bg-[#F0F5FA] text-[#0A4D8C] flex items-center justify-center">
-                  <FileText className="w-4 h-4 stroke-[2.2]" />
-                </div>
-                <div>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-[#221815] block leading-none">
-                    {totalMedicalRecordsCount > 0 ? totalMedicalRecordsCount : 10}
-                  </span>
-                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
-                    Medical Records
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 4: Next Visit */}
-              <div
-                onClick={() => setActiveTab('appointments')}
-                className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-stone-300 transition-all cursor-pointer space-y-3"
-              >
-                <div className="w-9 h-9 rounded-2xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center">
-                  <Clock className="w-4 h-4 stroke-[2.2]" />
-                </div>
-                <div>
-                  <span className="text-xl sm:text-2xl font-extrabold text-[#221815] block leading-none">
-                    {nextVisitDate}
-                  </span>
-                  <span className="text-xs text-stone-500 font-medium block mt-1.5">
-                    Next Clinic Visit
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* 8. Upcoming Appointments Section */}
-            <div className="bg-white rounded-3xl p-5 border border-stone-200/60 shadow-xs space-y-3.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#221815]">Upcoming Appointments</h3>
-                <button
-                  onClick={() => setActiveTab('appointments')}
-                  className="text-xs font-semibold text-[#0A4D8C] hover:underline flex items-center space-x-1 cursor-pointer"
-                >
-                  <span>View All</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-
-              {upcomingAppointments.length > 0 ? (
-                <div className="space-y-2.5">
-                  {upcomingAppointments.slice(0, 2).map((apt) => (
-                    <div
-                      key={apt.id}
-                      className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EAE5DC] flex items-center justify-between"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs font-bold text-[#221815]">{apt.doctorName}</span>
-                          <span className="px-2 py-0.5 bg-white text-[#C8232C] text-[10px] font-bold rounded-full border border-stone-200">
-                            {apt.departmentName}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-stone-500 flex items-center space-x-2">
-                          <span>📅 {apt.appointmentDate}</span>
-                          <span>⏰ {apt.appointmentTime}</span>
-                        </p>
-                      </div>
-
-                      {apt.type === 'telemedicine' ? (
-                        <button
-                          onClick={() => setActiveTelemedicineApt(apt)}
-                          className="px-3.5 py-1.5 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                          <span>Start Call</span>
-                        </button>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100">
-                          Confirmed
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-6 text-center space-y-2">
-                  <p className="text-xs text-stone-500">No upcoming clinic appointments.</p>
-                  <button
-                    onClick={() => {
-                      setActiveTab('appointments');
-                      setIsBookingOpen(true);
-                    }}
-                    className="px-4 py-2 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white text-xs font-semibold cursor-pointer inline-flex items-center space-x-1 shadow-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Book Appointment</span>
-                  </button>
-                </div>
-              )}
             </div>
 
           </div>
         )}
 
+        {/* ================= TAB: HEALTHCARE SERVICES (FEATURED) ================= */}
+        {activeTab === 'services' && (
+          <div className="space-y-4">
+            {/* Header banner */}
+            <div className="bg-white rounded-3xl p-5 border border-stone-200/60 shadow-xs space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#C8232C] text-white flex items-center justify-center shadow-xs">
+                    <Heart className="w-5 h-5 fill-white stroke-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h2 className="text-base sm:text-lg font-bold text-[#221815]">Healthcare Services &amp; Home Care</h2>
+                      <span className="px-2 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[10px] font-bold rounded-full">
+                        FEATURED
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500">
+                      Standard clinical tariffs, SHA / NHIF Kenya coverage &amp; direct service dispatch
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search & Category Filter */}
+              <div className="space-y-2.5 pt-1">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search services, laboratory tests, procedures, imaging..."
+                    value={servicesSearch}
+                    onChange={(e) => setServicesSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EAE5DC] text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#C8232C]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                  {['All', 'Consultation', 'Laboratory', 'Radiology & Imaging', 'Emergency & Ambulance', 'Home Care & Nursing'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setServicesCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl font-medium text-xs whitespace-nowrap transition-colors cursor-pointer ${
+                        servicesCategory === cat
+                          ? 'bg-[#C8232C] text-white font-bold shadow-2xs'
+                          : 'bg-[#FAF8F5] text-stone-600 hover:bg-stone-200/60 border border-[#EAE5DC]'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Services List Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(INITIAL_HOSPITAL_SERVICES || [])
+                .filter((srv) => {
+                  const matchesSearch = srv.name.toLowerCase().includes(servicesSearch.toLowerCase()) ||
+                    srv.description.toLowerCase().includes(servicesSearch.toLowerCase()) ||
+                    srv.code.toLowerCase().includes(servicesSearch.toLowerCase());
+                  const matchesCategory = servicesCategory === 'All' || srv.category === servicesCategory ||
+                    (servicesCategory === 'Home Care & Nursing' && (srv.category === 'Consultation' || srv.category === 'Physiotherapy & Rehab'));
+                  return matchesSearch && matchesCategory;
+                })
+                .map((srv) => (
+                  <div
+                    key={srv.id}
+                    className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/60 shadow-xs hover:border-[#C8232C]/30 transition-all flex flex-col justify-between space-y-3"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#0A4D8C] bg-[#F0F5FA] px-2 py-0.5 rounded-lg">
+                          {srv.category}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-stone-500">
+                          {srv.code}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-[#221815] leading-snug">{srv.name}</h3>
+                      <p className="text-xs text-stone-500 leading-relaxed line-clamp-2">
+                        {srv.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block font-medium">Standard Tariff</span>
+                        <span className="text-sm font-black text-[#221815]">
+                          KES {srv.standardFeeKES.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5">
+                        {srv.shaCovered && (
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100">
+                            SHA Covered
+                          </span>
+                        )}
+                        <button
+                          onClick={() => {
+                            setActiveTab('appointments');
+                            setIsBookingOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white text-xs font-semibold shadow-2xs transition-transform active:scale-95 cursor-pointer"
+                        >
+                          Book Service
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* In-Home Clinical Care Banner */}
+            <div className="bg-[#FAF8F5] rounded-3xl p-5 border border-[#EAE5DC] space-y-3">
+              <div className="flex items-start space-x-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#0A4D8C] text-white flex items-center justify-center shrink-0">
+                  <Activity className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#221815]">Need In-Home Nursing or Home Phlebotomy?</h3>
+                  <p className="text-xs text-stone-600 mt-1">
+                    TERRALINK Health dispatches licensed clinical officers and registered nurses for home wound care, medication administration, senior nursing, and lab sample collection across Nairobi.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 pt-1">
+                <a
+                  href="tel:0713544101"
+                  className="px-4 py-2 rounded-full bg-[#0A4D8C] hover:bg-[#083E72] text-white text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call Dispatch (0713544101)</span>
+                </a>
+                <a
+                  href="sms:0713544101"
+                  className="px-4 py-2 rounded-full bg-white text-[#221815] border border-stone-200 text-xs font-semibold flex items-center space-x-1.5 hover:bg-stone-50 transition-colors"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Request by SMS</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ================= TAB 2: AI ASSISTANT ================= */}
         {activeTab === 'ai_assistant' && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xs flex flex-col h-[75vh]">
-            <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
+          <div className="bg-white rounded-3xl border border-[#EAE5DC] shadow-xs flex flex-col h-[75vh]">
+            <div className="p-3.5 border-b border-[#EAE5DC] flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#0284c7] text-white flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#C8232C] text-white flex items-center justify-center">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900">AI Health Assistant</h3>
-                  <p className="text-[10px] text-slate-400">Evidence-based advice &bull; Kenya Health Network</p>
+                  <h3 className="text-xs sm:text-sm font-bold text-[#221815]">AI Health Assistant</h3>
+                  <p className="text-[10px] text-stone-500">Evidence-based advice &bull; Kenya Health Network</p>
                 </div>
               </div>
             </div>
@@ -1183,25 +1323,25 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                   <div
                     className={`max-w-[85%] rounded-2xl p-3 leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-[#0284c7] text-white rounded-br-xs'
-                        : 'bg-slate-100 text-slate-800 rounded-bl-xs'
+                        ? 'bg-[#C8232C] text-white rounded-br-xs'
+                        : 'bg-stone-100 text-[#221815] rounded-bl-xs'
                     }`}
                   >
                     <p className="whitespace-pre-line">{msg.text}</p>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-0.5 px-1">{msg.time}</span>
+                  <span className="text-[10px] text-stone-400 mt-0.5 px-1">{msg.time}</span>
                 </div>
               ))}
               {aiLoading && (
-                <div className="flex items-center space-x-2 text-slate-400 text-xs">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0284c7]" />
+                <div className="flex items-center space-x-2 text-stone-400 text-xs">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C8232C]" />
                   <span>Thinking...</span>
                 </div>
               )}
             </div>
 
             {/* Quick Prompt Pills */}
-            <div className="px-3.5 py-2 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+            <div className="px-3.5 py-2 border-t border-[#EAE5DC] flex items-center gap-1.5 overflow-x-auto text-[11px]">
               {[
                 'Explain my blood test results',
                 'What are common asthma triggers?',
@@ -1210,7 +1350,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                 <button
                   key={i}
                   onClick={() => setAiInput(pill)}
-                  className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 whitespace-nowrap transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 whitespace-nowrap transition-colors cursor-pointer"
                 >
                   {pill}
                 </button>
@@ -1218,18 +1358,18 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
             </div>
 
             {/* Input Bar */}
-            <form onSubmit={handleSendAiMessage} className="p-3 border-t border-slate-100 flex items-center space-x-2">
+            <form onSubmit={handleSendAiMessage} className="p-3 border-t border-[#EAE5DC] flex items-center space-x-2">
               <input
                 type="text"
                 placeholder="Type your health question..."
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                className="flex-1 px-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#C8232C]"
               />
               <button
                 type="submit"
                 disabled={!aiInput.trim() || aiLoading}
-                className="p-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] disabled:opacity-40 text-white cursor-pointer transition-colors"
+                className="p-2 rounded-xl bg-[#C8232C] hover:bg-[#B81D24] disabled:opacity-40 text-white cursor-pointer transition-colors"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -1242,12 +1382,12 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">Appointments</h2>
-                <p className="text-xs text-slate-500">Manage bookings &amp; consultations</p>
+                <h2 className="text-base sm:text-lg font-bold text-[#221815]">Appointments</h2>
+                <p className="text-xs text-stone-500">Manage bookings &amp; consultations</p>
               </div>
               <button
                 onClick={() => setIsBookingOpen(!isBookingOpen)}
-                className="px-3.5 py-1.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl bg-[#C8232C] hover:bg-[#B81D24] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer shadow-2xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>{isBookingOpen ? 'Close Form' : 'Book Appointment'}</span>
@@ -1373,7 +1513,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    className="px-4 py-2 rounded-xl bg-[#C8232C] hover:bg-[#B81D24] text-white font-semibold flex items-center space-x-1.5 cursor-pointer shadow-xs"
                   >
                     <span>Proceed to M-PESA Confirmation</span>
                   </button>
@@ -1397,7 +1537,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         apt.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                         apt.status === 'Cancelled' ? 'bg-rose-50 text-rose-700' :
-                        'bg-sky-50 text-sky-700'
+                        'bg-rose-50 text-[#C8232C]'
                       }`}>
                         {apt.status}
                       </span>
@@ -1415,7 +1555,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                       {apt.type === 'telemedicine' && apt.status === 'Confirmed' && (
                         <button
                           onClick={() => setActiveTelemedicineApt(apt)}
-                          className="px-3 py-1.5 rounded-xl bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-[#C8232C] hover:bg-[#B81D24] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
                         >
                           <Video className="w-3.5 h-3.5" />
                           <span>Join Video Consultation</span>
