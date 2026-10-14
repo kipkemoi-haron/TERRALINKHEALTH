@@ -39,7 +39,7 @@ import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../typ
 import { INITIAL_REVIEWS } from '../mockData';
 import founderPhotoImg from '../assets/images/founder_photo_1788042380844.jpg';
 import doctorHeroImg from '../assets/images/doctor_hero_1789942016435.jpg';
-import femaleDoctorHeroImg from '../assets/images/female_doctor_hero_1791972857243.jpg';
+import femaleDoctorHeroImg from '../assets/images/doctor_hero_desk_1791978142980.jpg';
 
 interface HospitalHomepageProps {
   departments?: Department[];
@@ -550,7 +550,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     <div className="min-h-screen w-full bg-[#FAF8F5] text-[#221815] flex flex-col justify-between selection:bg-[#FDF1F1] selection:text-[#C8232C] pb-24 sm:pb-28">
       
       {/* ================= 1. HEADER BAR ================= */}
-      <header className="w-full bg-white border-b border-[#EAE5DC] sticky top-0 z-40 shadow-2xs transition-all">
+      <header className="w-full bg-white border-b border-[#EAE5DC] sticky top-0 z-40 shadow-xs">
         <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           
           {/* Logo & Brand */}
@@ -564,15 +564,13 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D90429] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               <Activity className="w-5 h-5 stroke-[2.4]" />
             </div>
-            <div className="min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-2">
-                <span className="text-sm xs:text-base sm:text-lg md:text-xl font-black text-[#0B132B] leading-tight tracking-wider uppercase whitespace-nowrap">
-                  TERRALINK HEALTH
-                </span>
-                <span className="text-[10px] xs:text-[11px] sm:text-xs text-stone-500 font-medium leading-tight whitespace-nowrap">
-                  Digital Hospital Platform
-                </span>
-              </div>
+            <div className="flex flex-col min-w-0 text-left">
+              <span className="text-base sm:text-lg md:text-xl font-black text-[#0B132B] leading-none tracking-tight uppercase whitespace-nowrap">
+                TERRALINK HEALTH
+              </span>
+              <span className="text-[10.5px] sm:text-xs text-stone-500 font-medium leading-tight mt-0.5 whitespace-nowrap">
+                Digital Hospital Platform
+              </span>
             </div>
           </div>
 
@@ -585,7 +583,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 title="Open Patient Portal"
               >
                 <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
-                <span className="whitespace-nowrap">Patient Portal</span>
+                <span className="whitespace-nowrap font-semibold">Patient Portal</span>
               </button>
             ) : (
               <button
@@ -594,7 +592,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 title="Patient Portal Login"
               >
                 <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
-                <span className="whitespace-nowrap">Patient Portal</span>
+                <span className="whitespace-nowrap font-semibold">Patient Portal</span>
               </button>
             )}
           </div>
@@ -603,40 +601,40 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </header>
 
       {/* ================= 2. HERO SECTION ================= */}
-      {/* Realistic female doctor seated at her desk as background - clearly visible, sharp, no blur */}
+      {/* High-quality sharp realistic female doctor seated at her desk with white coat and stethoscope */}
       <section 
-        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-3.5rem-3.75rem)] sm:min-h-[580px] md:min-h-[640px] max-h-[820px] bg-[#FAF8F5]"
+        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-3.5rem-3.25rem)] sm:min-h-[580px] md:min-h-[640px] bg-[#FAF8F5]"
       >
-        {/* Female doctor seated at her desk */}
+        {/* Doctor seated at her desk: carefully positioned on mobile and larger screens */}
         <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[position:right_10%_top] xs:bg-[position:right_15%_center] sm:bg-[position:right_22%_center] md:bg-[position:right_center]"
+          className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[position:84%_30%] sm:bg-[position:80%_center] md:bg-[position:right_center]"
           style={{
             backgroundImage: `url(${femaleDoctorHeroImg})`,
           }}
         />
 
-        {/* Clean, subtle readability gradient: gentle white tint on the left for text contrast, completely transparent on the right so doctor is sharp & clear */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 50% to-transparent 85% sm:from-white/95 sm:via-white/70 42% sm:to-transparent pointer-events-none" />
+        {/* Clean subtle readability gradient: gentle white tint on the left for text contrast, completely transparent on the right so doctor is 100% sharp and recognizable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 40% to-transparent 65% sm:from-white/90 sm:via-white/50 40% sm:to-transparent pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-4 sm:py-6 flex flex-col justify-center">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-3.5 xs:py-4 sm:py-6 flex flex-col justify-center">
           
           {/* Left-aligned hero content matching reference image */}
-          <div className="max-w-xl text-left">
+          <div className="max-w-[280px] xs:max-w-[310px] sm:max-w-xl text-left">
             
             {/* Headline with navy blue & red branding */}
-            <h1 className="text-[25px] xs:text-[28px] sm:text-4xl md:text-5xl font-black text-[#0B132B] tracking-tight leading-[1.14]">
+            <h1 className="text-[24px] xs:text-[27px] sm:text-4xl md:text-5xl font-black text-[#0B132B] tracking-tight leading-[1.12]">
               Enhancing Hospital<br />
               Operations &amp;<br />
               <span className="text-[#D90429]">Patient Experience</span>
             </h1>
 
             {/* Subtitle / Description */}
-            <p className="mt-2.5 xs:mt-3 sm:mt-4 text-[12px] xs:text-[13px] sm:text-base text-slate-800 font-medium leading-snug sm:leading-relaxed max-w-[270px] xs:max-w-[310px] sm:max-w-md drop-shadow-2xs">
+            <p className="mt-2 xs:mt-2.5 sm:mt-4 text-[12px] xs:text-[13px] sm:text-base text-slate-800 font-medium leading-snug sm:leading-relaxed max-w-[245px] xs:max-w-[280px] sm:max-w-md">
               An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
             </p>
 
             {/* 3 Prominent Pill Buttons */}
-            <div className="mt-4 xs:mt-5 sm:mt-6 space-y-2.5 sm:space-y-3.5 w-full max-w-[260px] xs:max-w-[280px] sm:max-w-[320px]">
+            <div className="mt-3.5 xs:mt-4 sm:mt-6 space-y-2.5 sm:space-y-3.5 w-full max-w-[245px] xs:max-w-[270px] sm:max-w-[320px]">
               
               {/* 1. Book an Appointment > (Red Pill Button) */}
               <button
