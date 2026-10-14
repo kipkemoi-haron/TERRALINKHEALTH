@@ -39,6 +39,7 @@ import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../typ
 import { INITIAL_REVIEWS } from '../mockData';
 import founderPhotoImg from '../assets/images/founder_photo_1788042380844.jpg';
 import doctorHeroImg from '../assets/images/doctor_hero_1789942016435.jpg';
+import femaleDoctorHeroImg from '../assets/images/female_doctor_hero_1791972857243.jpg';
 
 interface HospitalHomepageProps {
   departments?: Department[];
@@ -598,62 +599,71 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </header>
 
       {/* ================= 2. HERO SECTION ================= */}
-      {/* Kept original messages exactly as instructed by user */}
-      <section className="relative w-full overflow-hidden pt-8 sm:pt-14 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-        
-        {/* Subtle background ambient glow */}
-        <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center">
-          <div className="w-[500px] h-[350px] bg-red-100/30 rounded-full blur-3xl opacity-70" />
-          <div className="w-[450px] h-[300px] bg-blue-100/30 rounded-full blur-3xl opacity-50 -ml-40" />
-        </div>
+      {/* Realistic female doctor seated at her desk as full background with subtle overlay for maximum clarity and readability */}
+      <section 
+        className="relative w-full overflow-hidden min-h-[620px] sm:min-h-[680px] md:min-h-[740px] flex items-center justify-center py-12 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-cover bg-center"
+        style={{
+          backgroundImage: `url(${femaleDoctorHeroImg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Subtle semi-transparent overlay to ensure text readability without fading out the doctor */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/25 to-white/80 sm:bg-gradient-to-r sm:from-white/90 sm:via-white/40 sm:to-transparent/10 pointer-events-none" />
 
-        <div className="max-w-3xl mx-auto flex flex-col items-center">
+        <div className="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center">
           
-          {/* Exact Original Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0f1f38] tracking-tight leading-tight">
-            Enhancing Hospital Operations &amp; <span className="text-[#C8232C]">Patient Experience</span>
-          </h1>
-
-          {/* Exact Original Description */}
-          <p className="mt-3.5 sm:mt-5 text-stone-600 text-sm sm:text-base md:text-lg leading-relaxed font-normal max-w-2xl">
-            An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
-          </p>
-
-          {/* ================= 3 Prominent Pill Buttons ================= */}
-          <div className="w-full max-w-md sm:max-w-lg mt-7 sm:mt-9 space-y-3.5 sm:space-y-4">
+          {/* Subtle semi-transparent panel for crisp text contrast */}
+          <div className="w-full max-w-2xl bg-white/70 sm:bg-white/55 backdrop-blur-[2px] rounded-3xl p-6 sm:p-8 md:p-10 border border-white/70 shadow-lg shadow-black/5 flex flex-col items-center text-center">
             
-            {/* 1. Book an Appointment > (Red Pill Button) */}
-            <button
-              onClick={handleBookAppointmentClick}
-              className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#C8232C] hover:bg-[#b31d25] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-red-600/30 hover:shadow-xl hover:shadow-red-600/40 transition-all duration-200 flex items-center justify-between cursor-pointer group"
-            >
-              <div className="flex items-center space-x-3.5">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
-                <span className="tracking-tight">Book an Appointment</span>
-              </div>
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* Exact Original Headline */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0f1f38] tracking-tight leading-tight drop-shadow-xs">
+              Enhancing Hospital Operations &amp; <span className="text-[#C8232C]">Patient Experience</span>
+            </h1>
 
-            {/* 2. Explore Our Services -> (Deep Navy / Blue Pill Button) */}
-            <button
-              onClick={handleExploreServicesClick}
-              className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#0A4D8C] hover:bg-[#083e72] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-900/25 hover:shadow-xl hover:shadow-blue-900/35 transition-all duration-200 flex items-center justify-between cursor-pointer group"
-            >
-              <div className="flex items-center space-x-3.5">
-                <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
-                <span className="tracking-tight">Explore Our Services</span>
-              </div>
-              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* Exact Original Description */}
+            <p className="mt-3.5 sm:mt-5 text-stone-900 text-sm sm:text-base md:text-lg leading-relaxed font-semibold max-w-xl drop-shadow-2xs">
+              An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
+            </p>
 
-            {/* 3. Call / SMS: 0713544101 (White Pill Button with Border) */}
-            <button
-              onClick={() => setIsCallSmsModalOpen(true)}
-              className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-white hover:bg-stone-50 active:scale-[0.99] text-[#0f1f38] border-2 border-stone-200 hover:border-stone-300 font-bold text-base sm:text-lg shadow-md shadow-stone-200/50 hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3 cursor-pointer group"
-            >
-              <PhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C] stroke-[2.3] shrink-0 group-hover:scale-110 transition-transform" />
-              <span className="tracking-tight">Call / SMS: 0713544101</span>
-            </button>
+            {/* ================= 3 Prominent Pill Buttons ================= */}
+            <div className="w-full max-w-md sm:max-w-lg mt-7 sm:mt-9 space-y-3.5 sm:space-y-4">
+              
+              {/* 1. Book an Appointment > (Red Pill Button) */}
+              <button
+                onClick={handleBookAppointmentClick}
+                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#C8232C] hover:bg-[#b31d25] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-red-600/35 hover:shadow-xl hover:shadow-red-600/45 transition-all duration-200 flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center space-x-3.5">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
+                  <span className="tracking-tight">Book an Appointment</span>
+                </div>
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* 2. Explore Our Services -> (Deep Navy / Blue Pill Button) */}
+              <button
+                onClick={handleExploreServicesClick}
+                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#0A4D8C] hover:bg-[#083e72] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transition-all duration-200 flex items-center justify-between cursor-pointer group"
+              >
+                <div className="flex items-center space-x-3.5">
+                  <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
+                  <span className="tracking-tight">Explore Our Services</span>
+                </div>
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              {/* 3. Call / SMS: 0713544101 (White Pill Button with Border) */}
+              <button
+                onClick={() => setIsCallSmsModalOpen(true)}
+                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-white hover:bg-stone-50 active:scale-[0.99] text-[#0f1f38] border-2 border-stone-200 hover:border-stone-300 font-bold text-base sm:text-lg shadow-md shadow-stone-200/50 hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3 cursor-pointer group"
+              >
+                <PhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C] stroke-[2.3] shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="tracking-tight">Call / SMS: 0713544101</span>
+              </button>
+
+            </div>
 
           </div>
 
