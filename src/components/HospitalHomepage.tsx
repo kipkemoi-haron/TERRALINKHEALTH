@@ -551,7 +551,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       
       {/* ================= 1. HEADER BAR ================= */}
       <header className="w-full bg-white border-b border-[#EAE5DC] sticky top-0 z-40 shadow-2xs transition-all">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           
           {/* Logo & Brand */}
           <div 
@@ -559,38 +559,42 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               if (currentUser?.role === 'patient') onNavigateToPortal('patient');
               else window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center space-x-3 cursor-pointer select-none group"
+            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer select-none min-w-0 group"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#C8232C] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3]" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D90429] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <Activity className="w-5 h-5 stroke-[2.4]" />
             </div>
-            <div>
-              <span className="text-base sm:text-lg md:text-xl font-black text-[#221815] leading-tight block tracking-wider uppercase">
-                TERRALINK HEALTH
-              </span>
-              <span className="text-[11px] sm:text-xs text-stone-500 font-medium leading-tight block">
-                Digital Hospital Platform
-              </span>
+            <div className="min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:space-x-2">
+                <span className="text-sm xs:text-base sm:text-lg md:text-xl font-black text-[#0B132B] leading-tight tracking-wider uppercase whitespace-nowrap">
+                  TERRALINK HEALTH
+                </span>
+                <span className="text-[10px] xs:text-[11px] sm:text-xs text-stone-500 font-medium leading-tight whitespace-nowrap">
+                  Digital Hospital Platform
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Right Header Navigation - "Patient Login" */}
-          <div className="flex items-center space-x-3">
+          {/* Right Header Navigation - Compact "Patient Portal" */}
+          <div className="flex items-center space-x-2 shrink-0">
             {currentUser && currentUser.role === 'patient' ? (
               <button
                 onClick={() => onNavigateToPortal('patient')}
-                className="px-4 py-2 rounded-full bg-[#FDF1F1] hover:bg-rose-100 text-[#C8232C] font-bold text-xs sm:text-sm border border-rose-200/80 transition-all cursor-pointer shadow-2xs flex items-center space-x-1.5"
+                className="px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-full bg-[#FFF5F5] hover:bg-rose-100 text-[#D90429] font-bold text-[11px] xs:text-xs border border-rose-200/90 transition-all cursor-pointer shadow-2xs flex items-center space-x-1.5 active:scale-95 shrink-0"
+                title="Open Patient Portal"
               >
-                <User className="w-4 h-4 stroke-[2.3]" />
-                <span>Patient Portal ({currentUser.name?.split(' ')[0]})</span>
+                <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
+                <span className="whitespace-nowrap">Patient Portal</span>
               </button>
             ) : (
               <button
                 onClick={() => handleOpenAuth('patient_login')}
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#C8232C] hover:bg-[#B81D24] text-white font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-xs hover:shadow-md flex items-center space-x-1.5 active:scale-95"
+                className="px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-full bg-[#FFF5F5] hover:bg-rose-100 text-[#D90429] font-bold text-[11px] xs:text-xs border border-rose-200/90 transition-all cursor-pointer shadow-2xs flex items-center space-x-1.5 active:scale-95 shrink-0"
+                title="Patient Portal Login"
               >
-                <User className="w-4 h-4 stroke-[2.3]" />
-                <span>Patient Login</span>
+                <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
+                <span className="whitespace-nowrap">Patient Portal</span>
               </button>
             )}
           </div>
@@ -599,68 +603,72 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </header>
 
       {/* ================= 2. HERO SECTION ================= */}
-      {/* Realistic female doctor seated at her desk as full background with subtle overlay for maximum clarity and readability */}
+      {/* Realistic female doctor seated at her desk as background - clearly visible, sharp, no blur */}
       <section 
-        className="relative w-full overflow-hidden min-h-[620px] sm:min-h-[680px] md:min-h-[740px] flex items-center justify-center py-12 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${femaleDoctorHeroImg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
+        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-3.5rem-3.75rem)] sm:min-h-[580px] md:min-h-[640px] max-h-[820px] bg-[#FAF8F5]"
       >
-        {/* Subtle semi-transparent overlay to ensure text readability without fading out the doctor */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/75 via-white/25 to-white/80 sm:bg-gradient-to-r sm:from-white/90 sm:via-white/40 sm:to-transparent/10 pointer-events-none" />
+        {/* Female doctor seated at her desk */}
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[position:right_10%_top] xs:bg-[position:right_15%_center] sm:bg-[position:right_22%_center] md:bg-[position:right_center]"
+          style={{
+            backgroundImage: `url(${femaleDoctorHeroImg})`,
+          }}
+        />
 
-        <div className="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center">
+        {/* Clean, subtle readability gradient: gentle white tint on the left for text contrast, completely transparent on the right so doctor is sharp & clear */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 50% to-transparent 85% sm:from-white/95 sm:via-white/70 42% sm:to-transparent pointer-events-none" />
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-4 sm:py-6 flex flex-col justify-center">
           
-          {/* Subtle semi-transparent panel for crisp text contrast */}
-          <div className="w-full max-w-2xl bg-white/70 sm:bg-white/55 backdrop-blur-[2px] rounded-3xl p-6 sm:p-8 md:p-10 border border-white/70 shadow-lg shadow-black/5 flex flex-col items-center text-center">
+          {/* Left-aligned hero content matching reference image */}
+          <div className="max-w-xl text-left">
             
-            {/* Exact Original Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#0f1f38] tracking-tight leading-tight drop-shadow-xs">
-              Enhancing Hospital Operations &amp; <span className="text-[#C8232C]">Patient Experience</span>
+            {/* Headline with navy blue & red branding */}
+            <h1 className="text-[25px] xs:text-[28px] sm:text-4xl md:text-5xl font-black text-[#0B132B] tracking-tight leading-[1.14]">
+              Enhancing Hospital<br />
+              Operations &amp;<br />
+              <span className="text-[#D90429]">Patient Experience</span>
             </h1>
 
-            {/* Exact Original Description */}
-            <p className="mt-3.5 sm:mt-5 text-stone-900 text-sm sm:text-base md:text-lg leading-relaxed font-semibold max-w-xl drop-shadow-2xs">
+            {/* Subtitle / Description */}
+            <p className="mt-2.5 xs:mt-3 sm:mt-4 text-[12px] xs:text-[13px] sm:text-base text-slate-800 font-medium leading-snug sm:leading-relaxed max-w-[270px] xs:max-w-[310px] sm:max-w-md drop-shadow-2xs">
               An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
             </p>
 
-            {/* ================= 3 Prominent Pill Buttons ================= */}
-            <div className="w-full max-w-md sm:max-w-lg mt-7 sm:mt-9 space-y-3.5 sm:space-y-4">
+            {/* 3 Prominent Pill Buttons */}
+            <div className="mt-4 xs:mt-5 sm:mt-6 space-y-2.5 sm:space-y-3.5 w-full max-w-[260px] xs:max-w-[280px] sm:max-w-[320px]">
               
               {/* 1. Book an Appointment > (Red Pill Button) */}
               <button
                 onClick={handleBookAppointmentClick}
-                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#C8232C] hover:bg-[#b31d25] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-red-600/35 hover:shadow-xl hover:shadow-red-600/45 transition-all duration-200 flex items-center justify-between cursor-pointer group"
+                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-bold text-xs xs:text-sm sm:text-base shadow-md shadow-red-600/30 hover:shadow-lg hover:shadow-red-600/40 transition-all flex items-center justify-between cursor-pointer group"
               >
-                <div className="flex items-center space-x-3.5">
-                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
-                  <span className="tracking-tight">Book an Appointment</span>
+                <div className="flex items-center space-x-2.5">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.3] shrink-0" />
+                  <span className="tracking-tight whitespace-nowrap">Book an Appointment</span>
                 </div>
-                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
 
               {/* 2. Explore Our Services -> (Deep Navy / Blue Pill Button) */}
               <button
                 onClick={handleExploreServicesClick}
-                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-[#0A4D8C] hover:bg-[#083e72] active:scale-[0.99] text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transition-all duration-200 flex items-center justify-between cursor-pointer group"
+                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-[#004B87] hover:bg-[#003B6B] active:scale-[0.98] text-white font-bold text-xs xs:text-sm sm:text-base shadow-md shadow-blue-900/25 hover:shadow-lg hover:shadow-blue-900/35 transition-all flex items-center justify-between cursor-pointer group"
               >
-                <div className="flex items-center space-x-3.5">
-                  <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.3] shrink-0" />
-                  <span className="tracking-tight">Explore Our Services</span>
+                <div className="flex items-center space-x-2.5">
+                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.3] shrink-0" />
+                  <span className="tracking-tight whitespace-nowrap">Explore Our Services</span>
                 </div>
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              {/* 3. Call / SMS: 0713544101 (White Pill Button with Border) */}
+              {/* 3. Call / SMS: 0713544101 (White Pill Button) */}
               <button
                 onClick={() => setIsCallSmsModalOpen(true)}
-                className="w-full py-4 sm:py-4.5 px-6 sm:px-8 rounded-full bg-white hover:bg-stone-50 active:scale-[0.99] text-[#0f1f38] border-2 border-stone-200 hover:border-stone-300 font-bold text-base sm:text-lg shadow-md shadow-stone-200/50 hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3 cursor-pointer group"
+                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-white hover:bg-stone-50 active:scale-[0.98] text-[#0B132B] border border-stone-200/90 font-bold text-xs xs:text-sm sm:text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center space-x-2.5 cursor-pointer group"
               >
-                <PhoneCall className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C] stroke-[2.3] shrink-0 group-hover:scale-110 transition-transform" />
-                <span className="tracking-tight">Call / SMS: 0713544101</span>
+                <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 text-[#D90429] stroke-[2.3] shrink-0 group-hover:scale-105 transition-transform" />
+                <span className="tracking-tight whitespace-nowrap">Call / SMS: 0713544101</span>
               </button>
 
             </div>
@@ -1010,16 +1018,16 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </footer>
 
       {/* ================= 6. FIXED BOTTOM MENU (Home, Appointments, Records, Telemedicine, More) ================= */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EAE5DC] shadow-lg py-1.5 sm:py-2 px-2 sm:px-6">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#EAE5DC] shadow-lg py-1.5 sm:py-2 px-2 sm:px-6">
         <div className="max-w-md sm:max-w-lg mx-auto flex items-center justify-around text-center">
           
           {/* Home */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center justify-center py-1 px-2 text-[#0A4D8C] font-bold cursor-pointer group"
+            className="flex flex-col items-center justify-center py-1 px-2 text-[#004B87] font-bold cursor-pointer group"
           >
-            <Home className="w-5 h-5 mb-0.5 stroke-[2.3] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight">Home</span>
+            <Home className="w-5 h-5 mb-0.5 stroke-[2.4] group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] leading-tight font-bold">Home</span>
           </button>
 
           {/* Appointments */}
@@ -1031,10 +1039,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 setIsBookingModalOpen(true);
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#C8232C] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
           >
             <Calendar className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight">Appointments</span>
+            <span className="text-[11px] leading-tight font-medium">Appointments</span>
           </button>
 
           {/* Records */}
@@ -1046,10 +1054,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#C8232C] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
           >
             <FileText className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight">Records</span>
+            <span className="text-[11px] leading-tight font-medium">Records</span>
           </button>
 
           {/* Telemedicine */}
@@ -1061,19 +1069,19 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#C8232C] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
           >
             <Video className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight">Telemedicine</span>
+            <span className="text-[11px] leading-tight font-medium">Telemedicine</span>
           </button>
 
           {/* More */}
           <button
             onClick={() => setIsMoreDrawerOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#C8232C] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
           >
             <Menu className="w-5 h-5 mb-0.5 stroke-[2.3] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-bold">More</span>
+            <span className="text-[11px] leading-tight font-medium">More</span>
           </button>
 
         </div>
