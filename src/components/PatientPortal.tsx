@@ -89,6 +89,7 @@ interface PatientPortalProps {
   onPayInvoice: (invoiceId: string, receipt: string) => void;
   onLogout?: () => void;
   onNavigateToHome?: () => void;
+  initialTab?: 'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile';
 }
 
 export const PatientPortal: React.FC<PatientPortalProps> = ({
@@ -108,12 +109,19 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   onCancelAppointment,
   onPayInvoice,
   onLogout,
-  onNavigateToHome
+  onNavigateToHome,
+  initialTab = 'dashboard'
 }) => {
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile'
-  >('dashboard');
+  >(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Healthcare Services Filter & Search
   const [servicesSearch, setServicesSearch] = useState<string>('');

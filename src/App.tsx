@@ -53,6 +53,7 @@ import { safeFetchJson, getLocalUsers, getLocalPatientProfiles } from './utils/a
 export function App() {
   // Active top-level portal ('home' is the default institutional hospital website)
   const [activePortal, setActivePortal] = useState<'home' | 'patient' | 'provider' | 'admin'>('home');
+  const [patientInitialTab, setPatientInitialTab] = useState<'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile'>('dashboard');
   const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProviderPlan[]>(INITIAL_INSURANCE_PROVIDERS);
 
   // Current session user & token with system memory and localStorage persistence
@@ -608,7 +609,8 @@ export function App() {
               setAuthModalMode(mode);
               setAuthModalOpen(true);
             }}
-            onNavigateToPortal={(portal) => {
+            onNavigateToPortal={(portal, tab) => {
+              if (tab) setPatientInitialTab(tab);
               setActivePortal(portal);
             }}
           />
@@ -618,6 +620,7 @@ export function App() {
         {activePortal === 'patient' && (
           currentUser && currentUser.role === 'patient' && currentPatient ? (
             <PatientPortal
+              initialTab={patientInitialTab}
               patient={currentPatient}
               onUpdatePatient={(updated) => {
                 setCurrentPatient(updated);
