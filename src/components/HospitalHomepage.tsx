@@ -33,7 +33,9 @@ import {
   Layers,
   CheckCircle,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Download,
+  Smartphone
 } from 'lucide-react';
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
 import { INITIAL_REVIEWS } from '../mockData';
@@ -53,6 +55,7 @@ interface HospitalHomepageProps {
   onOpenPatientLogin?: () => void;
   onOpenStaffLogin?: () => void;
   onSelectDepartmentForBooking?: (deptId: string) => void;
+  onDownloadApp?: () => void;
 }
 
 // 20 existing services accurately capturing Terralink's clinical ecosystem
@@ -309,6 +312,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   onOpenRegister,
   onOpenPatientLogin,
   onOpenStaffLogin,
+  onDownloadApp,
 }) => {
   const handleOpenAuth = (mode: 'patient_login' | 'patient_register' | 'staff_login') => {
     if (onOpenAuthModal) {
@@ -985,6 +989,16 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
               <span>Patient Reviews &amp; Stories ({liveReviews.length})</span>
             </button>
+
+            {onDownloadApp && (
+              <button
+                onClick={onDownloadApp}
+                className="px-3.5 py-1.5 rounded-full bg-[#FDF1F1] hover:bg-rose-100 text-[#C8232C] font-bold text-[11px] border border-rose-200 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              >
+                <Download className="w-3.5 h-3.5 text-[#C8232C]" />
+                <span>Download App</span>
+              </button>
+            )}
           </div>
 
           {/* ================= SUBTLE STAFF & ADMIN PORTALS IN FOOTER ================= */}
@@ -1206,6 +1220,32 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   <span className="text-[10px] text-stone-500">Medical confidentiality compliance</span>
                 </div>
               </button>
+
+              {/* Download Mobile App */}
+              {onDownloadApp && (
+                <button
+                  onClick={() => {
+                    setIsMoreDrawerOpen(false);
+                    onDownloadApp();
+                  }}
+                  className="sm:col-span-2 p-3.5 rounded-2xl bg-[#FDF1F1] hover:bg-rose-100/80 border border-rose-200 transition-all text-left flex items-center justify-between cursor-pointer group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#D90429] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-[#C8232C]">
+                        Download TERRALINK Mobile App
+                      </span>
+                      <span className="text-[10px] text-stone-600">
+                        Install to Home Screen (iOS / Android) or download APK
+                      </span>
+                    </div>
+                  </div>
+                  <Download className="w-4 h-4 text-[#C8232C] shrink-0" />
+                </button>
+              )}
 
             </div>
 

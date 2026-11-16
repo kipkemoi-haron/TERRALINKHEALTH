@@ -42,7 +42,8 @@ import {
   FilePlus2,
   Landmark,
   BadgePercent,
-  CheckCircle
+  CheckCircle,
+  Smartphone
 } from 'lucide-react';
 import {
   PatientProfile,
@@ -89,6 +90,7 @@ interface PatientPortalProps {
   onPayInvoice: (invoiceId: string, receipt: string) => void;
   onLogout?: () => void;
   onNavigateToHome?: () => void;
+  onDownloadApp?: () => void;
   initialTab?: 'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile';
 }
 
@@ -110,6 +112,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   onPayInvoice,
   onLogout,
   onNavigateToHome,
+  onDownloadApp,
   initialTab = 'dashboard'
 }) => {
   // Active Navigation Tab
@@ -809,6 +812,25 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
                 </div>
                 {activeTab === 'profile' && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C]" />}
               </button>
+
+              {/* 9. Download App */}
+              {onDownloadApp && (
+                <button
+                  onClick={() => {
+                    setIsHamburgerOpen(false);
+                    onDownloadApp();
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-2xl transition-all cursor-pointer text-[#221815] hover:bg-rose-50/80 border border-transparent hover:border-rose-200"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Smartphone className="w-4 h-4 text-[#C8232C]" />
+                    <span className="font-semibold">Download App</span>
+                  </div>
+                  <span className="px-1.5 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[9px] font-bold rounded-full">
+                    APP
+                  </span>
+                </button>
+              )}
 
             </div>
 

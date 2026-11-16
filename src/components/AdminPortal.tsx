@@ -99,6 +99,7 @@ interface AdminPortalProps {
   onRefreshData?: () => void;
   onLogout?: () => void;
   onNavigatePortal?: (portal: 'home' | 'patient' | 'provider' | 'admin') => void;
+  onDownloadApp?: () => void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -118,7 +119,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onAddDepartment,
   onRefreshData,
   onLogout,
-  onNavigatePortal
+  onNavigatePortal,
+  onDownloadApp
 }) => {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'analytics' | 'billings' | 'insurance' | 'beds' | 'services' | 'pricing' | 'socials' | 'departments' | 'equipment' | 'announcements' | 'slots' | 'staff' | 'patients' | 'audit_logs'
@@ -972,6 +974,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
                 <ChevronRight className="w-4 h-4 text-stone-400" />
               </button>
+
+              {/* Download App */}
+              {onDownloadApp && (
+                <button
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    onDownloadApp();
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[#221815] hover:bg-rose-50/80 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Smartphone className="w-4 h-4 text-[#C8232C]" />
+                    <span className="font-medium">Download App</span>
+                  </div>
+                  <span className="px-1.5 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[9px] font-bold rounded-full">
+                    APP
+                  </span>
+                </button>
+              )}
 
               {/* Logout */}
               <button

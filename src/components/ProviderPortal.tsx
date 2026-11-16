@@ -58,6 +58,7 @@ interface ProviderPortalProps {
   onUpdateAppointmentStatus: (aptId: string, status: any) => Promise<void>;
   onUpdateUser?: (updated: User) => void;
   onNavigatePortal?: (portal: 'home' | 'patient' | 'provider' | 'admin') => void;
+  onDownloadApp?: () => void;
   onLogout?: () => void;
 }
 
@@ -82,6 +83,7 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
   onUpdateAppointmentStatus,
   onUpdateUser,
   onNavigatePortal,
+  onDownloadApp,
   onLogout
 }) => {
   // Navigation State - defaults to 'dashboard' matching Image 1
@@ -245,6 +247,7 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
         }}
         currentUser={{ ...currentUser, avatar: localAvatar || currentUser.avatar }}
         onNavigatePortal={onNavigatePortal}
+        onDownloadApp={onDownloadApp}
         onLogout={onLogout}
         onOpenAvatarModal={() => setIsAvatarModalOpen(true)}
       />

@@ -15,7 +15,8 @@ import {
   UserCircle,
   ChevronDown,
   Camera,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -36,6 +37,7 @@ interface StaffDrawerProps {
   onSelectTab: (tab: StaffPortalTab) => void;
   currentUser: User;
   onNavigatePortal?: (portal: 'home' | 'patient' | 'provider' | 'admin') => void;
+  onDownloadApp?: () => void;
   onLogout?: () => void;
   onOpenAvatarModal?: () => void;
 }
@@ -47,6 +49,7 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
   onSelectTab,
   currentUser,
   onNavigatePortal,
+  onDownloadApp,
   onLogout,
   onOpenAvatarModal
 }) => {
@@ -217,6 +220,25 @@ export const StaffDrawer: React.FC<StaffDrawerProps> = ({
               </div>
             )}
           </div>
+
+          {onDownloadApp && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onDownloadApp();
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-[#221815] hover:bg-rose-50/80 border border-transparent hover:border-rose-200 transition-all cursor-pointer text-left"
+            >
+              <div className="flex items-center space-x-3 min-w-0">
+                <Smartphone className="w-4 h-4 shrink-0 text-[#C8232C]" />
+                <span className="truncate font-semibold">Download App</span>
+              </div>
+              <span className="px-1.5 py-0.5 bg-[#FDF1F1] text-[#C8232C] text-[9px] font-bold rounded-full shrink-0">
+                APP
+              </span>
+            </button>
+          )}
         </nav>
 
         {/* Drawer Footer User Profile */}

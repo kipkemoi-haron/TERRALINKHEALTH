@@ -49,8 +49,12 @@ import { AdminPortal } from './components/AdminPortal';
 import { AuthModals, MandatoryPasswordChangeModal, AdminLoginGate, PatientLoginGate, ClinicalStaffLoginGate } from './components/AuthModals';
 import { mockDepartments, mockDoctors, mockPatients, mockStaffUsers, mockAnalytics, mockAuditLogs, INITIAL_INSURANCE_PROVIDERS } from './mockData';
 import { safeFetchJson, getLocalUsers, getLocalPatientProfiles } from './utils/apiHelper';
+import { usePWAInstall } from './hooks/usePWAInstall';
+import { TopAppDownloadBanner, PWAInstallModal, OfflineIndicator } from './components/PWAInstallUI';
 
 export function App() {
+  const pwa = usePWAInstall();
+
   // Active top-level portal ('home' is the default institutional hospital website)
   const [activePortal, setActivePortal] = useState<'home' | 'patient' | 'provider' | 'admin'>('home');
   const [patientInitialTab, setPatientInitialTab] = useState<'dashboard' | 'services' | 'ai_assistant' | 'appointments' | 'records' | 'billing' | 'queue' | 'doctors' | 'messages' | 'profile'>('dashboard');
@@ -407,6 +411,14 @@ export function App() {
   return (
     <div className="min-h-screen relative overflow-x-hidden text-slate-800 flex flex-col font-sans antialiased selection:bg-teal-500 selection:text-white">
       
+      {/* Top App Download Notification Banner for Website Visitors (pushes header cleanly down) */}
+      <TopAppDownloadBanner
+        isInstalled={pwa.isInstalled}
+        isBannerDismissed={pwa.isBannerDismissed}
+        onDownloadClick={pwa.triggerDownloadApp}
+        onDismiss={pwa.dismissBanner}
+      />
+
       {/* Soft Frosted Ambient Light Blobs in Background */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-rose-100/30 rounded-full blur-3xl" />
@@ -613,6 +625,7 @@ export function App() {
               if (tab) setPatientInitialTab(tab);
               setActivePortal(portal);
             }}
+            onDownloadApp={pwa.triggerDownloadApp}
           />
         )}
 
@@ -648,6 +661,7 @@ export function App() {
                 setActivePortal('home');
               }}
               onNavigateToHome={() => setActivePortal('home')}
+              onDownloadApp={pwa.triggerDownloadApp}
             />
           ) : (
             <PatientLoginGate
@@ -705,6 +719,7 @@ export function App() {
                 }
               }}
               onNavigatePortal={(portal) => setActivePortal(portal)}
+              onDownloadApp={pwa.triggerDownloadApp}
               onLogout={() => {
                 handleSetUserSession(null, null, null);
                 setActivePortal('home');
@@ -752,6 +767,7 @@ export function App() {
                 setActivePortal('home');
               }}
               onNavigatePortal={(portal) => setActivePortal(portal)}
+              onDownloadApp={pwa.triggerDownloadApp}
             />
           ) : (
             <AdminLoginGate
@@ -893,6 +909,19 @@ export function App() {
           </div>
         </footer>
       )}
+
+      {/* PWA App Install & APK Fallback Modal + Offline Indicator */}
+      <PWAInstallModal
+        isOpen={pwa.showInstallModal}
+        onClose={() => pwa.setShowInstallModal(false)}
+        isInstallable={pwa.isInstallable}
+        isInstalled={pwa.isInstalled}
+        isIOS={pwa.isIOS}
+        isAndroid={pwa.isAndroid}
+        isApkAvailable={pwa.isApkAvailable}
+        onNativeInstall={pwa.install}
+      />
+      <OfflineIndicator isOnline={pwa.isOnline} />
 
     </div>
   );

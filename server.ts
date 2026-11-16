@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import fs from 'fs';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -3372,6 +3373,21 @@ Please provide a comprehensive, intelligent, supportive, and data-grounded respo
 // Explicit API 404 Handler to prevent returning HTML index.html for unmatched API routes
 app.all('/api/*', (req: Request, res: Response) => {
   res.status(404).json({ error: `API route ${req.method} ${req.path} not found.` });
+});
+
+// Explicit Android APK route: serve hosted /public/app.apk (or /dist/app.apk) with proper MIME type, or 404 if not yet hosted
+app.get('/app.apk', (req: Request, res: Response) => {
+  const prodApk = path.join(process.cwd(), 'dist', 'app.apk');
+  const publicApk = path.join(process.cwd(), 'public', 'app.apk');
+  const apkPath = fs.existsSync(prodApk) ? prodApk : fs.existsSync(publicApk) ? publicApk : null;
+
+  if (!apkPath) {
+    return res.status(404).json({ error: 'Android APK is not yet hosted at /public/app.apk' });
+  }
+
+  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  res.setHeader('Content-Disposition', 'attachment; filename="TERRALINK-HEALTH.apk"');
+  return res.sendFile(apkPath);
 });
 
 // ----------------- VITE / SERVER INITIALIZATION -----------------
