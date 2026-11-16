@@ -26,6 +26,8 @@ export const TopAppDownloadBanner: React.FC<TopAppDownloadBannerProps> = ({
   onDownloadClick,
   onDismiss,
 }) => {
+  const [iconLoadError, setIconLoadError] = React.useState(false);
+
   if (isInstalled || isBannerDismissed) return null;
 
   return (
@@ -38,15 +40,16 @@ export const TopAppDownloadBanner: React.FC<TopAppDownloadBannerProps> = ({
         {/* Left: App Icon + Message */}
         <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#D90429] flex items-center justify-center shrink-0 shadow-xs overflow-hidden border border-white/15">
-            <img
-              src="/pwa-192x192.png"
-              alt="TERRALINK HEALTH App"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <Activity className="w-4 h-4 text-white stroke-[2.4] hidden" />
+            {!iconLoadError ? (
+              <img
+                src="/pwa-192x192.png"
+                alt="TERRALINK HEALTH App"
+                className="w-full h-full object-cover"
+                onError={() => setIconLoadError(true)}
+              />
+            ) : (
+              <Activity className="w-4 h-4 text-white stroke-[2.4]" />
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate">

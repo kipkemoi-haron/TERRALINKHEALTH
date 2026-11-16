@@ -409,7 +409,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden text-slate-800 flex flex-col font-sans antialiased selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen relative overflow-x-clip text-slate-800 flex flex-col font-sans antialiased selection:bg-teal-500 selection:text-white">
       
       {/* Top App Download Notification Banner for Website Visitors (pushes header cleanly down) */}
       <TopAppDownloadBanner

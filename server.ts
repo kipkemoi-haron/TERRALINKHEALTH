@@ -3390,6 +3390,21 @@ app.get('/app.apk', (req: Request, res: Response) => {
   return res.sendFile(apkPath);
 });
 
+// Digital Asset Links for Android Trusted Web Activity (TWA) verification
+app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
+  const prodPath = path.join(process.cwd(), 'dist', '.well-known', 'assetlinks.json');
+  const publicPath = path.join(process.cwd(), 'public', '.well-known', 'assetlinks.json');
+  const filePath = fs.existsSync(prodPath) ? prodPath : fs.existsSync(publicPath) ? publicPath : null;
+
+  if (!filePath) {
+    return res.status(404).json({ error: 'Digital Asset Links file not found.' });
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  return res.sendFile(filePath);
+});
+
 // ----------------- VITE / SERVER INITIALIZATION -----------------
 
 async function startServer() {
@@ -3401,7 +3416,16 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        dotfiles: 'allow',
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('sw.js') || filePath.endsWith('manifest.json')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          }
+        }
+      })
+    );
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
