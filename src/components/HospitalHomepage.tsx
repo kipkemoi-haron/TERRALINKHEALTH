@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
+  ShieldPlus,
   Stethoscope,
   Clock,
   ArrowRight,
@@ -10,6 +11,7 @@ import {
   Quote,
   Star,
   User,
+  Users,
   X,
   Search,
   CheckCircle2,
@@ -25,6 +27,7 @@ import {
   Home,
   Menu,
   Heart,
+  HeartPulse,
   Syringe,
   Pill,
   Ambulance,
@@ -36,7 +39,10 @@ import {
   ExternalLink,
   Download,
   Smartphone,
-  HelpCircle
+  HelpCircle,
+  BriefcaseMedical,
+  Microscope,
+  MoreHorizontal
 } from 'lucide-react';
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
 import { INITIAL_REVIEWS } from '../mockData';
@@ -614,7 +620,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       
       {/* ================= 1. HEADER BAR ================= */}
       <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-8">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-4 sm:gap-8">
           
           {/* Logo & Brand */}
           <button
@@ -629,7 +635,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             <div className="w-9 h-9 rounded-xl bg-[#C8102E] text-white flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-xs">
               <Activity className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <span className="font-display text-base sm:text-lg font-extrabold text-[#132238] leading-none tracking-tight uppercase whitespace-nowrap">
+            <span className="font-display text-[15px] sm:text-lg font-extrabold text-[#0A2756] leading-none tracking-tight uppercase whitespace-nowrap">
               TERRALINK HOSPITAL
             </span>
           </button>
@@ -639,14 +645,14 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             <button
               type="button"
               onClick={handleExploreServicesClick}
-              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hover:text-[#0A2756] transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               Services
             </button>
             <button
               type="button"
               onClick={handleBookAppointmentClick}
-              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hover:text-[#0A2756] transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               Appointments
             </button>
@@ -659,27 +665,27 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   handleOpenAuth('patient_login');
                 }
               }}
-              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hover:text-[#0A2756] transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               Telemedicine
             </button>
             <button
               type="button"
               onClick={() => setIsReviewsModalOpen(true)}
-              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hover:text-[#0A2756] transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               Reviews
             </button>
             <button
               type="button"
               onClick={() => setIsMoreDrawerOpen(true)}
-              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hover:text-[#0A2756] transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
               More
             </button>
           </nav>
 
-          {/* Right Header Navigation - Compact "Patient Portal" */}
+          {/* Right Header Action - Rounded Patient Portal Button */}
           <div className="flex items-center shrink-0">
             <button
               type="button"
@@ -690,10 +696,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   handleOpenAuth('patient_login');
                 }
               }}
-              className="px-3.5 sm:px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#132238] font-semibold text-xs transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 whitespace-nowrap"
+              className="px-3.5 sm:px-4 py-2 rounded-full bg-slate-50 hover:bg-slate-100 text-[#0A2756] border border-slate-200/80 font-semibold text-xs transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 whitespace-nowrap"
               title="Open Patient Portal"
             >
-              <User className="w-3.5 h-3.5 stroke-[2.1] text-slate-600" />
+              <User className="w-3.5 h-3.5 stroke-[2.1] text-[#0A2756]/80" />
               <span>Patient Portal</span>
             </button>
           </div>
@@ -701,178 +707,305 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </header>
 
-      {/* ================= 2. HERO IMAGE & BRANDING COVER ================= */}
-      <section className="w-full bg-white pt-2.5 sm:pt-6 pb-8 sm:pb-12 px-3.5 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-10 items-center">
+      {/* ================= 2. FULL-BLEED HOSPITAL HERO SECTION ================= */}
+      <section className="relative w-full overflow-hidden bg-[#082458]">
+        {/* Full-Bleed Hospital Entrance Background Photograph */}
+        {!heroImgFailed ? (
+          <img
+            src={hospitalExteriorImg}
+            alt="TERRALINK HOSPITAL main entrance with doctors and medical professionals welcoming patients"
+            referrerPolicy="no-referrer"
+            onError={() => setHeroImgFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover object-[72%_28%] sm:object-[center_30%] select-none pointer-events-none"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#072152] via-[#0B3475] to-[#1D4ED8]" />
+        )}
+
+        {/* Deep Navy Left-Side Gradient Overlay Keeping Hospital Building & Professionals Clear on Right */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(95deg, rgba(7, 33, 82, 0.96) 0%, rgba(10, 46, 108, 0.88) 44%, rgba(10, 46, 108, 0.42) 68%, rgba(10, 46, 108, 0.08) 100%)'
+          }}
+        />
+        <div
+          className="absolute inset-0 sm:hidden pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(7, 33, 82, 0.28) 0%, rgba(7, 33, 82, 0.12) 48%, rgba(7, 33, 82, 0.88) 88%, rgba(7, 33, 82, 0.96) 100%)'
+          }}
+        />
+
+        {/* Hero Foreground Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-8 sm:pt-14 lg:pt-20 pb-14 sm:pb-24 lg:pb-28">
+          <div className="text-left">
             
-            {/* Bright Outdoor Wide-Angle Entrance Photo (Top full-width rounded cover on mobile, balanced right frame on desktop) */}
-            <div className="order-1 lg:order-2 lg:col-span-6">
-              <div className="relative w-full aspect-[4/3] rounded-2xl rounded-b-3xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-100 shadow-xs">
-                {!heroImgFailed ? (
-                  <img
-                    src={hospitalExteriorImg}
-                    alt="TERRALINK HOSPITAL main entrance with doctors welcoming patients"
-                    referrerPolicy="no-referrer"
-                    onError={() => setHeroImgFailed(true)}
-                    className="w-full h-full object-cover object-center"
+            {/* Main Heading with Gold Priority Accent & Subtle Curved Underline */}
+            <h1 className="font-display text-[28px] xs:text-[32px] sm:text-5xl lg:text-[54px] font-extrabold text-white tracking-tight leading-[1.12] drop-shadow-xs">
+              Your Health,
+              <br />
+              Our{' '}
+              <span className="relative inline-block text-[#F5B700]">
+                Priority
+                <svg
+                  viewBox="0 0 140 12"
+                  fill="none"
+                  className="absolute -bottom-1 left-0 w-full h-2.5 text-[#F5B700]"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2 9.5C38 2.5 96 1.5 138 7.5"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
                   />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#132238] to-[#28257A] text-white">
-                    <Building2 className="w-10 h-10 mb-2 text-white/90" />
-                    <span className="font-display text-lg font-bold tracking-wider uppercase">TERRALINK HOSPITAL</span>
-                  </div>
-                )}
+                </svg>
+              </span>
+            </h1>
+
+            {/* Supporting Copy */}
+            <p className="mt-3.5 sm:mt-5 text-[13px] xs:text-[14px] sm:text-base lg:text-lg text-white/95 font-medium leading-relaxed max-w-[235px] xs:max-w-[260px] sm:max-w-lg drop-shadow-xs">
+              Get quality care, expert support, and a seamless digital experience&mdash;all in one place.
+            </p>
+
+            {/* Three Visual Feature Icons: Compassion | Expertise | Better Health */}
+            <div className="mt-5 sm:mt-7 inline-flex items-stretch divide-x divide-white/30">
+              <div className="pr-3 xs:pr-4 sm:pr-6 flex flex-col items-center text-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 border border-white/25 flex items-center justify-center mb-1.5 backdrop-blur-xs">
+                  <ShieldPlus className="w-4 h-4 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-semibold text-white whitespace-nowrap">
+                  Compassion
+                </span>
+              </div>
+
+              <div className="px-3 xs:px-4 sm:px-6 flex flex-col items-center text-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 border border-white/25 flex items-center justify-center mb-1.5 backdrop-blur-xs">
+                  <Users className="w-4 h-4 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-semibold text-white whitespace-nowrap">
+                  Expertise
+                </span>
+              </div>
+
+              <div className="pl-3 xs:pl-4 sm:pl-6 flex flex-col items-center text-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 border border-white/25 flex items-center justify-center mb-1.5 backdrop-blur-xs">
+                  <HeartPulse className="w-4 h-4 text-white stroke-[2.2]" />
+                </div>
+                <span className="text-[11px] sm:text-xs font-semibold text-white whitespace-nowrap">
+                  Better Health
+                </span>
               </div>
             </div>
 
-            {/* High-Impact Introduction Titles & Pill Actions */}
-            <div className="order-2 lg:order-1 lg:col-span-6 px-1 sm:px-0 flex flex-col items-start text-left">
-              {/* Introductory Neutral Pill Badge */}
-              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 text-[10px] sm:text-xs font-semibold tracking-wider uppercase">
-                COMPASSION &bull; EXPERTISE &bull; BETTER HEALTH
-              </div>
+            {/* Side-by-Side Primary Action Buttons — Always Same Horizontal Row */}
+            <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:inline-flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleBookAppointmentClick}
+                className="px-2 xs:px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-full bg-[#C8102E] hover:bg-[#A60D25] active:scale-[0.98] text-white font-bold text-[11px] xs:text-[12px] sm:text-sm shadow-lg shadow-black/25 transition-all inline-flex items-center justify-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
+              >
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.2] shrink-0" />
+                <span>Book Appointment</span>
+                <ChevronRight className="w-3.5 h-3.5 text-white/90 shrink-0" />
+              </button>
 
-              {/* Primary Title in Trustworthy Deep Navy Serif */}
-              <h1 className="mt-3.5 font-serif-display text-[30px] xs:text-[34px] sm:text-4xl lg:text-[46px] font-bold text-[#132238] tracking-tight leading-[1.12] [text-wrap:balance]">
-                Your Health, Our Priority
-              </h1>
-
-              {/* Patient-First Subtitle */}
-              <p className="mt-3 text-[15px] sm:text-base text-slate-600 font-normal leading-relaxed max-w-lg">
-                Get quality care, expert support, and a seamless digital experience&mdash;all in one place.
-              </p>
-
-              {/* Two Side-by-Side Pill Buttons */}
-              <div className="mt-5 sm:mt-7 flex flex-wrap items-center gap-2.5 sm:gap-3.5 w-full">
-                <button
-                  type="button"
-                  onClick={handleBookAppointmentClick}
-                  className="px-4 sm:px-6 py-3 rounded-full bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.98] text-white font-semibold text-[13px] sm:text-sm shadow-xs shadow-red-900/15 transition-all inline-flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap min-h-[44px]"
-                >
-                  <Calendar className="w-4 h-4 stroke-[2] shrink-0" />
-                  <span>Book Appointment</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsCallSmsModalOpen(true)}
-                  className="px-4 sm:px-5 py-3 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-[#132238] border border-slate-300 font-semibold text-[13px] sm:text-sm transition-all inline-flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap min-h-[44px]"
-                >
-                  <Phone className="w-4 h-4 text-[#B91C1C] stroke-[2] shrink-0" />
-                  <span>24/7 Emergency / Call</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsCallSmsModalOpen(true)}
+                className="px-2 xs:px-3 sm:px-5 py-2.5 sm:py-3.5 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-[#0A2756] border border-[#0A2756]/35 font-bold text-[11px] xs:text-[12px] sm:text-sm shadow-lg shadow-black/15 transition-all inline-flex items-center justify-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap min-h-[44px]"
+              >
+                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C8102E] stroke-[2.2] shrink-0" />
+                <span>24/7 Emergency / Call</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#0A2756]/80 shrink-0" />
+              </button>
             </div>
 
           </div>
         </div>
+
+        {/* Hero Section Bottom Curved Wave Transition (White & Subtle Light-Blue Accents) */}
+        <div className="pointer-events-none absolute bottom-0 inset-x-0 z-10 leading-none">
+          <svg
+            viewBox="0 0 1440 90"
+            preserveAspectRatio="none"
+            className="w-full h-9 sm:h-14 lg:h-16 block"
+            aria-hidden="true"
+          >
+            {/* Subtle Light-Blue Ribbon Wave */}
+            <path
+              d="M0,78 C340,22 760,4 1440,54 L1440,90 L0,90 Z"
+              fill="#DBEAFE"
+            />
+            {/* Clean White Foreground Curve */}
+            <path
+              d="M0,86 C390,34 860,18 1440,68 L1440,90 L0,90 Z"
+              fill="#FFFFFF"
+            />
+          </svg>
+        </div>
       </section>
 
-      {/* ================= 3. COMPACT POPULAR SERVICES ================= */}
-      <section id="explore-healthcare-services" className="w-full py-6 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
-        <div className="max-w-6xl mx-auto">
+      {/* ================= 3. POPULAR SERVICES SECTION ================= */}
+      <section id="explore-healthcare-services" className="w-full pt-3 sm:pt-6 pb-8 sm:pb-12 px-2.5 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-[#132238] tracking-tight text-left">
-              Popular Services
-            </h2>
-
-            {showAllServices && (
-              <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Search 20 services..."
-                  value={catalogSearch}
-                  onChange={(e) => setCatalogSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#132238]/15 transition-all"
-                />
-              </div>
-            )}
+          {/* Centered Heading Flanked by Subtle Blue Lines */}
+          <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-8">
+            <div className="flex items-center justify-center gap-3 sm:gap-4">
+              <span className="h-[1.5px] w-8 sm:w-12 bg-[#3B82F6]/60 rounded-full" aria-hidden="true" />
+              <h2 className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-[#0A2756] tracking-tight">
+                Popular Services
+              </h2>
+              <span className="h-[1.5px] w-8 sm:w-12 bg-[#3B82F6]/60 rounded-full" aria-hidden="true" />
+            </div>
+            <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-slate-600 font-medium">
+              Comprehensive healthcare services for you and your family.
+            </p>
           </div>
 
-          {/* Filter Pills Underneath Title */}
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
-            {catalogCategories.map(cat => (
-              <button
-                type="button"
-                key={cat}
-                onClick={() => {
-                  setCatalogCategory(cat);
-                  if (cat !== 'All') setShowAllServices(true);
-                }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                  catalogCategory === cat
-                    ? 'bg-[#132238] text-white'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+          {/* Five Core Service Cards in One Horizontal Row (Mobile & Desktop) */}
+          <div className="grid grid-cols-5 gap-1.5 sm:gap-4 lg:gap-5">
+            {[
+              {
+                serviceId: 'srv-opd',
+                label: 'General Consultation',
+                circleBg: 'bg-[#E0F2FE] text-[#0284C7]',
+                icon: <Stethoscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
+              },
+              {
+                serviceId: 'srv-spec',
+                label: 'Specialist Care',
+                circleBg: 'bg-[#DCFCE7] text-[#059669]',
+                icon: <BriefcaseMedical className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
+              },
+              {
+                serviceId: 'srv-lab-cbc',
+                label: 'Laboratory Services',
+                circleBg: 'bg-[#EDE9FE] text-[#7C3AED]',
+                icon: <Microscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
+              },
+              {
+                serviceId: 'srv-pharm',
+                label: 'Pharmacy Services',
+                circleBg: 'bg-[#FFEDD5] text-[#EA580C]',
+                icon: <Pill className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
+              },
+              {
+                serviceId: 'srv-nurse',
+                label: 'Hire a Nurse',
+                circleBg: 'bg-[#CCFBF1] text-[#0D9488]',
+                icon: <HeartPulse className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
+              }
+            ].map((item) => {
+              const matchedService =
+                TERRALINK_CATALOG_SERVICES.find(s => s.id === item.serviceId) ||
+                TERRALINK_CATALOG_SERVICES[0];
+              return (
+                <button
+                  key={item.serviceId}
+                  type="button"
+                  onClick={() => setSelectedServiceDetail(matchedService)}
+                  className="bg-white rounded-xl sm:rounded-2xl px-1 py-3 sm:p-5 border border-slate-100 hover:border-slate-200 shadow-[0_2px_10px_rgba(10,39,86,0.06)] hover:shadow-[0_8px_22px_rgba(10,39,86,0.1)] transition-all cursor-pointer flex flex-col items-center text-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A2756]/25"
+                >
+                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full ${item.circleBg} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-105 transition-transform shrink-0`}>
+                    {item.icon}
+                  </div>
+                  <span className="font-display text-[10px] xs:text-[11px] sm:text-sm font-bold text-[#0A2756] leading-tight tracking-tight">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Clean, Tight 2-Column (Mobile) / 3-Column (Desktop) Card Layout — Essential Fields Only */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {visibleServices.map(service => (
-              <button
-                type="button"
-                key={service.id}
-                onClick={() => setSelectedServiceDetail(service)}
-                className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 hover:border-slate-300 shadow-[0_1px_4px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col items-start text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#132238]/25"
-              >
-                {/* 1. Icon in a soft, colored circular background */}
-                <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
-                  {renderServiceIcon(service.iconType)}
+          {/* Toggle to Expand Full 20-Service Catalog & Category Filters */}
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setShowAllServices(prev => !prev)}
+              className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#0A2756] font-semibold text-xs transition-all cursor-pointer inline-flex items-center space-x-1.5 active:scale-[0.98]"
+            >
+              <span>
+                {showAllServices
+                  ? 'Hide Full Services Catalog'
+                  : `Explore All ${TERRALINK_CATALOG_SERVICES.length} Services \u2192`}
+              </span>
+            </button>
+          </div>
+
+          {showAllServices && (
+            <div className="mt-6 pt-6 border-t border-slate-100 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
+                  {['All', 'Nursing', 'Consultations', 'Labs', 'Therapy', 'Maternity', 'Emergency', 'Inpatient'].map(cat => (
+                    <button
+                      type="button"
+                      key={cat}
+                      onClick={() => setCatalogCategory(cat)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                        catalogCategory === cat
+                          ? 'bg-[#0A2756] text-white'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
 
-                {/* 2. Bold, concise Service Title (max 2-3 words) */}
-                <h3 className="font-display text-[14px] sm:text-base font-bold text-[#0F172A] leading-snug tracking-tight">
-                  {service.shortTitle}
-                </h3>
+                <div className="relative w-full sm:w-64 shrink-0">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Search 20 services..."
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0A2756]/15 transition-all"
+                  />
+                </div>
+              </div>
 
-                {/* 3. Clean price subtitle */}
-                <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
-                  From KES {service.standardFeeKES.toLocaleString()}
-                </p>
-              </button>
-            ))}
-          </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {filteredCatalogServices.map(service => (
+                  <button
+                    type="button"
+                    key={service.id}
+                    onClick={() => setSelectedServiceDetail(service)}
+                    className="bg-white rounded-2xl p-4 border border-slate-200/80 hover:border-slate-300 shadow-[0_1px_4px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col items-start text-left group"
+                  >
+                    <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                      {renderServiceIcon(service.iconType)}
+                    </div>
+                    <h3 className="font-display text-sm font-bold text-[#0F172A] leading-snug tracking-tight">
+                      {service.shortTitle}
+                    </h3>
+                    <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
+                      From KES {service.standardFeeKES.toLocaleString()}
+                    </p>
+                  </button>
+                ))}
+              </div>
 
-          {visibleServices.length === 0 && (
-            <div className="text-center py-10 bg-slate-50/50 rounded-3xl border border-slate-100 p-8 space-y-3 mt-4">
-              <Search className="w-7 h-7 text-slate-400 mx-auto" />
-              <h4 className="font-display text-base font-bold text-slate-900">No matching services found</h4>
-              <p className="text-xs text-slate-500">Try searching with a different health term or reset filters.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setCatalogSearch('');
-                  setCatalogCategory('All');
-                  setShowAllServices(false);
-                }}
-                className="px-5 py-2 rounded-full bg-[#132238] text-white font-semibold text-xs cursor-pointer"
-              >
-                Reset Filters
-              </button>
-            </div>
-          )}
-
-          {/* Expand to View All 20 Services */}
-          {catalogCategory === 'All' && catalogSearch.trim() === '' && (
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => setShowAllServices(prev => !prev)}
-                className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#132238] font-semibold text-xs transition-all cursor-pointer inline-flex items-center space-x-1.5 active:scale-[0.98]"
-              >
-                <span>
-                  {showAllServices
-                    ? 'Show Top 6 Services'
-                    : `View All ${TERRALINK_CATALOG_SERVICES.length} Services \u2192`}
-                </span>
-              </button>
+              {filteredCatalogServices.length === 0 && (
+                <div className="text-center py-8 bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-2.5">
+                  <Search className="w-6 h-6 text-slate-400 mx-auto" />
+                  <h4 className="font-display text-sm font-bold text-slate-900">No matching services found</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCatalogSearch('');
+                      setCatalogCategory('All');
+                    }}
+                    className="px-4 py-1.5 rounded-full bg-[#0A2756] text-white font-semibold text-xs cursor-pointer"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1117,27 +1250,32 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       </footer>
 
       {/* ================= 6. SLEEK FIXED BOTTOM NAVIGATION BAR (Mobile Smartphone Only) ================= */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-[0_-1px_10px_rgba(15,23,42,0.03)]">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-[0_-1px_10px_rgba(15,23,42,0.04)]">
         <div className="max-w-lg mx-auto grid grid-cols-5 items-center h-16 px-1">
           
           {/* Home */}
           <button
+            type="button"
             onClick={() => {
               setIsMoreDrawerOpen(false);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className={`flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
-              !isMoreDrawerOpen ? 'text-[#0EA5E9]' : 'text-slate-400 hover:text-slate-600'
+            className={`relative flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
+              !isMoreDrawerOpen ? 'text-[#0284C7]' : 'text-slate-400 hover:text-slate-600'
             }`}
           >
-            <Home className="w-[21px] h-[21px] stroke-[1.8]" />
-            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${!isMoreDrawerOpen ? 'font-semibold' : 'font-medium'}`}>
+            <Home className={`w-[21px] h-[21px] stroke-[2] ${!isMoreDrawerOpen ? 'fill-[#0284C7]/15' : ''}`} />
+            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${!isMoreDrawerOpen ? 'font-bold' : 'font-medium'}`}>
               Home
             </span>
+            {!isMoreDrawerOpen && (
+              <span className="absolute bottom-0 inset-x-4 h-[2.5px] rounded-t-full bg-[#0284C7]" />
+            )}
           </button>
 
           {/* Appointments */}
           <button
+            type="button"
             onClick={() => {
               setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
@@ -1146,7 +1284,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 setIsBookingModalOpen(true);
               }
             }}
-            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-500 hover:text-slate-700 cursor-pointer transition-colors"
           >
             <Calendar className="w-[21px] h-[21px] stroke-[1.75]" />
             <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
@@ -1156,6 +1294,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
           {/* Records */}
           <button
+            type="button"
             onClick={() => {
               setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
@@ -1164,7 +1303,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-500 hover:text-slate-700 cursor-pointer transition-colors"
           >
             <FileText className="w-[21px] h-[21px] stroke-[1.75]" />
             <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
@@ -1174,6 +1313,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
           {/* Telemedicine */}
           <button
+            type="button"
             onClick={() => {
               setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
@@ -1182,7 +1322,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-500 hover:text-slate-700 cursor-pointer transition-colors"
           >
             <Video className="w-[21px] h-[21px] stroke-[1.75]" />
             <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
@@ -1192,24 +1332,19 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
           {/* More */}
           <button
+            type="button"
             onClick={() => setIsMoreDrawerOpen(prev => !prev)}
-            className={`flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
-              isMoreDrawerOpen ? 'text-[#0EA5E9]' : 'text-slate-400 hover:text-slate-600'
+            className={`relative flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
+              isMoreDrawerOpen ? 'text-[#0284C7]' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-[21px] h-[21px]"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="6.5" r="2" />
-              <circle cx="6.5" cy="16.5" r="2" />
-              <circle cx="17.5" cy="16.5" r="2" />
-            </svg>
-            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${isMoreDrawerOpen ? 'font-semibold' : 'font-medium'}`}>
+            <MoreHorizontal className="w-[21px] h-[21px] stroke-[2.2]" />
+            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${isMoreDrawerOpen ? 'font-bold' : 'font-medium'}`}>
               More
             </span>
+            {isMoreDrawerOpen && (
+              <span className="absolute bottom-0 inset-x-4 h-[2.5px] rounded-t-full bg-[#0284C7]" />
+            )}
           </button>
 
         </div>
