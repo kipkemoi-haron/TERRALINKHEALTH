@@ -200,41 +200,89 @@ export const ProviderPortal: React.FC<ProviderPortalProps> = ({
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#221815] flex flex-col font-sans">
       {/* Top Bar matching uniform theme */}
-      <header className="sticky top-0 z-30 bg-white border-b border-[#EAE5DC] px-4 h-14 flex items-center justify-between shadow-2xs">
-        {/* Hamburger Menu Trigger */}
-        <button
-          type="button"
-          onClick={() => setIsDrawerOpen(true)}
-          className="p-2 -ml-2 text-[#0A4D8C] hover:text-[#C8232C] rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
-          aria-label="Open Navigation Menu"
-          id="btn-open-staff-menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EAE5DC] px-4 sm:px-6 h-14 flex items-center justify-between shadow-2xs">
+        <div className="flex items-center space-x-3">
+          {/* Mobile Hamburger Menu Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(true)}
+            className="md:hidden p-2 -ml-2 text-[#0A4D8C] hover:text-[#C8232C] rounded-xl hover:bg-stone-100 transition-colors cursor-pointer"
+            aria-label="Open Navigation Menu"
+            id="btn-open-staff-menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-        {/* Center Title */}
-        <span className="text-sm sm:text-base font-bold text-[#221815]">
-          Healthcare Provider
-        </span>
+          <span className="text-sm sm:text-base font-bold text-[#221815] whitespace-nowrap">
+            Healthcare Provider
+          </span>
+        </div>
 
-        {/* User Monogram / Avatar on Right */}
-        <button
-          type="button"
-          onClick={() => setIsAvatarModalOpen(true)}
-          className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#0A4D8C] font-bold text-xs flex items-center justify-center border border-[#EAE5DC] hover:ring-2 hover:ring-[#C8232C]/30 transition-all cursor-pointer overflow-hidden shrink-0"
-          title="Profile & Settings"
-        >
-          {localAvatar || currentUser.avatar ? (
-            <img
-              src={localAvatar || currentUser.avatar}
-              alt={currentUser.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span>{initials}</span>
+        {/* Right Actions & Avatar */}
+        <div className="flex items-center space-x-3">
+          {onNavigatePortal && (
+            <button
+              type="button"
+              onClick={() => onNavigatePortal('home')}
+              className="hidden md:inline-flex px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 cursor-pointer whitespace-nowrap"
+            >
+              Hospital Home
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={() => onLogout?.()}
+            className="hidden md:inline-flex px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-[#C8232C] cursor-pointer whitespace-nowrap"
+          >
+            Sign Out
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsAvatarModalOpen(true)}
+            className="w-8 h-8 rounded-full bg-[#FAF8F5] text-[#0A4D8C] font-bold text-xs flex items-center justify-center border border-[#EAE5DC] hover:ring-2 hover:ring-[#C8232C]/30 transition-all cursor-pointer overflow-hidden shrink-0"
+            title="Profile & Settings"
+          >
+            {localAvatar || currentUser.avatar ? (
+              <img
+                src={localAvatar || currentUser.avatar}
+                alt={currentUser.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>{initials}</span>
+            )}
+          </button>
+        </div>
       </header>
+
+      {/* Desktop / Tablet Clinical Workspace Tab Bar */}
+      <nav className="hidden md:flex items-center gap-1.5 overflow-x-auto px-6 py-2 bg-white border-b border-[#EAE5DC] text-xs">
+        {(
+          [
+            { id: 'dashboard', label: 'Dashboard' },
+            { id: 'patients', label: 'Patients' },
+            { id: 'consultation', label: 'Consultation' },
+            { id: 'schedule', label: 'My Schedule' },
+            { id: 'lab_orders', label: 'Lab Orders' },
+            { id: 'admissions_queue', label: 'Inpatient Admissions' },
+            { id: 'radiology_workbench', label: 'Radiology & Scans' },
+            { id: 'pharmacy_dispense', label: 'Pharmacy Dispense' },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? 'bg-[#0A4D8C] text-white shadow-2xs'
+                : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Staff Left Slide-out Drawer */}
       <StaffDrawer

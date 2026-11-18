@@ -548,7 +548,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] font-sans text-[#221815] flex flex-col">
+    <div className="min-h-screen bg-[#FAF8F5] font-sans text-[#221815] flex flex-col md:flex-row">
       
       {/* Hidden file input for quick photo uploads */}
       <input
@@ -559,31 +559,153 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         onChange={handleImageFileUpload}
       />
 
-      {/* ================= WHITE HEADER MATCHING IMAGE 1 ================= */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-2xs">
-        {/* Left: Hamburger Menu Button */}
-        <button
-          onClick={() => setIsHamburgerOpen(true)}
-          className="p-1.5 -ml-1.5 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-          title="Open Menu"
-        >
-          <Menu className="w-5 h-5 text-slate-700" />
-        </button>
+      {/* ================= DESKTOP / TABLET PERSISTENT SIDEBAR ================= */}
+      <aside className="hidden md:flex md:w-64 lg:w-72 shrink-0 flex-col bg-[#FAF8F5] border-r border-[#EAE5DC] sticky top-0 h-screen z-20">
+        <div className="p-5 flex items-center space-x-3 border-b border-[#EAE5DC]">
+          <div className="w-9 h-9 rounded-xl bg-[#C8232C] text-white flex items-center justify-center shadow-xs shrink-0">
+            <Activity className="w-5 h-5 stroke-[2.4]" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-extrabold text-[#221815] tracking-tight leading-tight truncate">TERRALINK HOSPITAL</h3>
+            <p className="text-[11px] text-[#C8232C] font-bold leading-tight">Patient Portal</p>
+          </div>
+        </div>
 
-        {/* Center: "Patient Portal" */}
-        <h1 className="text-base font-bold text-slate-900 tracking-tight select-none">
-          Patient Portal
-        </h1>
+        <div className="mx-4 mt-4 px-3 py-2 rounded-xl bg-white border border-[#EAE5DC] flex items-center justify-between shadow-2xs">
+          <span className="text-[11px] font-semibold text-stone-500">Hotline 24/7:</span>
+          <a href="tel:0713544101" className="text-xs font-bold text-[#8F261F] flex items-center gap-1 hover:underline">
+            <Phone className="w-3.5 h-3.5 text-[#C8232C]" />
+            <span>0713544101</span>
+          </a>
+        </div>
 
-        {/* Right: Patient Profile Icon */}
-        <button
-          onClick={() => setActiveTab('profile')}
-          className="cursor-pointer transition-transform hover:scale-105"
-          title="My Profile"
-        >
-          {renderPatientAvatar('w-8 h-8 text-xs')}
-        </button>
-      </header>
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto text-xs font-medium">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
+            { id: 'services', label: 'Healthcare Services', icon: Heart },
+            { id: 'ai_assistant', label: 'AI Assistant', icon: Sparkles },
+            { id: 'appointments', label: 'Appointments', icon: Calendar },
+            { id: 'records', label: 'Medical Records', icon: FileText },
+            { id: 'billing', label: 'Billing & Payments (KES)', icon: CreditCard },
+            { id: 'doctors', label: 'Find a Doctor', icon: Stethoscope },
+            { id: 'messages', label: 'Messages', icon: MessageSquare },
+            { id: 'profile', label: 'Profile', icon: UserIcon },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-white text-[#C8232C] font-bold border border-[#EAE5DC] shadow-xs'
+                    : 'text-[#221815] hover:bg-stone-200/50'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#C8232C]' : 'text-stone-600'}`} />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-[#C8232C]" />}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-[#EAE5DC] bg-[#F5F1E8] flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-full bg-[#C8232C] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-2xs">
+              {patientInitials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#221815] truncate">{patient.name || 'Faith Chebet'}</p>
+              <p className="text-[10px] text-stone-500 font-medium">Patient Account</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1">
+            {onNavigateToHome && (
+              <button
+                type="button"
+                onClick={onNavigateToHome}
+                title="Hospital Website"
+                className="p-1.5 rounded-xl text-stone-600 hover:text-black hover:bg-white/80 transition-colors cursor-pointer"
+              >
+                <Building2 className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onLogout?.()}
+              title="Log Out"
+              className="p-1.5 rounded-xl text-[#C8232C] hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Content Shell */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* ================= DESKTOP TOP BAR ================= */}
+        <header className="hidden md:flex bg-white border-b border-slate-100 sticky top-0 z-20 px-8 py-3.5 items-center justify-between shadow-2xs">
+          <div className="flex items-center space-x-3">
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight capitalize">
+              {activeTab.replace('_', ' ')}
+            </h1>
+            <span className="text-xs text-stone-400">·</span>
+            <span className="text-xs font-medium text-stone-500">TERRALINK HOSPITAL Patient Portal</span>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            {onNavigateToHome && (
+              <button
+                type="button"
+                onClick={onNavigateToHome}
+                className="px-3.5 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Hospital Home
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className="cursor-pointer transition-transform hover:scale-105"
+              title="My Profile"
+            >
+              {renderPatientAvatar('w-9 h-9 text-xs')}
+            </button>
+          </div>
+        </header>
+
+        {/* ================= MOBILE HAMBURGER HEADER (Smartphones Only) ================= */}
+        <header className="md:hidden bg-white border-b border-slate-100 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-2xs">
+          {/* Left: Hamburger Menu Button */}
+          <button
+            onClick={() => setIsHamburgerOpen(true)}
+            className="p-1.5 -ml-1.5 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Open Menu"
+          >
+            <Menu className="w-5 h-5 text-slate-700" />
+          </button>
+
+          {/* Center: "Patient Portal" */}
+          <h1 className="text-base font-bold text-slate-900 tracking-tight select-none">
+            Patient Portal
+          </h1>
+
+          {/* Right: Patient Profile Icon */}
+          <button
+            onClick={() => setActiveTab('profile')}
+            className="cursor-pointer transition-transform hover:scale-105"
+            title="My Profile"
+          >
+            {renderPatientAvatar('w-8 h-8 text-xs')}
+          </button>
+        </header>
 
       {/* ================= NAVIGATION DRAWER MATCHING REFERENCE SCREENSHOT ================= */}
       {isHamburgerOpen && (
@@ -877,11 +999,11 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
       )}
 
       {/* ================= MAIN ACTIVE TAB CONTENT ================= */}
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-5 space-y-4">
+      <main className="flex-1 max-w-2xl md:max-w-6xl mx-auto w-full px-4 md:px-8 py-5 md:py-7 space-y-5">
         
         {/* ================= TAB 1: DASHBOARD ================= */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-5">
             
             {/* 1. Welcome Greeting Header */}
             <div>
@@ -894,7 +1016,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
             </div>
 
             {/* 2. Overview Cards: Upcoming Appointments, Bills, Medical Records, Next Visit */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               
               {/* Card 1: Upcoming Appointments */}
               <div
@@ -2929,6 +3051,7 @@ export const PatientPortal: React.FC<PatientPortalProps> = ({
         )}
 
       </main>
+      </div>
 
       {/* ================= AVATAR EDIT MODAL ================= */}
       {isAvatarModalOpen && (

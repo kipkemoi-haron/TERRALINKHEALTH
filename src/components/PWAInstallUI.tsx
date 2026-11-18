@@ -34,7 +34,7 @@ export const TopAppDownloadBanner: React.FC<TopAppDownloadBannerProps> = ({
     <div
       role="region"
       aria-label="Download TERRALINK HEALTH mobile app"
-      className="relative z-50 w-full bg-[#0B132B] text-white border-b border-white/10 shadow-sm shrink-0"
+      className="md:hidden relative z-50 w-full bg-[#0B132B] text-white border-b border-white/10 shadow-sm shrink-0"
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-2.5">
         {/* Left: App Icon + Message */}

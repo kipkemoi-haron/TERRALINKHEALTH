@@ -610,11 +610,11 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full bg-white text-slate-800 flex flex-col justify-between selection:bg-sky-100 selection:text-slate-900 pb-20 sm:pb-24">
+    <div className="min-h-screen w-full bg-white text-slate-800 flex flex-col justify-between selection:bg-sky-100 selection:text-slate-900 pb-20 md:pb-0">
       
       {/* ================= 1. HEADER BAR ================= */}
       <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-8">
           
           {/* Logo & Brand */}
           <button
@@ -624,7 +624,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               if (currentUser?.role === 'patient') onNavigateToPortal('patient');
               else window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0 group text-left"
+            className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0 group text-left shrink-0"
           >
             <div className="w-9 h-9 rounded-xl bg-[#C8102E] text-white flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-xs">
               <Activity className="w-5 h-5 stroke-[2.5]" />
@@ -633,6 +633,51 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               TERRALINK HOSPITAL
             </span>
           </button>
+
+          {/* Desktop / Tablet Top Navigation (Hidden on Mobile Smartphones) */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+            <button
+              type="button"
+              onClick={handleExploreServicesClick}
+              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Services
+            </button>
+            <button
+              type="button"
+              onClick={handleBookAppointmentClick}
+              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Appointments
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentUser && currentUser.role === 'patient') {
+                  onNavigateToPortal('patient', 'appointments');
+                } else {
+                  handleOpenAuth('patient_login');
+                }
+              }}
+              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Telemedicine
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsReviewsModalOpen(true)}
+              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Reviews
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMoreDrawerOpen(true)}
+              className="hover:text-[#132238] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              More
+            </button>
+          </nav>
 
           {/* Right Header Navigation - Compact "Patient Portal" */}
           <div className="flex items-center shrink-0">
@@ -1071,8 +1116,8 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </footer>
 
-      {/* ================= 6. SLEEK FIXED BOTTOM NAVIGATION BAR (Image 2 Styling) ================= */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-[0_-1px_10px_rgba(15,23,42,0.03)]">
+      {/* ================= 6. SLEEK FIXED BOTTOM NAVIGATION BAR (Mobile Smartphone Only) ================= */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-[0_-1px_10px_rgba(15,23,42,0.03)]">
         <div className="max-w-lg mx-auto grid grid-cols-5 items-center h-16 px-1">
           
           {/* Home */}

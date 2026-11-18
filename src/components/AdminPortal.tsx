@@ -642,7 +642,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalInvoicedKES = invoices.reduce((acc, curr) => acc + (curr.totalAmountKES || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] font-sans text-[#221815] flex flex-col pb-24 selection:bg-[#FDF1F1] selection:text-[#C8232C]">
+    <div className="min-h-screen bg-[#FAF8F5] font-sans text-[#221815] flex flex-col pb-24 md:pb-8 selection:bg-[#FDF1F1] selection:text-[#C8232C]">
       
       {/* ================= SLIDE-OUT HAMBURGER DRAWER ================= */}
       {isDrawerOpen && (
@@ -1055,7 +1055,55 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </span>
           </div>
         </div>
+        <div className="hidden md:flex items-center space-x-2">
+          {onNavigatePortal && (
+            <button
+              type="button"
+              onClick={() => onNavigatePortal('home')}
+              className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-semibold text-stone-700 cursor-pointer whitespace-nowrap"
+            >
+              Hospital Home
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onLogout?.()}
+            className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-semibold text-[#C8232C] cursor-pointer whitespace-nowrap"
+          >
+            Sign Out
+          </button>
+        </div>
       </header>
+
+      {/* Desktop / Tablet Persistent Tab Bar */}
+      <nav className="hidden md:flex items-center gap-1.5 overflow-x-auto px-6 py-2 bg-white border-b border-[#EAE5DC] text-xs">
+        {[
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'staff', label: 'Staff' },
+          { id: 'patients', label: 'Patients' },
+          { id: 'billings', label: 'Billings' },
+          { id: 'insurance', label: 'Insurance' },
+          { id: 'departments', label: 'Departments' },
+          { id: 'equipment', label: 'Equipment' },
+          { id: 'beds', label: 'Beds' },
+          { id: 'analytics', label: 'Analytics' },
+          { id: 'announcements', label: 'Alerts' },
+          { id: 'audit_logs', label: 'Audit Logs' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? 'bg-[#C8232C] text-white shadow-2xs'
+                : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Sub-header Bar (when on any management page) */}
       {activeTab !== 'dashboard' && (
@@ -3271,8 +3319,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       </div> {/* End of main content area */}
 
-      {/* ================= FIXED MOBILE BOTTOM NAVIGATION ================= */}
-      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 z-40 px-6 py-2 flex items-center justify-around shadow-lg">
+      {/* ================= FIXED MOBILE BOTTOM NAVIGATION (Smartphones Only) ================= */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 z-40 px-6 py-2 flex items-center justify-around shadow-lg">
         <button
           onClick={() => setActiveTab('dashboard')}
           className={`flex flex-col items-center space-y-1 transition-colors cursor-pointer ${
