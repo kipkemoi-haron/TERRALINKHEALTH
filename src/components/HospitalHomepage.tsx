@@ -63,9 +63,11 @@ interface HospitalHomepageProps {
 const TERRALINK_CATALOG_SERVICES = [
   {
     id: 'srv-nurse',
+    shortTitle: 'Home Nursing',
     name: 'Hire a Nurse & Bedside Care',
     category: 'Home & Nursing',
-    badge: 'MOST REQUESTED',
+    filterGroup: 'Nursing',
+    isPopular: true,
     iconType: 'heart',
     headline: 'Licensed, compassionate nursing care in the comfort of your home',
     description: 'Connect with registered nurses (RN/BSN) and licensed practical nurses for wound dressing, medication administration, post-operative monitoring, and IV infusion.',
@@ -75,9 +77,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-opd',
+    shortTitle: 'General Consultation',
     name: 'General Outpatient Medical Consultation',
     category: 'Clinical & Outpatient',
-    badge: 'MOST REQUESTED',
+    filterGroup: 'Consultations',
+    isPopular: true,
     iconType: 'stethoscope',
     headline: 'Comprehensive physical examination, primary diagnosis, and outpatient triage',
     description: 'Immediate medical check-up with licensed general medical officers, vital signs evaluation, disease diagnosis, and electronic prescription issuing.',
@@ -87,9 +91,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-physio',
+    shortTitle: 'Physiotherapy',
     name: 'Physiotherapy & Physical Rehabilitation',
     category: 'Therapy & Rehab',
-    badge: 'MOST REQUESTED',
+    filterGroup: 'Therapy',
+    isPopular: true,
     iconType: 'activity',
     headline: 'Personalized physical therapy, musculoskeletal rehabilitation, and mobility care',
     description: 'Targeted recovery sessions for post-stroke mobility, orthopedic fracture rehabilitation, sports injuries, and chronic pain management.',
@@ -98,10 +104,26 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Physical Therapy & Rehab'
   },
   {
+    id: 'srv-lab-cbc',
+    shortTitle: 'Lab Tests',
+    name: 'Full Hemogram / Complete Blood Count (CBC)',
+    category: 'Laboratory & Diagnostics',
+    filterGroup: 'Labs',
+    isPopular: true,
+    iconType: 'syringe',
+    headline: 'Automated 5-part differential blood analysis with platelet and red cell indices',
+    description: 'Rapid diagnostic screening for anemia, systemic infection, hematologic malignancies, and immune status with automated digital verification.',
+    standardFeeKES: 1200,
+    shaCovered: true,
+    departmentName: 'Medical Laboratory & Blood Bank'
+  },
+  {
     id: 'srv-spec',
+    shortTitle: 'Specialist Visit',
     name: 'Specialist Senior Physician Consultation',
     category: 'Specialist Clinics',
-    badge: 'SPECIALIST',
+    filterGroup: 'Consultations',
+    isPopular: true,
     iconType: 'stethoscope',
     headline: 'Senior Consultant clinical review in Cardiology, Neurology, Orthopedics, or Internal Medicine',
     description: 'Advanced clinical evaluations, diagnostic syntheses, and second medical opinions by leading KMPDC board-certified medical specialists.',
@@ -111,9 +133,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-emg',
+    shortTitle: 'Emergency Care',
     name: 'Accident & Emergency Trauma Triage',
     category: 'Emergency & Ambulance',
-    badge: '24/7 OPEN',
+    filterGroup: 'Emergency',
+    isPopular: true,
     iconType: 'ambulance',
     headline: 'Immediate critical trauma assessment, resuscitation, and casualty emergency care',
     description: 'Round-the-clock emergency room response with dedicated trauma bays, advanced resuscitation crash carts, and direct theatre access.',
@@ -123,9 +147,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-amb',
+    shortTitle: 'Ambulance Dispatch',
     name: 'ALS Emergency Ambulance Dispatch',
     category: 'Emergency & Ambulance',
-    badge: '24/7 DISPATCH',
+    filterGroup: 'Emergency',
+    isPopular: false,
     iconType: 'ambulance',
     headline: 'Type C Advanced Life Support paramedic ambulance dispatch across Nairobi',
     description: 'Equipped with Zoll X-Series monitor/defibrillators, transport ventilators, advanced airway management, and certified paramedic escorts.',
@@ -135,9 +161,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-mat-norm',
+    shortTitle: 'Normal Delivery',
     name: 'Normal Vaginal Delivery (Maternity Package)',
     category: 'Maternity & Delivery',
-    badge: 'MOST REQUESTED',
+    filterGroup: 'Maternity',
+    isPopular: false,
     iconType: 'heart',
     headline: 'Safe, compassionate maternity delivery with Obstetrician and midwife care',
     description: 'Comprehensive intrapartum monitoring, consultant Obstetrician delivery, dedicated midwife care, 48-hour postpartum stay, and newborn immunization.',
@@ -147,9 +175,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-mat-cs',
+    shortTitle: 'C-Section Delivery',
     name: 'Caesarean Section Surgical Delivery',
     category: 'Maternity & Delivery',
-    badge: 'SURGICAL',
+    filterGroup: 'Maternity',
+    isPopular: false,
     iconType: 'activity',
     headline: 'Elective and emergency C-section delivery in sterile laminar-flow operating theatre',
     description: 'Obstetrician surgical fee, anaesthetist cover, dedicated neonatal pediatric standby, theatre consumables, and 3-day private recovery suite.',
@@ -158,22 +188,12 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Obstetrics & Gynaecology'
   },
   {
-    id: 'srv-lab-cbc',
-    name: 'Full Hemogram / Complete Blood Count (CBC)',
-    category: 'Laboratory & Diagnostics',
-    badge: 'LABORATORY',
-    iconType: 'syringe',
-    headline: 'Automated 5-part differential blood analysis with platelet and red cell indices',
-    description: 'Rapid diagnostic screening for anemia, systemic infection, hematologic malignancies, and immune status with automated digital verification.',
-    standardFeeKES: 1200,
-    shaCovered: true,
-    departmentName: 'Medical Laboratory & Blood Bank'
-  },
-  {
     id: 'srv-lab-lipid',
+    shortTitle: 'Lipid Profile',
     name: 'Comprehensive Fasting Lipid Profile',
     category: 'Laboratory & Diagnostics',
-    badge: 'LABORATORY',
+    filterGroup: 'Labs',
+    isPopular: false,
     iconType: 'syringe',
     headline: 'Total cholesterol, HDL, LDL, triglycerides, and cardiovascular risk calculation',
     description: 'Fasting venous serum analysis providing deep metabolic insights for cardiovascular disease prevention and hypertension management.',
@@ -183,9 +203,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-rad-xray',
+    shortTitle: 'Chest X-Ray',
     name: 'Digital Chest X-Ray (PA & Lateral)',
     category: 'Laboratory & Diagnostics',
-    badge: 'IMAGING',
+    filterGroup: 'Labs',
+    isPopular: false,
     iconType: 'layers',
     headline: 'High-definition digital thoracic imaging with radiologist interpretation',
     description: 'Low-dose digital radiography for respiratory pathology, lung parenchyma evaluation, cardiac silhouette assessment, and clinical clearance.',
@@ -195,9 +217,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-rad-ct',
+    shortTitle: 'Brain CT Scan',
     name: 'Brain CT Scan (High-Resolution Multi-Slice)',
     category: 'Laboratory & Diagnostics',
-    badge: 'IMAGING',
+    filterGroup: 'Labs',
+    isPopular: false,
     iconType: 'layers',
     headline: '128-slice rapid volumetric computed tomography for trauma, stroke, and hemorrhage',
     description: 'Sub-millimeter cranial imaging for intracranial hemorrhage, acute ischemic stroke, trauma, and neurological evaluation with 3D multiplanar reconstruction.',
@@ -207,9 +231,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-icu',
+    shortTitle: 'ICU Care',
     name: 'Intensive Care Unit (ICU) Daily Inpatient Rate',
     category: 'Critical & Inpatient',
-    badge: 'CRITICAL CARE',
+    filterGroup: 'Inpatient',
+    isPopular: false,
     iconType: 'bed',
     headline: '24/7 dedicated 1:1 intensive nursing, mechanical ventilation, and multi-organ monitoring',
     description: 'Continuous hemodynamic monitoring, Hamilton mechanical ventilation, bedside arterial blood gas analysis, and daily intensivist consultations.',
@@ -219,9 +245,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-hdu',
+    shortTitle: 'HDU Monitoring',
     name: 'High Dependency Unit (HDU) Daily Rate',
     category: 'Critical & Inpatient',
-    badge: 'INPATIENT',
+    filterGroup: 'Inpatient',
+    isPopular: false,
     iconType: 'bed',
     headline: 'Continuous cardiac telemetry, oxygen therapy, and close clinical supervision',
     description: 'Step-down high dependency inpatient monitoring for recovering post-surgical and acute medical patients requiring continuous vital oversight.',
@@ -231,9 +259,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-ward-gen',
+    shortTitle: 'General Ward',
     name: 'General Medical / Surgical Ward Daily Rate',
     category: 'Critical & Inpatient',
-    badge: 'INPATIENT',
+    filterGroup: 'Inpatient',
+    isPopular: false,
     iconType: 'bed',
     headline: 'Standard inpatient bed allocation, routine doctor rounds, daily nursing, and meals',
     description: 'Fully furnished comfortable medical ward bed with wall oxygen port, daily ward physician rounds, dietary management, and dedicated nursing care.',
@@ -243,9 +273,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-cardiology',
+    shortTitle: 'Cardiology Clinic',
     name: 'Cardiology & Echocardiogram Clinic',
     category: 'Specialist Clinics',
-    badge: 'SPECIALIST',
+    filterGroup: 'Consultations',
+    isPopular: false,
     iconType: 'heart',
     headline: 'Hypertension, arrhythmia, heart failure management, and Doppler echocardiography',
     description: 'Expert diagnostic cardiology including 12-lead resting ECG, transthoracic echocardiography, and cardiovascular risk reduction therapies.',
@@ -255,9 +287,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-peds',
+    shortTitle: 'Child Wellness',
     name: 'Paediatrics & Child Wellness Clinic',
     category: 'Specialist Clinics',
-    badge: 'CHILD CARE',
+    filterGroup: 'Consultations',
+    isPopular: false,
     iconType: 'heart',
     headline: 'Childhood illness treatment, growth monitoring, and KEPI vaccination schedule',
     description: 'Gentle, child-centered clinical care by Consultant Paediatricians covering newborn screening, nutritional assessments, and routine immunizations.',
@@ -267,9 +301,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-onco',
+    shortTitle: 'Oncology Center',
     name: 'Oncology & Chemotherapy Center',
     category: 'Specialist Clinics',
-    badge: 'ONCOLOGY',
+    filterGroup: 'Consultations',
+    isPopular: false,
     iconType: 'activity',
     headline: 'Medical oncology, outpatient chemotherapy infusions, and cancer screening',
     description: 'Multidisciplinary tumor board coordination, compassionate chemotherapy infusions in private recliners, and early cancer detection screenings.',
@@ -279,9 +315,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-dialysis',
+    shortTitle: 'Kidney Dialysis',
     name: 'Dialysis & Nephrology Renal Session',
     category: 'Critical & Inpatient',
-    badge: 'RENAL CARE',
+    filterGroup: 'Therapy',
+    isPopular: false,
     iconType: 'activity',
     headline: 'Fresenius hemodialysis sessions, ultrafiltration, and renal nephrologist review',
     description: 'State-of-the-art dialysis suites with ultrapure RO water filtration, high-flux dialyzers, and continuous nephrology nurse supervision.',
@@ -291,9 +329,11 @@ const TERRALINK_CATALOG_SERVICES = [
   },
   {
     id: 'srv-pharm',
+    shortTitle: 'Pharmacy Refill',
     name: 'Pharmacy & Drug Dispensing',
     category: 'Clinical & Outpatient',
-    badge: 'PHARMACY',
+    filterGroup: 'Consultations',
+    isPopular: false,
     iconType: 'pill',
     headline: '24/7 verified medication dispensing, drug interaction checks, and counseling',
     description: 'KMPDC & Pharmacy and Poisons Board certified pharmaceuticals, chronic medicine refill programs, electronic interaction safety checks, and patient counseling.',
@@ -368,33 +408,41 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   // Info Modals (Contact, Privacy, Terms)
   const [activeInfoModal, setActiveInfoModal] = useState<'contact' | 'privacy' | 'terms' | null>(null);
 
-  // Healthcare Services Filter & Search State
+  // Healthcare Services Filter, Search & Slide-up Detail Sheet State
   const [catalogSearch, setCatalogSearch] = useState<string>('');
   const [catalogCategory, setCatalogCategory] = useState<string>('All');
+  const [showAllServices, setShowAllServices] = useState<boolean>(false);
+  const [selectedServiceDetail, setSelectedServiceDetail] = useState<typeof TERRALINK_CATALOG_SERVICES[number] | null>(null);
 
-  // Categories list
+  // Clean horizontal scrollable category filter pills
   const catalogCategories = [
     'All',
-    'Home & Nursing',
-    'Clinical & Outpatient',
-    'Emergency & Ambulance',
-    'Specialist Clinics',
-    'Maternity & Delivery',
-    'Laboratory & Diagnostics',
-    'Critical & Inpatient',
-    'Therapy & Rehab'
+    'Nursing',
+    'Consultations',
+    'Labs',
+    'Therapy',
+    'Maternity',
+    'Emergency',
+    'Inpatient'
   ];
 
   // Filtered Services List
   const filteredCatalogServices = TERRALINK_CATALOG_SERVICES.filter(service => {
-    const matchesSearch = 
-      service.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-      service.headline.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-      service.description.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-      service.category.toLowerCase().includes(catalogSearch.toLowerCase());
-    const matchesCat = catalogCategory === 'All' || service.category === catalogCategory;
+    const q = catalogSearch.trim().toLowerCase();
+    const matchesSearch = !q ||
+      service.shortTitle.toLowerCase().includes(q) ||
+      service.name.toLowerCase().includes(q) ||
+      service.headline.toLowerCase().includes(q) ||
+      service.description.toLowerCase().includes(q) ||
+      service.filterGroup.toLowerCase().includes(q);
+    const matchesCat = catalogCategory === 'All' || service.filterGroup === catalogCategory;
     return matchesSearch && matchesCat;
   });
+
+  const isDefaultPopularView = catalogCategory === 'All' && catalogSearch.trim() === '' && !showAllServices;
+  const visibleServices = isDefaultPopularView
+    ? TERRALINK_CATALOG_SERVICES.filter(s => s.isPopular).slice(0, 6)
+    : filteredCatalogServices;
 
   // Review Form State
   const [reviewForm, setReviewForm] = useState({
@@ -529,46 +577,44 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     }
   };
 
-  // Render Service Icon helper with Image 2-inspired vibrant circular colored badges
-  const getServiceBadgeColor = (category: string) => {
-    switch (category) {
-      case 'Home & Nursing':
-      case 'Maternity & Delivery':
-        return 'bg-[#EC2D6F]';
-      case 'Emergency & Ambulance':
-        return 'bg-[#D90429]';
-      case 'Clinical & Outpatient':
-      case 'Therapy & Rehab':
-        return 'bg-[#00A859]';
-      case 'Specialist Clinics':
-        return 'bg-[#28257A]';
-      case 'Laboratory & Diagnostics':
-        return 'bg-[#F59E0B]';
-      case 'Critical & Inpatient':
-        return 'bg-[#A855F7]';
+  // Soft tinted circle colors + crisp icon colors per service group (One Medical / Zocdoc aesthetic)
+  const getServiceSoftTint = (filterGroup: string) => {
+    switch (filterGroup) {
+      case 'Nursing':
+      case 'Maternity':
+        return 'bg-rose-50 text-[#D90429]';
+      case 'Emergency':
+        return 'bg-red-50 text-[#D90429]';
+      case 'Therapy':
+        return 'bg-emerald-50 text-[#00A859]';
+      case 'Labs':
+        return 'bg-amber-50 text-amber-600';
+      case 'Inpatient':
+        return 'bg-purple-50 text-purple-600';
+      case 'Consultations':
       default:
-        return 'bg-[#0EA5E9]';
+        return 'bg-indigo-50 text-[#28257A]';
     }
   };
 
   const renderServiceIcon = (type: string) => {
     switch (type) {
       case 'heart':
-        return <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Heart className="w-5 h-5 stroke-[2]" />;
       case 'activity':
-        return <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Activity className="w-5 h-5 stroke-[2]" />;
       case 'ambulance':
-        return <Ambulance className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Ambulance className="w-5 h-5 stroke-[2]" />;
       case 'syringe':
-        return <Syringe className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Syringe className="w-5 h-5 stroke-[2]" />;
       case 'pill':
-        return <Pill className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Pill className="w-5 h-5 stroke-[2]" />;
       case 'bed':
-        return <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Bed className="w-5 h-5 stroke-[2]" />;
       case 'layers':
-        return <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Layers className="w-5 h-5 stroke-[2]" />;
       default:
-        return <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
+        return <Stethoscope className="w-5 h-5 stroke-[2]" />;
     }
   };
 
@@ -622,84 +668,183 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </header>
 
-      {/* ================= 2. HERO SECTION ================= */}
-      <section 
-        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-4rem-4rem)] sm:min-h-[580px] md:min-h-[640px] bg-white"
-      >
-        {/* Doctor seated at her desk */}
-        <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[position:84%_30%] sm:bg-[position:80%_center] md:bg-[position:right_center]"
-          style={{
-            backgroundImage: `url(${femaleDoctorHeroImg})`,
-          }}
-        />
-
-        {/* Crisp white readability scrim */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/60 45% to-transparent 72% sm:from-white/95 sm:via-white/65 45% sm:to-transparent pointer-events-none" />
-
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 py-8 sm:py-12 flex flex-col justify-center">
-          
-          {/* Left-aligned hero content */}
-          <div className="max-w-[295px] xs:max-w-[325px] sm:max-w-xl text-left">
+      {/* ================= 2. PATIENT-FIRST SPLIT HERO SECTION ================= */}
+      <section className="w-full bg-white pt-4 sm:pt-8 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-3xl bg-slate-50/70 border border-slate-100 overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
             
-            {/* Rounded geometric headline */}
-            <h1 className="font-display text-[26px] xs:text-[30px] sm:text-4xl md:text-5xl font-bold text-[#0F172A] tracking-tight leading-[1.12] [text-wrap:balance]">
-              Enhancing Hospital<br />
-              Operations &amp;<br />
-              <span className="text-[#D90429]">Patient Experience</span>
-            </h1>
+            {/* Crisp Unblocked Doctor Photo (Top on Mobile, Right on Desktop — zero text over face) */}
+            <div className="order-1 lg:order-2 lg:col-span-6 relative bg-slate-100">
+              <img
+                src={femaleDoctorHeroImg}
+                alt="TERRALINK HEALTH Physician"
+                referrerPolicy="no-referrer"
+                className="w-full h-56 xs:h-64 sm:h-80 lg:h-full lg:min-h-[400px] object-cover object-[center_20%]"
+              />
+            </div>
 
-            {/* Subtitle / Description */}
-            <p className="mt-3 sm:mt-4 text-[13px] sm:text-base text-slate-600 font-normal leading-relaxed max-w-[260px] xs:max-w-[300px] sm:max-w-md">
-              An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
-            </p>
+            {/* Clean White/Soft-Tint Copy Container (Bottom on Mobile, Left on Desktop) */}
+            <div className="order-2 lg:order-1 lg:col-span-6 bg-white p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-left">
+              <h1 className="font-display text-2xl xs:text-[28px] sm:text-4xl lg:text-[42px] font-bold text-[#0F172A] tracking-tight leading-[1.14] [text-wrap:balance]">
+                Quality Healthcare, Right When You Need It.
+              </h1>
 
-            {/* 3 Prominent Rounded Action Buttons */}
-            <div className="mt-5 sm:mt-7 space-y-3 w-full max-w-[265px] xs:max-w-[285px] sm:max-w-[330px]">
-              
-              {/* 1. Book an Appointment */}
-              <button
-                onClick={handleBookAppointmentClick}
-                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-red-600/20 transition-all flex items-center justify-between cursor-pointer group"
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0" />
-                  <span className="tracking-tight whitespace-nowrap">Book an Appointment</span>
-                </div>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0 group-hover:translate-x-1 transition-transform" />
-              </button>
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-md">
+                Book a doctor, order lab tests, or request home nursing in seconds.
+              </p>
 
-              {/* 2. Explore Our Services */}
-              <button
-                onClick={handleExploreServicesClick}
-                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-[#28257A] hover:bg-[#1E1C63] active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-indigo-950/20 transition-all flex items-center justify-between cursor-pointer group"
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0" />
-                  <span className="tracking-tight whitespace-nowrap">Explore Our Services</span>
-                </div>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0 group-hover:translate-x-1 transition-transform" />
-              </button>
+              {/* 2 Streamlined Pill Buttons */}
+              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleBookAppointmentClick}
+                  className="px-6 py-3.5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-semibold text-sm shadow-sm shadow-red-600/20 transition-all inline-flex items-center space-x-2 cursor-pointer whitespace-nowrap"
+                >
+                  <Calendar className="w-4 h-4 stroke-[2.2] shrink-0" />
+                  <span>Book Appointment</span>
+                </button>
 
-              {/* 3. Call / SMS: 0713544101 */}
-              <button
-                onClick={() => setIsCallSmsModalOpen(true)}
-                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-900 border border-slate-200 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center space-x-2.5 cursor-pointer group"
-              >
-                <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 text-[#D90429] stroke-[2.2] shrink-0 group-hover:scale-105 transition-transform" />
-                <span className="tracking-tight whitespace-nowrap tabular-nums">Call / SMS: 0713544101</span>
-              </button>
-
+                <button
+                  onClick={() => setIsCallSmsModalOpen(true)}
+                  className="px-5 py-3.5 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-900 border border-slate-200 font-semibold text-sm transition-all inline-flex items-center space-x-2 cursor-pointer whitespace-nowrap"
+                >
+                  <PhoneCall className="w-4 h-4 text-[#D90429] stroke-[2.2] shrink-0" />
+                  <span>24/7 Emergency / Call</span>
+                </button>
+              </div>
             </div>
 
           </div>
+        </div>
+      </section>
+
+      {/* ================= 3. CLEAN, SCANNABLE SERVICES GRID ================= */}
+      <section id="explore-healthcare-services" className="w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
+        <div className="max-w-6xl mx-auto">
+          
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div className="text-left">
+              <h2 className="font-display text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                Popular Services
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Tap any service to view coverage &amp; details, or book directly.
+              </p>
+            </div>
+
+            {/* Compact Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={catalogSearch}
+                onChange={(e) => setCatalogSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#28257A]/15 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Horizontal Scrollable Category Filter Pills */}
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 mb-6 scrollbar-none no-scrollbar">
+            {catalogCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setCatalogCategory(cat);
+                  if (cat !== 'All') setShowAllServices(true);
+                }}
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                  catalogCategory === cat
+                    ? 'bg-[#28257A] text-white'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* 2-Column (Mobile) / 4-Column (Desktop) Scannable Grid — STRICTLY 4 Clean Elements per Card */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
+            {visibleServices.map(service => (
+              <div
+                key={service.id}
+                onClick={() => setSelectedServiceDetail(service)}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 hover:border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_20px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col justify-between gap-4 group text-left"
+              >
+                <div>
+                  {/* 1. Small, modern icon in a soft tinted circle */}
+                  <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
+                    {renderServiceIcon(service.iconType)}
+                  </div>
+
+                  {/* 2. Service Title (Max 2-3 words) */}
+                  <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 leading-snug tracking-tight">
+                    {service.shortTitle}
+                  </h3>
+
+                  {/* 3. Starting Price */}
+                  <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
+                    From KES {service.standardFeeKES.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* 4. Compact Book button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedServiceName(service.name);
+                    setIsBookingModalOpen(true);
+                  }}
+                  className="self-start px-4 py-1.5 rounded-full bg-[#FFF1F2] hover:bg-[#D90429] text-[#D90429] hover:text-white font-semibold text-xs transition-colors cursor-pointer active:scale-95"
+                >
+                  Book
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {visibleServices.length === 0 && (
+            <div className="text-center py-10 bg-slate-50/50 rounded-3xl border border-slate-100 p-8 space-y-3 mt-4">
+              <Search className="w-7 h-7 text-slate-400 mx-auto" />
+              <h4 className="font-display text-base font-bold text-slate-900">No matching services found</h4>
+              <p className="text-xs text-slate-500">Try searching with a different health term or reset filters.</p>
+              <button
+                onClick={() => {
+                  setCatalogSearch('');
+                  setCatalogCategory('All');
+                  setShowAllServices(false);
+                }}
+                className="px-5 py-2 rounded-full bg-[#28257A] text-white font-semibold text-xs cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+
+          {/* View All 20 Services Toggle Button */}
+          {catalogCategory === 'All' && catalogSearch.trim() === '' && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => setShowAllServices(prev => !prev)}
+                className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-[0.98]"
+              >
+                <span>
+                  {showAllServices
+                    ? 'Show Top 6 Services'
+                    : `View All ${TERRALINK_CATALOG_SERVICES.length} Services \u2192`}
+                </span>
+              </button>
+            </div>
+          )}
 
         </div>
       </section>
 
-      {/* ================= 3. KEY FEATURES FOR BETTER CARE ================= */}
+      {/* ================= 4. KEY FEATURES FOR BETTER CARE ================= */}
       <section className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           
           <div className="text-center space-y-2 mb-8 sm:mb-10">
             <h2 className="font-display text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
@@ -768,179 +913,80 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </section>
 
-      {/* ================= 4. EXPLORE OUR HEALTHCARE SERVICES CATALOG ================= */}
-      <section id="explore-healthcare-services" className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
-        <div className="max-w-5xl mx-auto">
-          
-          {/* Quiet Section Kicker */}
-          <p className="text-center text-xs font-semibold text-[#28257A] tracking-wide mb-2">
-            Healthcare Services Catalog
-          </p>
+      {/* ================= SLIDE-UP SERVICE DETAIL SHEET ================= */}
+      {selectedServiceDetail && (
+        <div
+          onClick={() => setSelectedServiceDetail(null)}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/50 backdrop-blur-xs"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5 max-h-[85vh] overflow-y-auto"
+          >
+            <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto sm:hidden" />
 
-          {/* Catalog Title */}
-          <h2 className="font-display text-2xl sm:text-4xl font-bold text-slate-900 text-center tracking-tight [text-wrap:balance]">
-            Explore Our Healthcare Services
-          </h2>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center space-x-3.5">
+                <div className={`w-12 h-12 rounded-full ${getServiceSoftTint(selectedServiceDetail.filterGroup)} flex items-center justify-center shrink-0`}>
+                  {renderServiceIcon(selectedServiceDetail.iconType)}
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-medium text-slate-400">
+                    {selectedServiceDetail.departmentName}
+                  </p>
+                  <h3 className="font-display text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                    {selectedServiceDetail.name}
+                  </h3>
+                </div>
+              </div>
 
-          {/* Subtitle */}
-          <p className="text-xs sm:text-sm md:text-base text-slate-500 text-center max-w-2xl mx-auto mt-3 leading-relaxed">
-            Browse all {TERRALINK_CATALOG_SERVICES.length} professional in-home, clinical, and specialized services. From licensed nursing and therapy to comprehensive medical check-ups &mdash; request the exact care you need.
-          </p>
-
-          {/* Search & Filter Container */}
-          <div className="mt-8 bg-slate-50/70 rounded-3xl p-4 sm:p-6 border border-slate-100 space-y-4">
-            
-            {/* Search Input Box */}
-            <div className="relative w-full">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-              <input
-                type="text"
-                placeholder="Search services (e.g., Hire a Nurse, Physiotherapy, Consultation...)"
-                value={catalogSearch}
-                onChange={(e) => setCatalogSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200/80 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#28257A]/15 focus:border-[#28257A]/40 transition-all"
-              />
-            </div>
-
-            {/* Counter text */}
-            <div className="text-center text-xs sm:text-sm font-medium text-slate-500 tabular-nums">
-              Showing <span className="font-semibold text-slate-900">{filteredCatalogServices.length}</span> of <span className="font-semibold text-slate-900">{TERRALINK_CATALOG_SERVICES.length}</span> Services
-            </div>
-
-            {/* Interactive Category Filter Buttons */}
-            <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
               <button
-                onClick={() => setCatalogCategory('All')}
-                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                  catalogCategory === 'All'
-                    ? 'bg-[#28257A] text-white'
-                    : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/70'
-                }`}
+                onClick={() => setSelectedServiceDetail(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 cursor-pointer"
               >
-                All Services ({TERRALINK_CATALOG_SERVICES.length})
+                <X className="w-4 h-4" />
               </button>
-
-              {catalogCategories.filter(c => c !== 'All').map(cat => {
-                const count = TERRALINK_CATALOG_SERVICES.filter(s => s.category === cat).length;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setCatalogCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                      catalogCategory === cat
-                        ? 'bg-[#28257A] text-white'
-                        : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/70'
-                    }`}
-                  >
-                    {cat} ({count})
-                  </button>
-                );
-              })}
             </div>
 
-          </div>
+            <div className="space-y-2.5 text-left">
+              <p className="text-sm font-semibold text-[#28257A]">
+                {selectedServiceDetail.headline}
+              </p>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                {selectedServiceDetail.description}
+              </p>
+            </div>
 
-          {/* ================= SERVICE CARDS ================= */}
-          <div className="mt-6 space-y-4">
-            {filteredCatalogServices.map(service => (
-              <div
-                key={service.id}
-                className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-100 hover:border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition-all duration-200 flex flex-col justify-between group"
-              >
-                <div>
-                  
-                  {/* Top Row: Vibrant Circular Icon Badge + Unboxed Category/Status Metadata */}
-                  <div className="flex items-start gap-4">
-                    
-                    <div className={`w-12 h-12 rounded-full ${getServiceBadgeColor(service.category)} text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-                      {renderServiceIcon(service.iconType)}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 text-xs text-slate-400 font-medium flex-wrap">
-                        <span>{service.category}</span>
-                        {service.badge && (
-                          <>
-                            <span aria-hidden="true">&middot;</span>
-                            <span className="text-[#D90429] font-semibold">{service.badge}</span>
-                          </>
-                        )}
-                      </div>
-                      
-                      <h3 className="font-display text-lg sm:text-xl font-bold text-slate-900 tracking-tight mt-0.5 group-hover:text-[#28257A] transition-colors">
-                        {service.name}
-                      </h3>
-                    </div>
-
-                  </div>
-
-                  {/* Headline */}
-                  <p className="mt-4 text-xs sm:text-sm font-semibold text-[#28257A] leading-snug">
-                    {service.headline}
-                  </p>
-
-                  {/* Descriptive text */}
-                  <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
-                    {service.description}
-                  </p>
-
-                </div>
-
-                {/* Bottom Row: Eligibility + Tariff + Action Button */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                  
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#00A859] shrink-0" />
-                    <span className="text-xs font-medium text-slate-500">
-                      SHA / Insurance Eligible
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <span className="text-[11px] text-slate-400 block font-medium">Standard Tariff</span>
-                      <span className="text-sm font-bold text-slate-900 tabular-nums">
-                        KES {service.standardFeeKES.toLocaleString()}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setSelectedServiceName(service.name);
-                        setIsBookingModalOpen(true);
-                      }}
-                      className="px-4 sm:px-5 py-2.5 rounded-full bg-[#D90429] hover:bg-[#B80323] text-white font-semibold text-xs transition-colors cursor-pointer active:scale-95 flex items-center space-x-1.5 whitespace-nowrap shrink-0"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>Request Care</span>
-                    </button>
-                  </div>
-
-                </div>
-
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3">
+              <div className="flex items-center space-x-2 text-left">
+                <CheckCircle2 className="w-4 h-4 text-[#00A859] shrink-0" />
+                <span className="text-xs font-medium text-slate-600">
+                  SHA / Private Insurance Eligible
+                </span>
               </div>
-            ))}
-
-            {filteredCatalogServices.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 p-8 space-y-3">
-                <Search className="w-8 h-8 text-slate-400 mx-auto" />
-                <h4 className="font-display text-base font-bold text-slate-900">No matching services found</h4>
-                <p className="text-xs text-slate-500">Try searching with a different health term or reset the category filter.</p>
-                <button
-                  onClick={() => {
-                    setCatalogSearch('');
-                    setCatalogCategory('All');
-                  }}
-                  className="px-5 py-2.5 rounded-full bg-[#28257A] text-white font-semibold text-xs cursor-pointer"
-                >
-                  Reset Filters
-                </button>
+              <div className="text-right shrink-0">
+                <span className="text-[11px] text-slate-400 block">Starting Tariff</span>
+                <span className="text-sm font-bold text-slate-900 tabular-nums">
+                  KES {selectedServiceDetail.standardFeeKES.toLocaleString()}
+                </span>
               </div>
-            )}
-          </div>
+            </div>
 
+            <button
+              onClick={() => {
+                const name = selectedServiceDetail.name;
+                setSelectedServiceDetail(null);
+                setSelectedServiceName(name);
+                setIsBookingModalOpen(true);
+              }}
+              className="w-full py-3.5 px-6 rounded-full bg-[#D90429] hover:bg-[#B80323] text-white font-semibold text-sm transition-all cursor-pointer flex items-center justify-center space-x-2"
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Book {selectedServiceDetail.shortTitle}</span>
+            </button>
+          </div>
         </div>
-      </section>
+      )}
 
       {/* ================= 5. FOOTER ================= */}
       <footer className="w-full py-10 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white text-center space-y-4 text-xs text-slate-500">
