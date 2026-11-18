@@ -42,7 +42,8 @@ import {
   HelpCircle,
   BriefcaseMedical,
   Microscope,
-  MoreHorizontal
+  MoreHorizontal,
+  Ribbon
 } from 'lucide-react';
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
 import { INITIAL_REVIEWS } from '../mockData';
@@ -64,22 +65,8 @@ interface HospitalHomepageProps {
   onDownloadApp?: () => void;
 }
 
-// 20 existing services accurately capturing Terralink's clinical ecosystem
+// Clinical service catalog accurately capturing Terralink Hospital's ecosystem
 const TERRALINK_CATALOG_SERVICES = [
-  {
-    id: 'srv-nurse',
-    shortTitle: 'Home Nursing',
-    name: 'Hire a Nurse & Bedside Care',
-    category: 'Home & Nursing',
-    filterGroup: 'Nursing',
-    isPopular: true,
-    iconType: 'heart',
-    headline: 'Licensed, compassionate nursing care in the comfort of your home',
-    description: 'Connect with registered nurses (RN/BSN) and licensed practical nurses for wound dressing, medication administration, post-operative monitoring, and IV infusion.',
-    standardFeeKES: 3500,
-    shaCovered: true,
-    departmentName: 'Outpatient & Home Nursing Wing'
-  },
   {
     id: 'srv-opd',
     shortTitle: 'General Consultation',
@@ -88,6 +75,7 @@ const TERRALINK_CATALOG_SERVICES = [
     filterGroup: 'Consultations',
     isPopular: true,
     iconType: 'stethoscope',
+    circleBg: 'bg-[#E0F2FE] text-[#0284C7]',
     headline: 'Comprehensive physical examination, primary diagnosis, and outpatient triage',
     description: 'Immediate medical check-up with licensed general medical officers, vital signs evaluation, disease diagnosis, and electronic prescription issuing.',
     standardFeeKES: 1500,
@@ -95,41 +83,14 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Outpatient Department (OPD)'
   },
   {
-    id: 'srv-physio',
-    shortTitle: 'Physiotherapy',
-    name: 'Physiotherapy & Physical Rehabilitation',
-    category: 'Therapy & Rehab',
-    filterGroup: 'Therapy',
-    isPopular: true,
-    iconType: 'activity',
-    headline: 'Personalized physical therapy, musculoskeletal rehabilitation, and mobility care',
-    description: 'Targeted recovery sessions for post-stroke mobility, orthopedic fracture rehabilitation, sports injuries, and chronic pain management.',
-    standardFeeKES: 2500,
-    shaCovered: true,
-    departmentName: 'Physical Therapy & Rehab'
-  },
-  {
-    id: 'srv-lab-cbc',
-    shortTitle: 'Lab Tests',
-    name: 'Full Hemogram / Complete Blood Count (CBC)',
-    category: 'Laboratory & Diagnostics',
-    filterGroup: 'Labs',
-    isPopular: true,
-    iconType: 'syringe',
-    headline: 'Automated 5-part differential blood analysis with platelet and red cell indices',
-    description: 'Rapid diagnostic screening for anemia, systemic infection, hematologic malignancies, and immune status with automated digital verification.',
-    standardFeeKES: 1200,
-    shaCovered: true,
-    departmentName: 'Medical Laboratory & Blood Bank'
-  },
-  {
     id: 'srv-spec',
-    shortTitle: 'Specialist Visit',
+    shortTitle: 'Specialist Care',
     name: 'Specialist Senior Physician Consultation',
     category: 'Specialist Clinics',
     filterGroup: 'Consultations',
     isPopular: true,
-    iconType: 'stethoscope',
+    iconType: 'briefcase',
+    circleBg: 'bg-[#DCFCE7] text-[#059669]',
     headline: 'Senior Consultant clinical review in Cardiology, Neurology, Orthopedics, or Internal Medicine',
     description: 'Advanced clinical evaluations, diagnostic syntheses, and second medical opinions by leading KMPDC board-certified medical specialists.',
     standardFeeKES: 3000,
@@ -137,13 +98,89 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Specialist Clinics'
   },
   {
+    id: 'srv-lab-cbc',
+    shortTitle: 'Laboratory Services',
+    name: 'Full Hemogram / Complete Blood Count (CBC)',
+    category: 'Laboratory & Diagnostics',
+    filterGroup: 'Labs',
+    isPopular: true,
+    iconType: 'microscope',
+    circleBg: 'bg-[#EDE9FE] text-[#7C3AED]',
+    headline: 'Automated 5-part differential blood analysis with platelet and red cell indices',
+    description: 'Rapid diagnostic screening for anemia, systemic infection, hematologic malignancies, and immune status with automated digital verification.',
+    standardFeeKES: 1200,
+    shaCovered: true,
+    departmentName: 'Medical Laboratory & Blood Bank'
+  },
+  {
+    id: 'srv-pharm',
+    shortTitle: 'Pharmacy Services',
+    name: 'Pharmacy & Drug Dispensing',
+    category: 'Clinical & Outpatient',
+    filterGroup: 'Consultations',
+    isPopular: true,
+    iconType: 'pill',
+    circleBg: 'bg-[#FFEDD5] text-[#EA580C]',
+    headline: '24/7 verified medication dispensing, drug interaction checks, and counseling',
+    description: 'KMPDC & Pharmacy and Poisons Board certified pharmaceuticals, chronic medicine refill programs, electronic interaction safety checks, and patient counseling.',
+    standardFeeKES: 500,
+    shaCovered: true,
+    departmentName: 'Pharmacy & Dispensing'
+  },
+  {
+    id: 'srv-nurse',
+    shortTitle: 'Hire a Nurse',
+    name: 'Hire a Nurse & Bedside Care',
+    category: 'Home & Nursing',
+    filterGroup: 'Nursing',
+    isPopular: true,
+    iconType: 'heartpulse',
+    circleBg: 'bg-[#CCFBF1] text-[#0D9488]',
+    headline: 'Licensed, compassionate nursing care in the comfort of your home',
+    description: 'Connect with registered nurses (RN/BSN) and licensed practical nurses for wound dressing, medication administration, post-operative monitoring, and IV infusion.',
+    standardFeeKES: 3500,
+    shaCovered: true,
+    departmentName: 'Outpatient & Home Nursing Wing'
+  },
+  {
+    id: 'srv-onco',
+    shortTitle: 'Cancer Care & Oncology',
+    name: 'Cancer Care & Oncology',
+    category: 'Specialist Clinics',
+    filterGroup: 'Oncology',
+    isPopular: false,
+    iconType: 'ribbon',
+    circleBg: 'bg-gradient-to-br from-rose-100 to-purple-100 text-[#9333EA]',
+    headline: 'Early cancer screening, chemotherapy, and multidisciplinary oncology support',
+    description: 'Comprehensive cancer screening, early diagnosis, chemotherapy, and personalized oncology support with dedicated specialists.',
+    standardFeeKES: 3500,
+    shaCovered: true,
+    departmentName: 'Oncology Center'
+  },
+  {
+    id: 'srv-physio',
+    shortTitle: 'Physiotherapy',
+    name: 'Physiotherapy & Physical Rehabilitation',
+    category: 'Therapy & Rehab',
+    filterGroup: 'Therapy',
+    isPopular: false,
+    iconType: 'activity',
+    circleBg: 'bg-emerald-50 text-[#059669]',
+    headline: 'Personalized physical therapy, musculoskeletal rehabilitation, and mobility care',
+    description: 'Targeted recovery sessions for post-stroke mobility, orthopedic fracture rehabilitation, sports injuries, and chronic pain management.',
+    standardFeeKES: 2500,
+    shaCovered: true,
+    departmentName: 'Physical Therapy & Rehab'
+  },
+  {
     id: 'srv-emg',
     shortTitle: 'Emergency Care',
     name: 'Accident & Emergency Trauma Triage',
     category: 'Emergency & Ambulance',
     filterGroup: 'Emergency',
-    isPopular: true,
+    isPopular: false,
     iconType: 'ambulance',
+    circleBg: 'bg-rose-50 text-[#C8102E]',
     headline: 'Immediate critical trauma assessment, resuscitation, and casualty emergency care',
     description: 'Round-the-clock emergency room response with dedicated trauma bays, advanced resuscitation crash carts, and direct theatre access.',
     standardFeeKES: 2500,
@@ -158,123 +195,12 @@ const TERRALINK_CATALOG_SERVICES = [
     filterGroup: 'Emergency',
     isPopular: false,
     iconType: 'ambulance',
+    circleBg: 'bg-red-50 text-[#DC2626]',
     headline: 'Type C Advanced Life Support paramedic ambulance dispatch across Nairobi',
     description: 'Equipped with Zoll X-Series monitor/defibrillators, transport ventilators, advanced airway management, and certified paramedic escorts.',
     standardFeeKES: 5000,
     shaCovered: true,
     departmentName: 'Emergency Transport & Dispatch'
-  },
-  {
-    id: 'srv-mat-norm',
-    shortTitle: 'Normal Delivery',
-    name: 'Normal Vaginal Delivery (Maternity Package)',
-    category: 'Maternity & Delivery',
-    filterGroup: 'Maternity',
-    isPopular: false,
-    iconType: 'heart',
-    headline: 'Safe, compassionate maternity delivery with Obstetrician and midwife care',
-    description: 'Comprehensive intrapartum monitoring, consultant Obstetrician delivery, dedicated midwife care, 48-hour postpartum stay, and newborn immunization.',
-    standardFeeKES: 45000,
-    shaCovered: true,
-    departmentName: 'Obstetrics & Gynaecology'
-  },
-  {
-    id: 'srv-mat-cs',
-    shortTitle: 'C-Section Delivery',
-    name: 'Caesarean Section Surgical Delivery',
-    category: 'Maternity & Delivery',
-    filterGroup: 'Maternity',
-    isPopular: false,
-    iconType: 'activity',
-    headline: 'Elective and emergency C-section delivery in sterile laminar-flow operating theatre',
-    description: 'Obstetrician surgical fee, anaesthetist cover, dedicated neonatal pediatric standby, theatre consumables, and 3-day private recovery suite.',
-    standardFeeKES: 95000,
-    shaCovered: true,
-    departmentName: 'Obstetrics & Gynaecology'
-  },
-  {
-    id: 'srv-lab-lipid',
-    shortTitle: 'Lipid Profile',
-    name: 'Comprehensive Fasting Lipid Profile',
-    category: 'Laboratory & Diagnostics',
-    filterGroup: 'Labs',
-    isPopular: false,
-    iconType: 'syringe',
-    headline: 'Total cholesterol, HDL, LDL, triglycerides, and cardiovascular risk calculation',
-    description: 'Fasting venous serum analysis providing deep metabolic insights for cardiovascular disease prevention and hypertension management.',
-    standardFeeKES: 1800,
-    shaCovered: true,
-    departmentName: 'Medical Laboratory & Blood Bank'
-  },
-  {
-    id: 'srv-rad-xray',
-    shortTitle: 'Chest X-Ray',
-    name: 'Digital Chest X-Ray (PA & Lateral)',
-    category: 'Laboratory & Diagnostics',
-    filterGroup: 'Labs',
-    isPopular: false,
-    iconType: 'layers',
-    headline: 'High-definition digital thoracic imaging with radiologist interpretation',
-    description: 'Low-dose digital radiography for respiratory pathology, lung parenchyma evaluation, cardiac silhouette assessment, and clinical clearance.',
-    standardFeeKES: 2500,
-    shaCovered: true,
-    departmentName: 'Radiology & Medical Imaging'
-  },
-  {
-    id: 'srv-rad-ct',
-    shortTitle: 'Brain CT Scan',
-    name: 'Brain CT Scan (High-Resolution Multi-Slice)',
-    category: 'Laboratory & Diagnostics',
-    filterGroup: 'Labs',
-    isPopular: false,
-    iconType: 'layers',
-    headline: '128-slice rapid volumetric computed tomography for trauma, stroke, and hemorrhage',
-    description: 'Sub-millimeter cranial imaging for intracranial hemorrhage, acute ischemic stroke, trauma, and neurological evaluation with 3D multiplanar reconstruction.',
-    standardFeeKES: 14000,
-    shaCovered: true,
-    departmentName: 'Radiology & Medical Imaging'
-  },
-  {
-    id: 'srv-icu',
-    shortTitle: 'ICU Care',
-    name: 'Intensive Care Unit (ICU) Daily Inpatient Rate',
-    category: 'Critical & Inpatient',
-    filterGroup: 'Inpatient',
-    isPopular: false,
-    iconType: 'bed',
-    headline: '24/7 dedicated 1:1 intensive nursing, mechanical ventilation, and multi-organ monitoring',
-    description: 'Continuous hemodynamic monitoring, Hamilton mechanical ventilation, bedside arterial blood gas analysis, and daily intensivist consultations.',
-    standardFeeKES: 25000,
-    shaCovered: true,
-    departmentName: 'Intensive Care Unit (ICU)'
-  },
-  {
-    id: 'srv-hdu',
-    shortTitle: 'HDU Monitoring',
-    name: 'High Dependency Unit (HDU) Daily Rate',
-    category: 'Critical & Inpatient',
-    filterGroup: 'Inpatient',
-    isPopular: false,
-    iconType: 'bed',
-    headline: 'Continuous cardiac telemetry, oxygen therapy, and close clinical supervision',
-    description: 'Step-down high dependency inpatient monitoring for recovering post-surgical and acute medical patients requiring continuous vital oversight.',
-    standardFeeKES: 12000,
-    shaCovered: true,
-    departmentName: 'High Dependency Unit (HDU)'
-  },
-  {
-    id: 'srv-ward-gen',
-    shortTitle: 'General Ward',
-    name: 'General Medical / Surgical Ward Daily Rate',
-    category: 'Critical & Inpatient',
-    filterGroup: 'Inpatient',
-    isPopular: false,
-    iconType: 'bed',
-    headline: 'Standard inpatient bed allocation, routine doctor rounds, daily nursing, and meals',
-    description: 'Fully furnished comfortable medical ward bed with wall oxygen port, daily ward physician rounds, dietary management, and dedicated nursing care.',
-    standardFeeKES: 3500,
-    shaCovered: true,
-    departmentName: 'Inpatient Medical Wards'
   },
   {
     id: 'srv-cardiology',
@@ -284,6 +210,7 @@ const TERRALINK_CATALOG_SERVICES = [
     filterGroup: 'Consultations',
     isPopular: false,
     iconType: 'heart',
+    circleBg: 'bg-rose-50 text-[#E11D48]',
     headline: 'Hypertension, arrhythmia, heart failure management, and Doppler echocardiography',
     description: 'Expert diagnostic cardiology including 12-lead resting ECG, transthoracic echocardiography, and cardiovascular risk reduction therapies.',
     standardFeeKES: 3000,
@@ -298,6 +225,7 @@ const TERRALINK_CATALOG_SERVICES = [
     filterGroup: 'Consultations',
     isPopular: false,
     iconType: 'heart',
+    circleBg: 'bg-sky-50 text-[#0284C7]',
     headline: 'Childhood illness treatment, growth monitoring, and KEPI vaccination schedule',
     description: 'Gentle, child-centered clinical care by Consultant Paediatricians covering newborn screening, nutritional assessments, and routine immunizations.',
     standardFeeKES: 2000,
@@ -305,18 +233,79 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Paediatrics Clinic'
   },
   {
-    id: 'srv-onco',
-    shortTitle: 'Oncology Center',
-    name: 'Oncology & Chemotherapy Center',
-    category: 'Specialist Clinics',
-    filterGroup: 'Consultations',
+    id: 'srv-mat-norm',
+    shortTitle: 'Normal Delivery',
+    name: 'Normal Vaginal Delivery (Maternity Package)',
+    category: 'Maternity & Delivery',
+    filterGroup: 'Maternity',
+    isPopular: false,
+    iconType: 'heart',
+    circleBg: 'bg-pink-50 text-[#DB2777]',
+    headline: 'Safe, compassionate maternity delivery with Obstetrician and midwife care',
+    description: 'Comprehensive intrapartum monitoring, consultant Obstetrician delivery, dedicated midwife care, 48-hour postpartum stay, and newborn immunization.',
+    standardFeeKES: 45000,
+    shaCovered: true,
+    departmentName: 'Obstetrics & Gynaecology'
+  },
+  {
+    id: 'srv-mat-cs',
+    shortTitle: 'C-Section Delivery',
+    name: 'Caesarean Section Surgical Delivery',
+    category: 'Maternity & Delivery',
+    filterGroup: 'Maternity',
     isPopular: false,
     iconType: 'activity',
-    headline: 'Medical oncology, outpatient chemotherapy infusions, and cancer screening',
-    description: 'Multidisciplinary tumor board coordination, compassionate chemotherapy infusions in private recliners, and early cancer detection screenings.',
-    standardFeeKES: 3500,
+    circleBg: 'bg-rose-50 text-[#BE185D]',
+    headline: 'Elective and emergency C-section delivery in sterile laminar-flow operating theatre',
+    description: 'Obstetrician surgical fee, anaesthetist cover, dedicated neonatal pediatric standby, theatre consumables, and 3-day private recovery suite.',
+    standardFeeKES: 95000,
     shaCovered: true,
-    departmentName: 'Oncology Center'
+    departmentName: 'Obstetrics & Gynaecology'
+  },
+  {
+    id: 'srv-lab-lipid',
+    shortTitle: 'Lipid Profile',
+    name: 'Comprehensive Fasting Lipid Profile',
+    category: 'Laboratory & Diagnostics',
+    filterGroup: 'Labs',
+    isPopular: false,
+    iconType: 'syringe',
+    circleBg: 'bg-amber-50 text-amber-600',
+    headline: 'Total cholesterol, HDL, LDL, triglycerides, and cardiovascular risk calculation',
+    description: 'Fasting venous serum analysis providing deep metabolic insights for cardiovascular disease prevention and hypertension management.',
+    standardFeeKES: 1800,
+    shaCovered: true,
+    departmentName: 'Medical Laboratory & Blood Bank'
+  },
+  {
+    id: 'srv-rad-xray',
+    shortTitle: 'Chest X-Ray',
+    name: 'Digital Chest X-Ray (PA & Lateral)',
+    category: 'Laboratory & Diagnostics',
+    filterGroup: 'Labs',
+    isPopular: false,
+    iconType: 'layers',
+    circleBg: 'bg-indigo-50 text-[#4F46E5]',
+    headline: 'High-definition digital thoracic imaging with radiologist interpretation',
+    description: 'Low-dose digital radiography for respiratory pathology, lung parenchyma evaluation, cardiac silhouette assessment, and clinical clearance.',
+    standardFeeKES: 2500,
+    shaCovered: true,
+    departmentName: 'Radiology & Medical Imaging'
+  },
+  {
+    id: 'srv-rad-ct',
+    shortTitle: 'Brain CT Scan',
+    name: 'Brain CT Scan (High-Resolution Multi-Slice)',
+    category: 'Laboratory & Diagnostics',
+    filterGroup: 'Labs',
+    isPopular: false,
+    iconType: 'layers',
+    circleBg: 'bg-violet-50 text-[#7C3AED]',
+    headline: '128-slice rapid volumetric computed tomography for trauma, stroke, and hemorrhage',
+    description: 'Sub-millimeter cranial imaging for intracranial hemorrhage, acute ischemic stroke, trauma, and neurological evaluation with 3D multiplanar reconstruction.',
+    standardFeeKES: 14000,
+    shaCovered: true,
+    departmentName: 'Radiology & Medical Imaging'
   },
   {
     id: 'srv-dialysis',
@@ -326,6 +315,7 @@ const TERRALINK_CATALOG_SERVICES = [
     filterGroup: 'Therapy',
     isPopular: false,
     iconType: 'activity',
+    circleBg: 'bg-teal-50 text-[#0D9488]',
     headline: 'Fresenius hemodialysis sessions, ultrafiltration, and renal nephrologist review',
     description: 'State-of-the-art dialysis suites with ultrapure RO water filtration, high-flux dialyzers, and continuous nephrology nurse supervision.',
     standardFeeKES: 9500,
@@ -333,18 +323,49 @@ const TERRALINK_CATALOG_SERVICES = [
     departmentName: 'Renal & Dialysis Center'
   },
   {
-    id: 'srv-pharm',
-    shortTitle: 'Pharmacy Refill',
-    name: 'Pharmacy & Drug Dispensing',
-    category: 'Clinical & Outpatient',
-    filterGroup: 'Consultations',
+    id: 'srv-icu',
+    shortTitle: 'ICU Care',
+    name: 'Intensive Care Unit (ICU) Daily Inpatient Rate',
+    category: 'Critical & Inpatient',
+    filterGroup: 'Inpatient',
     isPopular: false,
-    iconType: 'pill',
-    headline: '24/7 verified medication dispensing, drug interaction checks, and counseling',
-    description: 'KMPDC & Pharmacy and Poisons Board certified pharmaceuticals, chronic medicine refill programs, electronic interaction safety checks, and patient counseling.',
-    standardFeeKES: 500,
+    iconType: 'bed',
+    circleBg: 'bg-purple-50 text-purple-600',
+    headline: '24/7 dedicated 1:1 intensive nursing, mechanical ventilation, and multi-organ monitoring',
+    description: 'Continuous hemodynamic monitoring, Hamilton mechanical ventilation, bedside arterial blood gas analysis, and daily intensivist consultations.',
+    standardFeeKES: 25000,
     shaCovered: true,
-    departmentName: 'Pharmacy & Dispensing'
+    departmentName: 'Intensive Care Unit (ICU)'
+  },
+  {
+    id: 'srv-hdu',
+    shortTitle: 'HDU Monitoring',
+    name: 'High Dependency Unit (HDU) Daily Rate',
+    category: 'Critical & Inpatient',
+    filterGroup: 'Inpatient',
+    isPopular: false,
+    iconType: 'bed',
+    circleBg: 'bg-blue-50 text-[#1D4ED8]',
+    headline: 'Continuous cardiac telemetry, oxygen therapy, and close clinical supervision',
+    description: 'Step-down high dependency inpatient monitoring for recovering post-surgical and acute medical patients requiring continuous vital oversight.',
+    standardFeeKES: 12000,
+    shaCovered: true,
+    departmentName: 'High Dependency Unit (HDU)'
+  },
+  {
+    id: 'srv-ward-gen',
+    shortTitle: 'General Ward',
+    name: 'General Medical / Surgical Ward Daily Rate',
+    category: 'Critical & Inpatient',
+    filterGroup: 'Inpatient',
+    isPopular: false,
+    iconType: 'bed',
+    circleBg: 'bg-slate-100 text-[#0A2756]',
+    headline: 'Standard inpatient bed allocation, routine doctor rounds, daily nursing, and meals',
+    description: 'Fully furnished comfortable medical ward bed with wall oxygen port, daily ward physician rounds, dietary management, and dedicated nursing care.',
+    standardFeeKES: 3500,
+    shaCovered: true,
+    departmentName: 'Inpatient Medical Wards'
   }
 ];
 
@@ -412,34 +433,25 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   // Info Modals (Contact, Privacy, Terms)
   const [activeInfoModal, setActiveInfoModal] = useState<'contact' | 'privacy' | 'terms' | null>(null);
 
-  // Healthcare Services Filter, Search & Slide-up Detail Sheet State
+  // Healthcare Services Search & Slide-up Detail Sheet State
   const [catalogSearch, setCatalogSearch] = useState<string>('');
-  const [catalogCategory, setCatalogCategory] = useState<string>('All');
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
   const [selectedServiceDetail, setSelectedServiceDetail] = useState<typeof TERRALINK_CATALOG_SERVICES[number] | null>(null);
-
-  // Filter pills matching clean mobile healthcare portal layout
-  const catalogCategories = showAllServices
-    ? ['All', 'Nursing', 'Consultations', 'Labs', 'Therapy', 'Maternity', 'Emergency', 'Inpatient']
-    : ['All', 'Nursing', 'Consultations', 'Labs', 'Therapy'];
 
   // Filtered Services List
   const filteredCatalogServices = TERRALINK_CATALOG_SERVICES.filter(service => {
     const q = catalogSearch.trim().toLowerCase();
-    const matchesSearch = !q ||
+    return (
+      !q ||
       service.shortTitle.toLowerCase().includes(q) ||
       service.name.toLowerCase().includes(q) ||
       service.headline.toLowerCase().includes(q) ||
       service.description.toLowerCase().includes(q) ||
-      service.filterGroup.toLowerCase().includes(q);
-    const matchesCat = catalogCategory === 'All' || service.filterGroup === catalogCategory;
-    return matchesSearch && matchesCat;
+      service.category.toLowerCase().includes(q) ||
+      service.departmentName.toLowerCase().includes(q) ||
+      service.filterGroup.toLowerCase().includes(q)
+    );
   });
-
-  const isDefaultPopularView = catalogCategory === 'All' && catalogSearch.trim() === '' && !showAllServices;
-  const visibleServices = isDefaultPopularView
-    ? TERRALINK_CATALOG_SERVICES.filter(s => s.isPopular).slice(0, 6)
-    : filteredCatalogServices;
 
   // Review Form State
   const [reviewForm, setReviewForm] = useState({
@@ -574,9 +586,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     }
   };
 
-  // Soft tinted circle colors + crisp icon colors per service group (One Medical / Zocdoc aesthetic)
   const getServiceSoftTint = (filterGroup: string) => {
     switch (filterGroup) {
+      case 'Oncology':
+        return 'bg-gradient-to-br from-rose-100 to-purple-100 text-[#9333EA]';
       case 'Nursing':
       case 'Maternity':
         return 'bg-rose-50 text-[#D90429]';
@@ -596,22 +609,30 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
   const renderServiceIcon = (type: string) => {
     switch (type) {
+      case 'briefcase':
+        return <BriefcaseMedical className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
+      case 'microscope':
+        return <Microscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
+      case 'heartpulse':
+        return <HeartPulse className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
+      case 'ribbon':
+        return <Ribbon className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'heart':
-        return <Heart className="w-5 h-5 stroke-[2]" />;
+        return <Heart className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'activity':
-        return <Activity className="w-5 h-5 stroke-[2]" />;
+        return <Activity className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'ambulance':
-        return <Ambulance className="w-5 h-5 stroke-[2]" />;
+        return <Ambulance className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'syringe':
-        return <Syringe className="w-5 h-5 stroke-[2]" />;
+        return <Syringe className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'pill':
-        return <Pill className="w-5 h-5 stroke-[2]" />;
+        return <Pill className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'bed':
-        return <Bed className="w-5 h-5 stroke-[2]" />;
+        return <Bed className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       case 'layers':
-        return <Layers className="w-5 h-5 stroke-[2]" />;
+        return <Layers className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
       default:
-        return <Stethoscope className="w-5 h-5 stroke-[2]" />;
+        return <Stethoscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />;
     }
   };
 
@@ -867,147 +888,85 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             </p>
           </div>
 
-          {/* Five Core Service Cards in One Horizontal Row (Mobile & Desktop) */}
-          <div className="grid grid-cols-5 gap-1.5 sm:gap-4 lg:gap-5">
-            {[
-              {
-                serviceId: 'srv-opd',
-                label: 'General Consultation',
-                circleBg: 'bg-[#E0F2FE] text-[#0284C7]',
-                icon: <Stethoscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
-              },
-              {
-                serviceId: 'srv-spec',
-                label: 'Specialist Care',
-                circleBg: 'bg-[#DCFCE7] text-[#059669]',
-                icon: <BriefcaseMedical className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
-              },
-              {
-                serviceId: 'srv-lab-cbc',
-                label: 'Laboratory Services',
-                circleBg: 'bg-[#EDE9FE] text-[#7C3AED]',
-                icon: <Microscope className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
-              },
-              {
-                serviceId: 'srv-pharm',
-                label: 'Pharmacy Services',
-                circleBg: 'bg-[#FFEDD5] text-[#EA580C]',
-                icon: <Pill className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
-              },
-              {
-                serviceId: 'srv-nurse',
-                label: 'Hire a Nurse',
-                circleBg: 'bg-[#CCFBF1] text-[#0D9488]',
-                icon: <HeartPulse className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2]" />
-              }
-            ].map((item) => {
-              const matchedService =
-                TERRALINK_CATALOG_SERVICES.find(s => s.id === item.serviceId) ||
-                TERRALINK_CATALOG_SERVICES[0];
-              return (
-                <button
-                  key={item.serviceId}
-                  type="button"
-                  onClick={() => setSelectedServiceDetail(matchedService)}
-                  className="bg-white rounded-xl sm:rounded-2xl px-1 py-3 sm:p-5 border border-slate-100 hover:border-slate-200 shadow-[0_2px_10px_rgba(10,39,86,0.06)] hover:shadow-[0_8px_22px_rgba(10,39,86,0.1)] transition-all cursor-pointer flex flex-col items-center text-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A2756]/25"
-                >
-                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full ${item.circleBg} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-105 transition-transform shrink-0`}>
-                    {item.icon}
-                  </div>
-                  <span className="font-display text-[10px] xs:text-[11px] sm:text-sm font-bold text-[#0A2756] leading-tight tracking-tight">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Toggle to Expand Full 20-Service Catalog & Category Filters */}
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setShowAllServices(prev => !prev)}
-              className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#0A2756] font-semibold text-xs transition-all cursor-pointer inline-flex items-center space-x-1.5 active:scale-[0.98]"
-            >
-              <span>
-                {showAllServices
-                  ? 'Hide Full Services Catalog'
-                  : `Explore All ${TERRALINK_CATALOG_SERVICES.length} Services \u2192`}
-              </span>
-            </button>
-          </div>
-
+          {/* Search Input when Expanded (Seamless & Centered) */}
           {showAllServices && (
-            <div className="mt-6 pt-6 border-t border-slate-100 space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar">
-                  {['All', 'Nursing', 'Consultations', 'Labs', 'Therapy', 'Maternity', 'Emergency', 'Inpatient'].map(cat => (
+            <div className="max-w-md mx-auto mb-5">
+              <div className="relative w-full">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0A2756]/15 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Unified Seamless Service Cards Grid (Initial 5 cards, expands smoothly in identical square icon-card style) */}
+          {(() => {
+            const displayedServices = showAllServices
+              ? filteredCatalogServices
+              : TERRALINK_CATALOG_SERVICES.slice(0, 5);
+
+            return (
+              <>
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-4 lg:gap-5 items-stretch">
+                  {displayedServices.map((service) => (
                     <button
+                      key={service.id}
                       type="button"
-                      key={cat}
-                      onClick={() => setCatalogCategory(cat)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
-                        catalogCategory === cat
-                          ? 'bg-[#0A2756] text-white'
-                          : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
-                      }`}
+                      onClick={() => setSelectedServiceDetail(service)}
+                      className="h-full bg-white rounded-xl sm:rounded-2xl px-1 py-3 sm:p-5 border border-slate-100 hover:border-slate-200 shadow-[0_2px_10px_rgba(10,39,86,0.06)] hover:shadow-[0_8px_22px_rgba(10,39,86,0.1)] transition-all cursor-pointer flex flex-col items-center justify-start text-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A2756]/25"
                     >
-                      {cat}
+                      <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full ${service.circleBg} flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-105 transition-transform shrink-0`}>
+                        {renderServiceIcon(service.iconType)}
+                      </div>
+                      <span className="font-display w-full text-[10px] xs:text-[11px] sm:text-sm font-bold text-[#0A2756] leading-tight tracking-tight break-words">
+                        {service.shortTitle}
+                      </span>
                     </button>
                   ))}
                 </div>
 
-                <div className="relative w-full sm:w-64 shrink-0">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-                  <input
-                    type="text"
-                    placeholder="Search 20 services..."
-                    value={catalogSearch}
-                    onChange={(e) => setCatalogSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0A2756]/15 transition-all"
-                  />
-                </div>
-              </div>
+                {showAllServices && displayedServices.length === 0 && (
+                  <div className="text-center py-8 bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-2.5 mt-4">
+                    <Search className="w-6 h-6 text-slate-400 mx-auto" />
+                    <h4 className="font-display text-sm font-bold text-slate-900">No matching services found</h4>
+                    <button
+                      type="button"
+                      onClick={() => setCatalogSearch('')}
+                      className="px-4 py-1.5 rounded-full bg-[#0A2756] text-white font-semibold text-xs cursor-pointer"
+                    >
+                      Reset Search
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {filteredCatalogServices.map(service => (
-                  <button
-                    type="button"
-                    key={service.id}
-                    onClick={() => setSelectedServiceDetail(service)}
-                    className="bg-white rounded-2xl p-4 border border-slate-200/80 hover:border-slate-300 shadow-[0_1px_4px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col items-start text-left group"
-                  >
-                    <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
-                      {renderServiceIcon(service.iconType)}
-                    </div>
-                    <h3 className="font-display text-sm font-bold text-[#0F172A] leading-snug tracking-tight">
-                      {service.shortTitle}
-                    </h3>
-                    <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
-                      From KES {service.standardFeeKES.toLocaleString()}
-                    </p>
-                  </button>
-                ))}
-              </div>
-
-              {filteredCatalogServices.length === 0 && (
-                <div className="text-center py-8 bg-slate-50/50 rounded-3xl border border-slate-100 p-6 space-y-2.5">
-                  <Search className="w-6 h-6 text-slate-400 mx-auto" />
-                  <h4 className="font-display text-sm font-bold text-slate-900">No matching services found</h4>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCatalogSearch('');
-                      setCatalogCategory('All');
-                    }}
-                    className="px-4 py-1.5 rounded-full bg-[#0A2756] text-white font-semibold text-xs cursor-pointer"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Unified Expand / Collapse Button */}
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAllServices(prev => {
+                  const next = !prev;
+                  if (!next) setCatalogSearch('');
+                  return next;
+                });
+              }}
+              className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#0A2756] font-semibold text-xs transition-all cursor-pointer inline-flex items-center space-x-1.5 active:scale-[0.98]"
+            >
+              <span>
+                {showAllServices
+                  ? 'Show Less Services \u2191'
+                  : 'Explore All Services \u2192'}
+              </span>
+            </button>
+          </div>
 
         </div>
       </section>
@@ -1097,7 +1056,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center space-x-3.5">
-                <div className={`w-12 h-12 rounded-full ${getServiceSoftTint(selectedServiceDetail.filterGroup)} flex items-center justify-center shrink-0`}>
+                <div className={`w-12 h-12 rounded-full ${selectedServiceDetail.circleBg || getServiceSoftTint(selectedServiceDetail.filterGroup)} flex items-center justify-center shrink-0`}>
                   {renderServiceIcon(selectedServiceDetail.iconType)}
                 </div>
                 <div className="text-left">
