@@ -41,8 +41,7 @@ import {
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
 import { INITIAL_REVIEWS } from '../mockData';
 import founderPhotoImg from '../assets/images/founder_photo_1788042380844.jpg';
-import doctorHeroImg from '../assets/images/doctor_hero_1789942016435.jpg';
-import femaleDoctorHeroImg from '../assets/images/doctor_hero_desk_1791978142980.jpg';
+import hospitalExteriorImg from '../assets/images/terralink_hospital_exterior_1795040168279.jpg';
 
 interface HospitalHomepageProps {
   departments?: Department[];
@@ -367,8 +366,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     }
   };
 
-  // Doctor Hero Image with fallback
-  const doctorPhoto = doctorHeroImg || '/images/doctor_hero.jpg';
+  const [heroImgFailed, setHeroImgFailed] = useState<boolean>(false);
 
   // Founder Profile Modal State
   const [isFounderModalOpen, setIsFounderModalOpen] = useState<boolean>(false);
@@ -414,17 +412,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
   const [selectedServiceDetail, setSelectedServiceDetail] = useState<typeof TERRALINK_CATALOG_SERVICES[number] | null>(null);
 
-  // Clean horizontal scrollable category filter pills
-  const catalogCategories = [
-    'All',
-    'Nursing',
-    'Consultations',
-    'Labs',
-    'Therapy',
-    'Maternity',
-    'Emergency',
-    'Inpatient'
-  ];
+  // Filter pills matching clean mobile healthcare portal layout
+  const catalogCategories = showAllServices
+    ? ['All', 'Nursing', 'Consultations', 'Labs', 'Therapy', 'Maternity', 'Emergency', 'Inpatient']
+    : ['All', 'Nursing', 'Consultations', 'Labs', 'Therapy'];
 
   // Filtered Services List
   const filteredCatalogServices = TERRALINK_CATALOG_SERVICES.filter(service => {
@@ -623,33 +614,30 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
       
       {/* ================= 1. HEADER BAR ================= */}
       <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
           
           {/* Logo & Brand */}
-          <div 
+          <button
+            type="button"
             onClick={() => {
               setIsMoreDrawerOpen(false);
               if (currentUser?.role === 'patient') onNavigateToPortal('patient');
               else window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center space-x-3 cursor-pointer select-none min-w-0 group"
+            className="flex items-center space-x-2.5 cursor-pointer select-none min-w-0 group text-left"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D90429] text-white flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-              <Activity className="w-5 h-5 stroke-[2.4]" />
+            <div className="w-9 h-9 rounded-xl bg-[#C8102E] text-white flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-xs">
+              <Activity className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="flex flex-col min-w-0 text-left">
-              <span className="font-display text-base sm:text-lg font-bold text-[#0F172A] leading-none tracking-tight uppercase whitespace-nowrap">
-                TERRALINK HEALTH
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5 whitespace-nowrap">
-                Digital Hospital Platform
-              </span>
-            </div>
-          </div>
+            <span className="font-display text-base sm:text-lg font-extrabold text-[#132238] leading-none tracking-tight uppercase whitespace-nowrap">
+              TERRALINK HOSPITAL
+            </span>
+          </button>
 
           {/* Right Header Navigation - Compact "Patient Portal" */}
           <div className="flex items-center shrink-0">
             <button
+              type="button"
               onClick={() => {
                 if (currentUser && currentUser.role === 'patient') {
                   onNavigateToPortal('patient');
@@ -657,10 +645,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   handleOpenAuth('patient_login');
                 }
               }}
-              className="px-4 py-2 rounded-full bg-[#FFF1F2] hover:bg-rose-100 text-[#D90429] font-semibold text-xs transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 whitespace-nowrap"
+              className="px-3.5 sm:px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#132238] font-semibold text-xs transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 whitespace-nowrap"
               title="Open Patient Portal"
             >
-              <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
+              <User className="w-3.5 h-3.5 stroke-[2.1] text-slate-600" />
               <span>Patient Portal</span>
             </button>
           </div>
@@ -668,46 +656,65 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </header>
 
-      {/* ================= 2. PATIENT-FIRST SPLIT HERO SECTION ================= */}
-      <section className="w-full bg-white pt-4 sm:pt-8 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8">
+      {/* ================= 2. HERO IMAGE & BRANDING COVER ================= */}
+      <section className="w-full bg-white pt-2.5 sm:pt-6 pb-8 sm:pb-12 px-3.5 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-3xl bg-slate-50/70 border border-slate-100 overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 lg:gap-10 items-center">
             
-            {/* Crisp Unblocked Doctor Photo (Top on Mobile, Right on Desktop — zero text over face) */}
-            <div className="order-1 lg:order-2 lg:col-span-6 relative bg-slate-100">
-              <img
-                src={femaleDoctorHeroImg}
-                alt="TERRALINK HEALTH Physician"
-                referrerPolicy="no-referrer"
-                className="w-full h-56 xs:h-64 sm:h-80 lg:h-full lg:min-h-[400px] object-cover object-[center_20%]"
-              />
+            {/* Bright Outdoor Wide-Angle Entrance Photo (Top full-width rounded cover on mobile, balanced right frame on desktop) */}
+            <div className="order-1 lg:order-2 lg:col-span-6">
+              <div className="relative w-full aspect-[4/3] rounded-2xl rounded-b-3xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-100 shadow-xs">
+                {!heroImgFailed ? (
+                  <img
+                    src={hospitalExteriorImg}
+                    alt="TERRALINK HOSPITAL main entrance with doctors welcoming patients"
+                    referrerPolicy="no-referrer"
+                    onError={() => setHeroImgFailed(true)}
+                    className="w-full h-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#132238] to-[#28257A] text-white">
+                    <Building2 className="w-10 h-10 mb-2 text-white/90" />
+                    <span className="font-display text-lg font-bold tracking-wider uppercase">TERRALINK HOSPITAL</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Clean White/Soft-Tint Copy Container (Bottom on Mobile, Left on Desktop) */}
-            <div className="order-2 lg:order-1 lg:col-span-6 bg-white p-6 sm:p-10 lg:p-12 flex flex-col justify-center text-left">
-              <h1 className="font-display text-2xl xs:text-[28px] sm:text-4xl lg:text-[42px] font-bold text-[#0F172A] tracking-tight leading-[1.14] [text-wrap:balance]">
-                Quality Healthcare, Right When You Need It.
+            {/* High-Impact Introduction Titles & Pill Actions */}
+            <div className="order-2 lg:order-1 lg:col-span-6 px-1 sm:px-0 flex flex-col items-start text-left">
+              {/* Introductory Neutral Pill Badge */}
+              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-600 text-[10px] sm:text-xs font-semibold tracking-wider uppercase">
+                COMPASSION &bull; EXPERTISE &bull; BETTER HEALTH
+              </div>
+
+              {/* Primary Title in Trustworthy Deep Navy Serif */}
+              <h1 className="mt-3.5 font-serif-display text-[30px] xs:text-[34px] sm:text-4xl lg:text-[46px] font-bold text-[#132238] tracking-tight leading-[1.12] [text-wrap:balance]">
+                Your Health, Our Priority
               </h1>
 
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-md">
-                Book a doctor, order lab tests, or request home nursing in seconds.
+              {/* Patient-First Subtitle */}
+              <p className="mt-3 text-[15px] sm:text-base text-slate-600 font-normal leading-relaxed max-w-lg">
+                Get quality care, expert support, and a seamless digital experience&mdash;all in one place.
               </p>
 
-              {/* 2 Streamlined Pill Buttons */}
-              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3">
+              {/* Two Side-by-Side Pill Buttons */}
+              <div className="mt-5 sm:mt-7 flex flex-wrap items-center gap-2.5 sm:gap-3.5 w-full">
                 <button
+                  type="button"
                   onClick={handleBookAppointmentClick}
-                  className="px-6 py-3.5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-semibold text-sm shadow-sm shadow-red-600/20 transition-all inline-flex items-center space-x-2 cursor-pointer whitespace-nowrap"
+                  className="px-4 sm:px-6 py-3 rounded-full bg-[#B91C1C] hover:bg-[#991B1B] active:scale-[0.98] text-white font-semibold text-[13px] sm:text-sm shadow-xs shadow-red-900/15 transition-all inline-flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap min-h-[44px]"
                 >
-                  <Calendar className="w-4 h-4 stroke-[2.2] shrink-0" />
+                  <Calendar className="w-4 h-4 stroke-[2] shrink-0" />
                   <span>Book Appointment</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setIsCallSmsModalOpen(true)}
-                  className="px-5 py-3.5 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-900 border border-slate-200 font-semibold text-sm transition-all inline-flex items-center space-x-2 cursor-pointer whitespace-nowrap"
+                  className="px-4 sm:px-5 py-3 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-[#132238] border border-slate-300 font-semibold text-[13px] sm:text-sm transition-all inline-flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap min-h-[44px]"
                 >
-                  <PhoneCall className="w-4 h-4 text-[#D90429] stroke-[2.2] shrink-0" />
+                  <Phone className="w-4 h-4 text-[#B91C1C] stroke-[2] shrink-0" />
                   <span>24/7 Emergency / Call</span>
                 </button>
               </div>
@@ -717,46 +724,43 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </section>
 
-      {/* ================= 3. CLEAN, SCANNABLE SERVICES GRID ================= */}
-      <section id="explore-healthcare-services" className="w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
+      {/* ================= 3. COMPACT POPULAR SERVICES ================= */}
+      <section id="explore-healthcare-services" className="w-full py-6 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
         <div className="max-w-6xl mx-auto">
           
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
-            <div className="text-left">
-              <h2 className="font-display text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                Popular Services
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Tap any service to view coverage &amp; details, or book directly.
-              </p>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-[#132238] tracking-tight text-left">
+              Popular Services
+            </h2>
 
-            {/* Compact Search Input */}
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              <input
-                type="text"
-                placeholder="Search services..."
-                value={catalogSearch}
-                onChange={(e) => setCatalogSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#28257A]/15 transition-all"
-              />
-            </div>
+            {showAllServices && (
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search 20 services..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#132238]/15 transition-all"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Horizontal Scrollable Category Filter Pills */}
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 mb-6 scrollbar-none no-scrollbar">
+          {/* Filter Pills Underneath Title */}
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
             {catalogCategories.map(cat => (
               <button
+                type="button"
                 key={cat}
                 onClick={() => {
                   setCatalogCategory(cat);
                   if (cat !== 'All') setShowAllServices(true);
                 }}
-                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   catalogCategory === cat
-                    ? 'bg-[#28257A] text-white'
-                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60'
+                    ? 'bg-[#132238] text-white'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
                 }`}
               >
                 {cat}
@@ -764,44 +768,30 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             ))}
           </div>
 
-          {/* 2-Column (Mobile) / 4-Column (Desktop) Scannable Grid — STRICTLY 4 Clean Elements per Card */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
+          {/* Clean, Tight 2-Column (Mobile) / 3-Column (Desktop) Card Layout — Essential Fields Only */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {visibleServices.map(service => (
-              <div
+              <button
+                type="button"
                 key={service.id}
                 onClick={() => setSelectedServiceDetail(service)}
-                className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 hover:border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_20px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col justify-between gap-4 group text-left"
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 hover:border-slate-300 shadow-[0_1px_4px_rgba(15,23,42,0.02)] hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all cursor-pointer flex flex-col items-start text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#132238]/25"
               >
-                <div>
-                  {/* 1. Small, modern icon in a soft tinted circle */}
-                  <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
-                    {renderServiceIcon(service.iconType)}
-                  </div>
-
-                  {/* 2. Service Title (Max 2-3 words) */}
-                  <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 leading-snug tracking-tight">
-                    {service.shortTitle}
-                  </h3>
-
-                  {/* 3. Starting Price */}
-                  <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
-                    From KES {service.standardFeeKES.toLocaleString()}
-                  </p>
+                {/* 1. Icon in a soft, colored circular background */}
+                <div className={`w-10 h-10 rounded-full ${getServiceSoftTint(service.filterGroup)} flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform`}>
+                  {renderServiceIcon(service.iconType)}
                 </div>
 
-                {/* 4. Compact Book button */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedServiceName(service.name);
-                    setIsBookingModalOpen(true);
-                  }}
-                  className="self-start px-4 py-1.5 rounded-full bg-[#FFF1F2] hover:bg-[#D90429] text-[#D90429] hover:text-white font-semibold text-xs transition-colors cursor-pointer active:scale-95"
-                >
-                  Book
-                </button>
-              </div>
+                {/* 2. Bold, concise Service Title (max 2-3 words) */}
+                <h3 className="font-display text-[14px] sm:text-base font-bold text-[#0F172A] leading-snug tracking-tight">
+                  {service.shortTitle}
+                </h3>
+
+                {/* 3. Clean price subtitle */}
+                <p className="mt-1 text-xs font-medium text-slate-500 tabular-nums">
+                  From KES {service.standardFeeKES.toLocaleString()}
+                </p>
+              </button>
             ))}
           </div>
 
@@ -811,24 +801,26 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
               <h4 className="font-display text-base font-bold text-slate-900">No matching services found</h4>
               <p className="text-xs text-slate-500">Try searching with a different health term or reset filters.</p>
               <button
+                type="button"
                 onClick={() => {
                   setCatalogSearch('');
                   setCatalogCategory('All');
                   setShowAllServices(false);
                 }}
-                className="px-5 py-2 rounded-full bg-[#28257A] text-white font-semibold text-xs cursor-pointer"
+                className="px-5 py-2 rounded-full bg-[#132238] text-white font-semibold text-xs cursor-pointer"
               >
                 Reset Filters
               </button>
             </div>
           )}
 
-          {/* View All 20 Services Toggle Button */}
+          {/* Expand to View All 20 Services */}
           {catalogCategory === 'All' && catalogSearch.trim() === '' && (
-            <div className="mt-8 text-center">
+            <div className="mt-6 text-center">
               <button
+                type="button"
                 onClick={() => setShowAllServices(prev => !prev)}
-                className="px-6 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-[0.98]"
+                className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#132238] font-semibold text-xs transition-all cursor-pointer inline-flex items-center space-x-1.5 active:scale-[0.98]"
               >
                 <span>
                   {showAllServices
