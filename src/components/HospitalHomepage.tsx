@@ -35,7 +35,8 @@ import {
   Building2,
   ExternalLink,
   Download,
-  Smartphone
+  Smartphone,
+  HelpCircle
 } from 'lucide-react';
 import { Department, Doctor, InsuranceProviderPlan, PatientReview } from '../types';
 import { INITIAL_REVIEWS } from '../mockData';
@@ -528,88 +529,104 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
     }
   };
 
-  // Render Service Icon helper
+  // Render Service Icon helper with Image 2-inspired vibrant circular colored badges
+  const getServiceBadgeColor = (category: string) => {
+    switch (category) {
+      case 'Home & Nursing':
+      case 'Maternity & Delivery':
+        return 'bg-[#EC2D6F]';
+      case 'Emergency & Ambulance':
+        return 'bg-[#D90429]';
+      case 'Clinical & Outpatient':
+      case 'Therapy & Rehab':
+        return 'bg-[#00A859]';
+      case 'Specialist Clinics':
+        return 'bg-[#28257A]';
+      case 'Laboratory & Diagnostics':
+        return 'bg-[#F59E0B]';
+      case 'Critical & Inpatient':
+        return 'bg-[#A855F7]';
+      default:
+        return 'bg-[#0EA5E9]';
+    }
+  };
+
   const renderServiceIcon = (type: string) => {
     switch (type) {
       case 'heart':
-        return <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'activity':
-        return <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'ambulance':
-        return <Ambulance className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Ambulance className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'syringe':
-        return <Syringe className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Syringe className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'pill':
-        return <Pill className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Pill className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'bed':
-        return <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       case 'layers':
-        return <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
       default:
-        return <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-[#C8232C]" />;
+        return <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />;
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FAF8F5] text-[#221815] flex flex-col justify-between selection:bg-[#FDF1F1] selection:text-[#C8232C] pb-24 sm:pb-28">
+    <div className="min-h-screen w-full bg-white text-slate-800 flex flex-col justify-between selection:bg-sky-100 selection:text-slate-900 pb-20 sm:pb-24">
       
       {/* ================= 1. HEADER BAR ================= */}
-      <header className="w-full bg-white border-b border-[#EAE5DC] sticky top-0 z-40 shadow-xs">
-        <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+      <header className="w-full bg-white/95 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Logo & Brand */}
           <div 
             onClick={() => {
+              setIsMoreDrawerOpen(false);
               if (currentUser?.role === 'patient') onNavigateToPortal('patient');
               else window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer select-none min-w-0 group"
+            className="flex items-center space-x-3 cursor-pointer select-none min-w-0 group"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D90429] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D90429] text-white flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <Activity className="w-5 h-5 stroke-[2.4]" />
             </div>
             <div className="flex flex-col min-w-0 text-left">
-              <span className="text-base sm:text-lg md:text-xl font-black text-[#0B132B] leading-none tracking-tight uppercase whitespace-nowrap">
+              <span className="font-display text-base sm:text-lg font-bold text-[#0F172A] leading-none tracking-tight uppercase whitespace-nowrap">
                 TERRALINK HEALTH
               </span>
-              <span className="text-[10.5px] sm:text-xs text-stone-500 font-medium leading-tight mt-0.5 whitespace-nowrap">
+              <span className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5 whitespace-nowrap">
                 Digital Hospital Platform
               </span>
             </div>
           </div>
 
           {/* Right Header Navigation - Compact "Patient Portal" */}
-          <div className="flex items-center space-x-2 shrink-0">
-            {currentUser && currentUser.role === 'patient' ? (
-              <button
-                onClick={() => onNavigateToPortal('patient')}
-                className="px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-full bg-[#FFF5F5] hover:bg-rose-100 text-[#D90429] font-bold text-[11px] xs:text-xs border border-rose-200/90 transition-all cursor-pointer shadow-2xs flex items-center space-x-1.5 active:scale-95 shrink-0"
-                title="Open Patient Portal"
-              >
-                <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
-                <span className="whitespace-nowrap font-semibold">Patient Portal</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => handleOpenAuth('patient_login')}
-                className="px-2.5 xs:px-3 py-1 xs:py-1.5 rounded-full bg-[#FFF5F5] hover:bg-rose-100 text-[#D90429] font-bold text-[11px] xs:text-xs border border-rose-200/90 transition-all cursor-pointer shadow-2xs flex items-center space-x-1.5 active:scale-95 shrink-0"
-                title="Patient Portal Login"
-              >
-                <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
-                <span className="whitespace-nowrap font-semibold">Patient Portal</span>
-              </button>
-            )}
+          <div className="flex items-center shrink-0">
+            <button
+              onClick={() => {
+                if (currentUser && currentUser.role === 'patient') {
+                  onNavigateToPortal('patient');
+                } else {
+                  handleOpenAuth('patient_login');
+                }
+              }}
+              className="px-4 py-2 rounded-full bg-[#FFF1F2] hover:bg-rose-100 text-[#D90429] font-semibold text-xs transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 whitespace-nowrap"
+              title="Open Patient Portal"
+            >
+              <User className="w-3.5 h-3.5 stroke-[2.2] text-[#D90429]" />
+              <span>Patient Portal</span>
+            </button>
           </div>
 
         </div>
       </header>
 
       {/* ================= 2. HERO SECTION ================= */}
-      {/* High-quality sharp realistic female doctor seated at her desk with white coat and stethoscope */}
       <section 
-        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-3.5rem-3.25rem)] sm:min-h-[580px] md:min-h-[640px] bg-[#FAF8F5]"
+        className="relative w-full overflow-hidden flex flex-col justify-center min-h-[calc(100svh-4rem-4rem)] sm:min-h-[580px] md:min-h-[640px] bg-white"
       >
-        {/* Doctor seated at her desk: carefully positioned on mobile and larger screens */}
+        {/* Doctor seated at her desk */}
         <div 
           className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[position:84%_30%] sm:bg-[position:80%_center] md:bg-[position:right_center]"
           style={{
@@ -617,60 +634,60 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
           }}
         />
 
-        {/* Clean subtle readability gradient: gentle white tint on the left for text contrast, completely transparent on the right so doctor is 100% sharp and recognizable */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 40% to-transparent 65% sm:from-white/90 sm:via-white/50 40% sm:to-transparent pointer-events-none" />
+        {/* Crisp white readability scrim */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/60 45% to-transparent 72% sm:from-white/95 sm:via-white/65 45% sm:to-transparent pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-3.5 xs:py-4 sm:py-6 flex flex-col justify-center">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 py-8 sm:py-12 flex flex-col justify-center">
           
-          {/* Left-aligned hero content matching reference image */}
-          <div className="max-w-[280px] xs:max-w-[310px] sm:max-w-xl text-left">
+          {/* Left-aligned hero content */}
+          <div className="max-w-[295px] xs:max-w-[325px] sm:max-w-xl text-left">
             
-            {/* Headline with navy blue & red branding */}
-            <h1 className="text-[24px] xs:text-[27px] sm:text-4xl md:text-5xl font-black text-[#0B132B] tracking-tight leading-[1.12]">
+            {/* Rounded geometric headline */}
+            <h1 className="font-display text-[26px] xs:text-[30px] sm:text-4xl md:text-5xl font-bold text-[#0F172A] tracking-tight leading-[1.12] [text-wrap:balance]">
               Enhancing Hospital<br />
               Operations &amp;<br />
               <span className="text-[#D90429]">Patient Experience</span>
             </h1>
 
             {/* Subtitle / Description */}
-            <p className="mt-2 xs:mt-2.5 sm:mt-4 text-[12px] xs:text-[13px] sm:text-base text-slate-800 font-medium leading-snug sm:leading-relaxed max-w-[245px] xs:max-w-[280px] sm:max-w-md">
+            <p className="mt-3 sm:mt-4 text-[13px] sm:text-base text-slate-600 font-normal leading-relaxed max-w-[260px] xs:max-w-[300px] sm:max-w-md">
               An integrated digital platform for patient engagement, digital registration, telemedicine, and real-time analytics &mdash; built for Kenyan hospitals.
             </p>
 
-            {/* 3 Prominent Pill Buttons */}
-            <div className="mt-3.5 xs:mt-4 sm:mt-6 space-y-2.5 sm:space-y-3.5 w-full max-w-[245px] xs:max-w-[270px] sm:max-w-[320px]">
+            {/* 3 Prominent Rounded Action Buttons */}
+            <div className="mt-5 sm:mt-7 space-y-3 w-full max-w-[265px] xs:max-w-[285px] sm:max-w-[330px]">
               
-              {/* 1. Book an Appointment > (Red Pill Button) */}
+              {/* 1. Book an Appointment */}
               <button
                 onClick={handleBookAppointmentClick}
-                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-bold text-xs xs:text-sm sm:text-base shadow-md shadow-red-600/30 hover:shadow-lg hover:shadow-red-600/40 transition-all flex items-center justify-between cursor-pointer group"
+                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-[#D90429] hover:bg-[#B80323] active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-red-600/20 transition-all flex items-center justify-between cursor-pointer group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.3] shrink-0" />
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0" />
                   <span className="tracking-tight whitespace-nowrap">Book an Appointment</span>
                 </div>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              {/* 2. Explore Our Services -> (Deep Navy / Blue Pill Button) */}
+              {/* 2. Explore Our Services */}
               <button
                 onClick={handleExploreServicesClick}
-                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-[#004B87] hover:bg-[#003B6B] active:scale-[0.98] text-white font-bold text-xs xs:text-sm sm:text-base shadow-md shadow-blue-900/25 hover:shadow-lg hover:shadow-blue-900/35 transition-all flex items-center justify-between cursor-pointer group"
+                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-[#28257A] hover:bg-[#1E1C63] active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-indigo-950/20 transition-all flex items-center justify-between cursor-pointer group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.3] shrink-0" />
+                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0" />
                   <span className="tracking-tight whitespace-nowrap">Explore Our Services</span>
                 </div>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2] shrink-0 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              {/* 3. Call / SMS: 0713544101 (White Pill Button) */}
+              {/* 3. Call / SMS: 0713544101 */}
               <button
                 onClick={() => setIsCallSmsModalOpen(true)}
-                className="w-full py-2.5 xs:py-3 sm:py-3.5 px-4 sm:px-5 rounded-full bg-white hover:bg-stone-50 active:scale-[0.98] text-[#0B132B] border border-stone-200/90 font-bold text-xs xs:text-sm sm:text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center space-x-2.5 cursor-pointer group"
+                className="w-full py-3 sm:py-3.5 px-5 rounded-full bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-900 border border-slate-200 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center space-x-2.5 cursor-pointer group"
               >
-                <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 text-[#D90429] stroke-[2.3] shrink-0 group-hover:scale-105 transition-transform" />
-                <span className="tracking-tight whitespace-nowrap">Call / SMS: 0713544101</span>
+                <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 text-[#D90429] stroke-[2.2] shrink-0 group-hover:scale-105 transition-transform" />
+                <span className="tracking-tight whitespace-nowrap tabular-nums">Call / SMS: 0713544101</span>
               </button>
 
             </div>
@@ -680,69 +697,69 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </section>
 
-      {/* ================= 3. KEY FEATURES FOR BETTER CARE (Directly below Call / SMS button) ================= */}
-      <section className="w-full py-8 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-[#EAE5DC] bg-white/70">
+      {/* ================= 3. KEY FEATURES FOR BETTER CARE ================= */}
+      <section className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto">
           
-          <div className="text-center space-y-1 mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-[#221815] tracking-tight">
-              KEY FEATURES FOR BETTER CARE
+          <div className="text-center space-y-2 mb-8 sm:mb-10">
+            <h2 className="font-display text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Key Features for Better Care
             </h2>
-            <p className="text-xs sm:text-sm text-stone-500">
+            <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
               Powering efficient hospital operations and improved patient outcomes.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 border border-slate-100 rounded-3xl overflow-hidden bg-white">
             
             {/* 1. Reduced Wait Times */}
-            <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] shadow-2xs">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FDF1F1] border border-[#FADBD8] text-[#C8232C] flex items-center justify-center mb-2.5 shrink-0 shadow-2xs">
+            <div className="flex flex-col items-center text-center py-8 px-4 sm:px-6 border-r border-b md:border-b-0 border-slate-100">
+              <div className="w-12 h-12 rounded-full bg-[#0EA5E9] text-white flex items-center justify-center mb-3.5 shrink-0">
                 <Clock className="w-5 h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#221815] leading-tight">
+              <h3 className="font-display text-sm sm:text-base font-semibold text-slate-900 leading-tight">
                 Reduced Wait Times
               </h3>
-              <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                 Real-time queue tracking &amp; online appointment booking.
               </p>
             </div>
 
             {/* 2. Secure Records */}
-            <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] shadow-2xs">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FDF1F1] border border-[#FADBD8] text-[#C8232C] flex items-center justify-center mb-2.5 shrink-0 shadow-2xs">
+            <div className="flex flex-col items-center text-center py-8 px-4 sm:px-6 border-b md:border-b-0 md:border-r border-slate-100">
+              <div className="w-12 h-12 rounded-full bg-[#00A859] text-white flex items-center justify-center mb-3.5 shrink-0">
                 <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#221815] leading-tight">
+              <h3 className="font-display text-sm sm:text-base font-semibold text-slate-900 leading-tight">
                 Secure Records
               </h3>
-              <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                 Encrypted patient data with role-based access control.
               </p>
             </div>
 
             {/* 3. Telemedicine */}
-            <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] shadow-2xs">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FDF1F1] border border-[#FADBD8] text-[#C8232C] flex items-center justify-center mb-2.5 shrink-0 shadow-2xs">
+            <div className="flex flex-col items-center text-center py-8 px-4 sm:px-6 border-r border-slate-100">
+              <div className="w-12 h-12 rounded-full bg-[#EC2D6F] text-white flex items-center justify-center mb-3.5 shrink-0">
                 <Video className="w-5 h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#221815] leading-tight">
+              <h3 className="font-display text-sm sm:text-base font-semibold text-slate-900 leading-tight">
                 Telemedicine
               </h3>
-              <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                 Virtual consultations from anywhere in Kenya.
               </p>
             </div>
 
             {/* 4. Real-Time Analytics */}
-            <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE5DC] shadow-2xs">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FDF1F1] border border-[#FADBD8] text-[#C8232C] flex items-center justify-center mb-2.5 shrink-0 shadow-2xs">
+            <div className="flex flex-col items-center text-center py-8 px-4 sm:px-6">
+              <div className="w-12 h-12 rounded-full bg-[#F59E0B] text-white flex items-center justify-center mb-3.5 shrink-0">
                 <Activity className="w-5 h-5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-[#221815] leading-tight">
+              <h3 className="font-display text-sm sm:text-base font-semibold text-slate-900 leading-tight">
                 Real-Time Analytics
               </h3>
-              <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
                 Live dashboards for hospital performance monitoring.
               </p>
             </div>
@@ -751,56 +768,53 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </section>
 
-      {/* ================= 4. EXPLORE OUR HEALTHCARE SERVICES CATALOG (Exact design from uploaded image) ================= */}
-      <section id="explore-healthcare-services" className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-[#EAE5DC] bg-[#FAF8F5]">
+      {/* ================= 4. EXPLORE OUR HEALTHCARE SERVICES CATALOG ================= */}
+      <section id="explore-healthcare-services" className="w-full py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white">
         <div className="max-w-5xl mx-auto">
           
-          {/* Header Badge */}
-          <div className="flex justify-center mb-3">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FDF1F1] text-[#C8232C] text-[11px] sm:text-xs font-bold uppercase tracking-wider shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>HEALTHCARE SERVICES CATALOG</span>
-            </div>
-          </div>
+          {/* Quiet Section Kicker */}
+          <p className="text-center text-xs font-semibold text-[#28257A] tracking-wide mb-2">
+            Healthcare Services Catalog
+          </p>
 
           {/* Catalog Title */}
-          <h2 className="text-2xl sm:text-4xl font-black text-[#0f1f38] text-center tracking-tight">
+          <h2 className="font-display text-2xl sm:text-4xl font-bold text-slate-900 text-center tracking-tight [text-wrap:balance]">
             Explore Our Healthcare Services
           </h2>
 
-          {/* Subtitle from mockup */}
-          <p className="text-xs sm:text-sm md:text-base text-stone-600 text-center max-w-2xl mx-auto mt-2 sm:mt-3 leading-relaxed">
+          {/* Subtitle */}
+          <p className="text-xs sm:text-sm md:text-base text-slate-500 text-center max-w-2xl mx-auto mt-3 leading-relaxed">
             Browse all {TERRALINK_CATALOG_SERVICES.length} professional in-home, clinical, and specialized services. From licensed nursing and therapy to comprehensive medical check-ups &mdash; request the exact care you need.
           </p>
 
-          {/* Search & Filter Container Card matching image */}
-          <div className="mt-8 bg-white rounded-3xl p-4 sm:p-6 border border-stone-200/80 shadow-xs space-y-4">
+          {/* Search & Filter Container */}
+          <div className="mt-8 bg-slate-50/70 rounded-3xl p-4 sm:p-6 border border-slate-100 space-y-4">
             
             {/* Search Input Box */}
             <div className="relative w-full">
-              <Search className="w-4 h-4 text-stone-400 absolute left-4 top-3.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
               <input
                 type="text"
                 placeholder="Search services (e.g., Hire a Nurse, Physiotherapy, Consultation...)"
                 value={catalogSearch}
                 onChange={(e) => setCatalogSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0A4D8C]/20 transition-all"
+                className="w-full pl-11 pr-4 py-2.5 sm:py-3 rounded-2xl bg-white border border-slate-200/80 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#28257A]/15 focus:border-[#28257A]/40 transition-all"
               />
             </div>
 
-            {/* Counter text matching image */}
-            <div className="text-center text-xs sm:text-sm font-semibold text-stone-500">
-              Showing <span className="font-bold text-[#0f1f38]">{filteredCatalogServices.length}</span> of <span className="font-bold text-[#0f1f38]">{TERRALINK_CATALOG_SERVICES.length}</span> Services
+            {/* Counter text */}
+            <div className="text-center text-xs sm:text-sm font-medium text-slate-500 tabular-nums">
+              Showing <span className="font-semibold text-slate-900">{filteredCatalogServices.length}</span> of <span className="font-semibold text-slate-900">{TERRALINK_CATALOG_SERVICES.length}</span> Services
             </div>
 
-            {/* Filter Pills matching image */}
+            {/* Interactive Category Filter Buttons */}
             <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
               <button
                 onClick={() => setCatalogCategory('All')}
-                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   catalogCategory === 'All'
-                    ? 'bg-[#0f1f38] text-white shadow-xs'
-                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                    ? 'bg-[#28257A] text-white'
+                    : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/70'
                 }`}
               >
                 All Services ({TERRALINK_CATALOG_SERVICES.length})
@@ -812,10 +826,10 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   <button
                     key={cat}
                     onClick={() => setCatalogCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       catalogCategory === cat
-                        ? 'bg-[#0f1f38] text-white shadow-xs'
-                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                        ? 'bg-[#28257A] text-white'
+                        : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/70'
                     }`}
                   >
                     {cat} ({count})
@@ -826,72 +840,66 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
 
           </div>
 
-          {/* ================= SERVICE CARDS (Design matching the uploaded image) ================= */}
-          <div className="mt-6 space-y-4 sm:space-y-5">
+          {/* ================= SERVICE CARDS ================= */}
+          <div className="mt-6 space-y-4">
             {filteredCatalogServices.map(service => (
               <div
                 key={service.id}
-                className="bg-white rounded-3xl p-5 sm:p-7 border border-rose-100/90 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
+                className="bg-white rounded-3xl p-5 sm:p-7 border border-slate-100 hover:border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.02)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition-all duration-200 flex flex-col justify-between group"
               >
                 <div>
                   
-                  {/* Top Row: Square Icon Badge + Category + Most Requested Pill Badge */}
-                  <div className="flex items-start justify-between gap-3">
+                  {/* Top Row: Vibrant Circular Icon Badge + Unboxed Category/Status Metadata */}
+                  <div className="flex items-start gap-4">
                     
-                    <div className="flex items-center space-x-3.5">
-                      {/* Squircle Pink/Red Icon Badge */}
-                      <div className="w-12 h-12 rounded-2xl bg-[#FDF1F1] border border-rose-100/80 text-[#C8232C] flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                        {renderServiceIcon(service.iconType)}
-                      </div>
-
-                      <div>
-                        {/* Category Tag */}
-                        <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-                          {service.category}
-                        </span>
-                        
-                        {/* Service Title */}
-                        <h3 className="text-lg sm:text-xl font-bold text-[#0f1f38] tracking-tight group-hover:text-[#C8232C] transition-colors">
-                          {service.name}
-                        </h3>
-                      </div>
+                    <div className={`w-12 h-12 rounded-full ${getServiceBadgeColor(service.category)} text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                      {renderServiceIcon(service.iconType)}
                     </div>
 
-                    {/* Red Pill Badge (e.g. MOST REQUESTED) */}
-                    {service.badge && (
-                      <span className="px-3 py-1 rounded-full bg-[#C8232C] text-white text-[10px] font-bold uppercase tracking-wider shadow-2xs shrink-0">
-                        {service.badge}
-                      </span>
-                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 text-xs text-slate-400 font-medium flex-wrap">
+                        <span>{service.category}</span>
+                        {service.badge && (
+                          <>
+                            <span aria-hidden="true">&middot;</span>
+                            <span className="text-[#D90429] font-semibold">{service.badge}</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <h3 className="font-display text-lg sm:text-xl font-bold text-slate-900 tracking-tight mt-0.5 group-hover:text-[#28257A] transition-colors">
+                        {service.name}
+                      </h3>
+                    </div>
 
                   </div>
 
-                  {/* Bold Punchy Headline in dark navy */}
-                  <p className="mt-3.5 text-xs sm:text-sm font-bold text-[#0A4D8C] leading-snug">
+                  {/* Headline */}
+                  <p className="mt-4 text-xs sm:text-sm font-semibold text-[#28257A] leading-snug">
                     {service.headline}
                   </p>
 
                   {/* Descriptive text */}
-                  <p className="mt-1.5 text-xs sm:text-sm text-stone-600 leading-relaxed font-normal">
+                  <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
                     {service.description}
                   </p>
 
                 </div>
 
-                {/* Bottom Row: Available Options / Tariff + Action Button */}
-                <div className="mt-5 pt-3.5 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3">
+                {/* Bottom Row: Eligibility + Tariff + Action Button */}
+                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                   
                   <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wide">
-                      AVAILABLE OPTIONS &bull; SHA / INSURANCE ELIGIBLE
+                    <CheckCircle2 className="w-4 h-4 text-[#00A859] shrink-0" />
+                    <span className="text-xs font-medium text-slate-500">
+                      SHA / Insurance Eligible
                     </span>
                   </div>
 
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <span className="text-[10px] text-stone-400 block font-medium">Standard Tariff</span>
-                      <span className="text-xs sm:text-sm font-black text-[#0f1f38]">
+                      <span className="text-[11px] text-slate-400 block font-medium">Standard Tariff</span>
+                      <span className="text-sm font-bold text-slate-900 tabular-nums">
                         KES {service.standardFeeKES.toLocaleString()}
                       </span>
                     </div>
@@ -901,7 +909,7 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                         setSelectedServiceName(service.name);
                         setIsBookingModalOpen(true);
                       }}
-                      className="px-4 sm:px-5 py-2 rounded-xl bg-[#C8232C] hover:bg-[#b31d25] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer active:scale-95 flex items-center space-x-1.5"
+                      className="px-4 sm:px-5 py-2.5 rounded-full bg-[#D90429] hover:bg-[#B80323] text-white font-semibold text-xs transition-colors cursor-pointer active:scale-95 flex items-center space-x-1.5 whitespace-nowrap shrink-0"
                     >
                       <Calendar className="w-3.5 h-3.5" />
                       <span>Request Care</span>
@@ -914,16 +922,16 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
             ))}
 
             {filteredCatalogServices.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-3xl border border-stone-200 p-8 space-y-3">
-                <Search className="w-8 h-8 text-stone-400 mx-auto" />
-                <h4 className="text-base font-bold text-stone-800">No matching services found</h4>
-                <p className="text-xs text-stone-500">Try searching with a different health term or reset the category filter.</p>
+              <div className="text-center py-12 bg-white rounded-3xl border border-slate-100 p-8 space-y-3">
+                <Search className="w-8 h-8 text-slate-400 mx-auto" />
+                <h4 className="font-display text-base font-bold text-slate-900">No matching services found</h4>
+                <p className="text-xs text-slate-500">Try searching with a different health term or reset the category filter.</p>
                 <button
                   onClick={() => {
                     setCatalogSearch('');
                     setCatalogCategory('All');
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#0f1f38] text-white font-bold text-xs"
+                  className="px-5 py-2.5 rounded-full bg-[#28257A] text-white font-semibold text-xs cursor-pointer"
                 >
                   Reset Filters
                 </button>
@@ -934,75 +942,71 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </section>
 
-      {/* ================= 5. FOOTER (Institutional info, Privacy, Terms, subtle Staff/Admin portals) ================= */}
-      <footer className="w-full py-8 sm:py-10 px-4 sm:px-6 lg:px-8 border-t border-[#EAE5DC] bg-white text-center space-y-4 text-xs text-stone-500">
+      {/* ================= 5. FOOTER ================= */}
+      <footer className="w-full py-10 sm:py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 bg-white text-center space-y-4 text-xs text-slate-500">
         <div className="max-w-4xl mx-auto space-y-3">
           
-          {/* Institutional Copyright */}
-          <p className="text-[#221815] font-semibold text-xs sm:text-sm">
+          <p className="font-display text-slate-900 font-semibold text-xs sm:text-sm">
             &copy; 2026 TERRALINK HEALTH &mdash; Digital Hospital Management Platform
           </p>
           
-          {/* Location details */}
-          <p className="text-stone-500 text-xs">
+          <p className="text-slate-400 text-xs">
             Hospital Hill Road, Parklands / Upper Hill Medical Complex, Nairobi County, Kenya &bull; 24/7 Hotline: 0713544101
           </p>
 
-          {/* Links Row */}
-          <div className="flex flex-wrap items-center justify-center gap-3 text-stone-600 pt-1 font-medium">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-slate-600 pt-1 font-medium">
             <button
               onClick={() => setActiveInfoModal('contact')}
-              className="hover:text-[#C8232C] transition-colors cursor-pointer"
+              className="hover:text-[#D90429] transition-colors cursor-pointer"
             >
               Contact
             </button>
-            <span>|</span>
+            <span className="text-slate-300">&middot;</span>
             <button
               onClick={() => setActiveInfoModal('privacy')}
-              className="hover:text-[#C8232C] transition-colors cursor-pointer"
+              className="hover:text-[#D90429] transition-colors cursor-pointer"
             >
               Privacy Policy
             </button>
-            <span>|</span>
+            <span className="text-slate-300">&middot;</span>
             <button
               onClick={() => setActiveInfoModal('terms')}
-              className="hover:text-[#C8232C] transition-colors cursor-pointer"
+              className="hover:text-[#D90429] transition-colors cursor-pointer"
             >
               Terms of Service
             </button>
           </div>
 
-          {/* Secondary Badges for Founder Leadership & Patient Stories */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          {/* Secondary Actions for Founder Leadership, Stories & App */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
               onClick={() => setIsFounderModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-stone-200/70 text-stone-700 font-bold text-[11px] border border-[#EAE5DC] transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              className="px-4 py-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/70 transition-colors flex items-center space-x-1.5 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#C8232C]" />
-              <span>Founder &amp; Executive Perspective</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#D90429]" />
+              <span>Founder Perspective</span>
             </button>
 
             <button
               onClick={() => setIsReviewsModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-stone-200/70 text-stone-700 font-bold text-[11px] border border-[#EAE5DC] transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              className="px-4 py-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/70 transition-colors flex items-center space-x-1.5 cursor-pointer"
             >
-              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-              <span>Patient Reviews &amp; Stories ({liveReviews.length})</span>
+              <Star className="w-3.5 h-3.5 text-[#F59E0B] fill-[#F59E0B]" />
+              <span>Patient Reviews ({liveReviews.length})</span>
             </button>
 
             {onDownloadApp && (
               <button
                 onClick={onDownloadApp}
-                className="px-3.5 py-1.5 rounded-full bg-[#FDF1F1] hover:bg-rose-100 text-[#C8232C] font-bold text-[11px] border border-rose-200 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                className="px-4 py-2 rounded-full bg-[#FFF1F2] hover:bg-rose-100 text-[#D90429] font-semibold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-[#C8232C]" />
+                <Download className="w-3.5 h-3.5 text-[#D90429]" />
                 <span>Download App</span>
               </button>
             )}
           </div>
 
-          {/* ================= SUBTLE STAFF & ADMIN PORTALS IN FOOTER ================= */}
-          <div className="flex items-center justify-center gap-2 pt-4 border-t border-stone-100 text-[11px] text-stone-400">
+          <div className="flex items-center justify-center gap-3 pt-4 border-t border-slate-100 text-xs text-slate-400">
             <button
               onClick={() => {
                 if (currentUser && currentUser.role !== 'patient') {
@@ -1011,15 +1015,15 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
                   handleOpenAuth('staff_login');
                 }
               }}
-              className="px-2.5 py-1 rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer font-medium"
+              className="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer font-medium"
               title="Staff & Doctor Workspace"
             >
               Staff Login
             </button>
-            <span className="text-stone-300">&bull;</span>
+            <span className="text-slate-300">&middot;</span>
             <button
               onClick={() => onNavigateToPortal('admin')}
-              className="px-2.5 py-1 rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer font-medium"
+              className="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer font-medium"
               title="Hospital Administration"
             >
               Admin Portal
@@ -1029,233 +1033,296 @@ export const HospitalHomepage: React.FC<HospitalHomepageProps> = ({
         </div>
       </footer>
 
-      {/* ================= 6. FIXED BOTTOM MENU (Home, Appointments, Records, Telemedicine, More) ================= */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#EAE5DC] shadow-lg py-1.5 sm:py-2 px-2 sm:px-6">
-        <div className="max-w-md sm:max-w-lg mx-auto flex items-center justify-around text-center">
+      {/* ================= 6. SLEEK FIXED BOTTOM NAVIGATION BAR (Image 2 Styling) ================= */}
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-[0_-1px_10px_rgba(15,23,42,0.03)]">
+        <div className="max-w-lg mx-auto grid grid-cols-5 items-center h-16 px-1">
           
           {/* Home */}
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex flex-col items-center justify-center py-1 px-2 text-[#004B87] font-bold cursor-pointer group"
+            onClick={() => {
+              setIsMoreDrawerOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
+              !isMoreDrawerOpen ? 'text-[#0EA5E9]' : 'text-slate-400 hover:text-slate-600'
+            }`}
           >
-            <Home className="w-5 h-5 mb-0.5 stroke-[2.4] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-bold">Home</span>
+            <Home className="w-[21px] h-[21px] stroke-[1.8]" />
+            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${!isMoreDrawerOpen ? 'font-semibold' : 'font-medium'}`}>
+              Home
+            </span>
           </button>
 
           {/* Appointments */}
           <button
             onClick={() => {
+              setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
                 onNavigateToPortal('patient', 'appointments');
               } else {
                 setIsBookingModalOpen(true);
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
           >
-            <Calendar className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-medium">Appointments</span>
+            <Calendar className="w-[21px] h-[21px] stroke-[1.75]" />
+            <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
+              Appointments
+            </span>
           </button>
 
           {/* Records */}
           <button
             onClick={() => {
+              setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
                 onNavigateToPortal('patient', 'records');
               } else {
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
           >
-            <FileText className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-medium">Records</span>
+            <FileText className="w-[21px] h-[21px] stroke-[1.75]" />
+            <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
+              Records
+            </span>
           </button>
 
           {/* Telemedicine */}
           <button
             onClick={() => {
+              setIsMoreDrawerOpen(false);
               if (currentUser && currentUser.role === 'patient') {
                 onNavigateToPortal('patient', 'appointments');
               } else {
                 handleOpenAuth('patient_login');
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
+            className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"
           >
-            <Video className="w-5 h-5 mb-0.5 stroke-[2] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-medium">Telemedicine</span>
+            <Video className="w-[21px] h-[21px] stroke-[1.75]" />
+            <span className="text-[11px] font-medium mt-1 leading-none whitespace-nowrap">
+              Telemedicine
+            </span>
           </button>
 
           {/* More */}
           <button
-            onClick={() => setIsMoreDrawerOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-2 text-stone-500 hover:text-[#004B87] font-medium cursor-pointer group transition-colors"
+            onClick={() => setIsMoreDrawerOpen(prev => !prev)}
+            className={`flex flex-col items-center justify-center h-full cursor-pointer transition-colors ${
+              isMoreDrawerOpen ? 'text-[#0EA5E9]' : 'text-slate-400 hover:text-slate-600'
+            }`}
           >
-            <Menu className="w-5 h-5 mb-0.5 stroke-[2.3] group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] leading-tight font-medium">More</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-[21px] h-[21px]"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="6.5" r="2" />
+              <circle cx="6.5" cy="16.5" r="2" />
+              <circle cx="17.5" cy="16.5" r="2" />
+            </svg>
+            <span className={`text-[11px] mt-1 leading-none whitespace-nowrap ${isMoreDrawerOpen ? 'font-semibold' : 'font-medium'}`}>
+              More
+            </span>
           </button>
 
         </div>
       </nav>
 
-      {/* ================= MODAL / DRAWER: "MORE" MENU ================= */}
+      {/* ================= MODAL / DRAWER: "MORE" MENU (Image 2 Layout & Style) ================= */}
       {isMoreDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#EAE5DC] relative max-h-[85vh] overflow-y-auto space-y-5">
-            
-            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-              <div className="flex items-center space-x-2">
-                <Menu className="w-5 h-5 text-[#C8232C]" />
-                <h3 className="text-base font-bold text-[#0f1f38]">Hospital Directory &amp; More Options</h3>
+        <div
+          onClick={() => setIsMoreDrawerOpen(false)}
+          className="fixed inset-x-0 top-0 bottom-16 z-40 bg-white sm:inset-0 sm:bottom-0 sm:z-50 sm:bg-slate-950/45 sm:backdrop-blur-xs flex flex-col sm:items-center sm:justify-center sm:p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full h-full sm:h-auto sm:max-w-md bg-white sm:rounded-3xl sm:overflow-hidden sm:shadow-2xl sm:border sm:border-slate-100 flex flex-col justify-between overflow-y-auto"
+          >
+            <div>
+              {/* Bold Top Quick-Action Header Bar (Image 2 Style) */}
+              <div className="bg-[#28257A] text-white px-4 pt-6 pb-6 relative">
+                <button
+                  onClick={() => setIsMoreDrawerOpen(false)}
+                  aria-label="Close More Menu"
+                  className="hidden sm:flex absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/90 items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="grid grid-cols-4 gap-2 max-w-md mx-auto">
+                  {/* Quick Action 1: Help */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      setActiveInfoModal('contact');
+                    }}
+                    className="flex flex-col items-center justify-center py-1 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white/12 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                      <HelpCircle className="w-5 h-5 text-[#38BDF8] stroke-[2.2]" />
+                    </div>
+                    <span className="font-display text-xs font-medium text-white/95 mt-2 whitespace-nowrap">
+                      Help
+                    </span>
+                  </button>
+
+                  {/* Quick Action 2: Chat */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      if (currentUser && currentUser.role === 'patient') {
+                        onNavigateToPortal('patient', 'messages');
+                      } else {
+                        setIsCallSmsModalOpen(true);
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center py-1 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white/12 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                      <MessageCircle className="w-5 h-5 text-[#38BDF8] stroke-[2.2]" />
+                    </div>
+                    <span className="font-display text-xs font-medium text-white/95 mt-2 whitespace-nowrap">
+                      Chat
+                    </span>
+                  </button>
+
+                  {/* Quick Action 3: Profile */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      if (currentUser && currentUser.role === 'patient') {
+                        onNavigateToPortal('patient', 'profile');
+                      } else {
+                        handleOpenAuth('patient_login');
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center py-1 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white/12 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                      <User className="w-5 h-5 text-[#38BDF8] stroke-[2.2]" />
+                    </div>
+                    <span className="font-display text-xs font-medium text-white/95 mt-2 whitespace-nowrap">
+                      Profile
+                    </span>
+                  </button>
+
+                  {/* Quick Action 4: Staff Login */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      if (currentUser && currentUser.role !== 'patient') {
+                        onNavigateToPortal('provider');
+                      } else {
+                        handleOpenAuth('staff_login');
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center py-1 group cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white/12 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                      <Stethoscope className="w-5 h-5 text-[#38BDF8] stroke-[2.2]" />
+                    </div>
+                    <span className="font-display text-xs font-medium text-white/95 mt-2 whitespace-nowrap">
+                      Staff Login
+                    </span>
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setIsMoreDrawerOpen(false)}
-                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              {/* Clean Minimalist 2x2 Grid Divided by Subtle Hairlines (Image 2 Style) */}
+              <div className="px-5 py-6 bg-white">
+                <div className="grid grid-cols-2">
+                  
+                  {/* 1. Patient Reviews */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      setIsReviewsModalOpen(true);
+                    }}
+                    className="flex flex-col items-center justify-center py-9 px-3 border-r border-b border-slate-100 hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#EC2D6F] text-white flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform">
+                      <Star className="w-6 h-6 stroke-[2.1] fill-white" />
+                    </div>
+                    <span className="font-display text-[15px] font-semibold text-slate-800 tracking-tight text-center">
+                      Patient Reviews ({liveReviews.length})
+                    </span>
+                  </button>
+
+                  {/* 2. Ambulance Dispatch */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      setIsCallSmsModalOpen(true);
+                    }}
+                    className="flex flex-col items-center justify-center py-9 px-3 border-b border-slate-100 hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#F59E0B] text-white flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform">
+                      <Ambulance className="w-6 h-6 stroke-[2.1]" />
+                    </div>
+                    <span className="font-display text-[15px] font-semibold text-slate-800 tracking-tight text-center">
+                      Ambulance Dispatch
+                    </span>
+                  </button>
+
+                  {/* 3. Healthcare Services */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      handleExploreServicesClick();
+                    }}
+                    className="flex flex-col items-center justify-center py-9 px-3 border-r border-slate-100 hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#00A859] text-white flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform">
+                      <Stethoscope className="w-6 h-6 stroke-[2.1]" />
+                    </div>
+                    <span className="font-display text-[15px] font-semibold text-slate-800 tracking-tight text-center">
+                      Healthcare Services
+                    </span>
+                  </button>
+
+                  {/* 4. KDPA 2019 Privacy */}
+                  <button
+                    onClick={() => {
+                      setIsMoreDrawerOpen(false);
+                      setActiveInfoModal('privacy');
+                    }}
+                    className="flex flex-col items-center justify-center py-9 px-3 hover:bg-slate-50/70 active:bg-slate-100/60 transition-colors cursor-pointer group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#C084FC] text-white flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform">
+                      <ShieldCheck className="w-6 h-6 stroke-[2.1]" />
+                    </div>
+                    <span className="font-display text-[15px] font-semibold text-slate-800 tracking-tight text-center">
+                      KDPA 2019 Privacy
+                    </span>
+                  </button>
+
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
-              
-              {/* Founder Perspective */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  setIsFounderModalOpen(true);
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-rose-50 border border-[#EAE5DC] hover:border-rose-200 transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#FDF1F1] text-[#C8232C] flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-[#C8232C]">Founder Perspective</span>
-                  <span className="text-[10px] text-stone-500">Haron Kipkemoi on Kenyan healthcare digitization</span>
-                </div>
-              </button>
-
-              {/* Contact Us */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  setActiveInfoModal('contact');
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-blue-50 border border-[#EAE5DC] hover:border-blue-200 transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0A4D8C] flex items-center justify-center shrink-0">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-[#0A4D8C]">Contact &amp; 24/7 Hotline</span>
-                  <span className="text-[10px] text-stone-500">Call/SMS: 0713544101 &bull; Parklands HQ</span>
-                </div>
-              </button>
-
-              {/* Patient Reviews & Stories */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  setIsReviewsModalOpen(true);
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-amber-50 border border-[#EAE5DC] hover:border-amber-200 transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                  <Star className="w-4 h-4 fill-amber-500" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-amber-700">Patient Reviews ({liveReviews.length})</span>
-                  <span className="text-[10px] text-stone-500">Real clinical recovery experiences</span>
-                </div>
-              </button>
-
-              {/* Emergency Ambulance Dispatch */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  setIsCallSmsModalOpen(true);
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-rose-50 border border-[#EAE5DC] hover:border-rose-200 transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-rose-50 text-[#C8232C] flex items-center justify-center shrink-0">
-                  <Ambulance className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-[#C8232C]">Ambulance Dispatch</span>
-                  <span className="text-[10px] text-stone-500">Type C ALS Paramedic fleet response</span>
-                </div>
-              </button>
-
-              {/* Explore Services Catalog */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  handleExploreServicesClick();
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-emerald-50 border border-[#EAE5DC] hover:border-emerald-200 transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                  <Stethoscope className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-emerald-700">Healthcare Services (20)</span>
-                  <span className="text-[10px] text-stone-500">In-home, clinical &amp; specialized catalog</span>
-                </div>
-              </button>
-
-              {/* Privacy & Legal */}
-              <button
-                onClick={() => {
-                  setIsMoreDrawerOpen(false);
-                  setActiveInfoModal('privacy');
-                }}
-                className="p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-stone-100 border border-[#EAE5DC] transition-all text-left flex items-start space-x-3 cursor-pointer group"
-              >
-                <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-600 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-[#0f1f38] block">KDPA 2019 Privacy</span>
-                  <span className="text-[10px] text-stone-500">Medical confidentiality compliance</span>
-                </div>
-              </button>
-
-              {/* Download Mobile App */}
+            {/* Generous White Space + Optional Mobile App Link */}
+            <div className="flex-1 min-h-[120px] sm:min-h-[48px] bg-white flex flex-col items-center justify-end pb-6 px-6 gap-3">
               {onDownloadApp && (
                 <button
                   onClick={() => {
                     setIsMoreDrawerOpen(false);
                     onDownloadApp();
                   }}
-                  className="sm:col-span-2 p-3.5 rounded-2xl bg-[#FDF1F1] hover:bg-rose-100/80 border border-rose-200 transition-all text-left flex items-center justify-between cursor-pointer group"
+                  className="inline-flex items-center space-x-2 text-xs font-semibold text-[#28257A] hover:text-[#0EA5E9] transition-colors cursor-pointer py-2 px-4 rounded-full hover:bg-slate-50"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#D90429] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                      <Smartphone className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-xs text-[#0f1f38] block group-hover:text-[#C8232C]">
-                        Download TERRALINK Mobile App
-                      </span>
-                      <span className="text-[10px] text-stone-600">
-                        Install to Home Screen (iOS / Android) or download APK
-                      </span>
-                    </div>
-                  </div>
-                  <Download className="w-4 h-4 text-[#C8232C] shrink-0" />
+                  <Smartphone className="w-4 h-4" />
+                  <span>Download TERRALINK Mobile App</span>
                 </button>
               )}
-
-            </div>
-
-            <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
-              <span className="text-stone-400 text-[11px]">TERRALINK HEALTH Hospital Kenya</span>
               <button
                 onClick={() => setIsMoreDrawerOpen(false)}
-                className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold cursor-pointer"
+                className="sm:hidden text-xs font-medium text-slate-400 hover:text-slate-600 py-1 cursor-pointer"
               >
-                Close
+                Close Menu
               </button>
             </div>
 

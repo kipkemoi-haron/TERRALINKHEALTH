@@ -3410,7 +3410,32 @@ app.get('/.well-known/assetlinks.json', (req: Request, res: Response) => {
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false, ws: false },
+      plugins: [
+        {
+          name: 'disable-hmr-websocket',
+          transform(code: string, id: string) {
+            if (id.endsWith('vite/dist/client/client.mjs')) {
+              return {
+                code: code
+                  .replace(
+                    'transport.connect(createHMRHandler(handleMessage));',
+                    '/* HMR WebSocket disabled */'
+                  )
+                  .replace(
+                    'throw new Error("send was called before connect");',
+                    'return;'
+                  )
+                  .replace(
+                    'throw new Error("invoke was called before connect");',
+                    'return;'
+                  ),
+                map: null
+              };
+            }
+          }
+        }
+      ],
       appType: 'spa'
     });
     app.use(vite.middlewares);
